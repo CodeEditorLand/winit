@@ -1,4 +1,3 @@
-Cargo.lock
 target/
 rls/
 .vscode/
@@ -7,4 +6,3 @@ rls/
 *.ts
 *.js
 #*#
-.DS_Store
