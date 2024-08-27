@@ -25,7 +25,7 @@ Join us in any of these:
 [![Matrix](https://img.shields.io/badge/Matrix-%23Glutin%3Amatrix.org-blueviolet.svg)](https://matrix.to/#/#Glutin:matrix.org)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/tomaka/glutin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-## Usage
+## 🛠️ Usage
 
 Winit is a window creation and management library. It can create windows and
 lets you handle events (for example: the window being resized, a key being
