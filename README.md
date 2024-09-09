@@ -13,9 +13,7 @@ winit = "0.24.0"
 
 For features _within_ the scope of winit, see [FEATURES.md](FEATURES.md).
 
-For features _outside_ the scope of winit, see
-[Missing features provided by other crates](https://github.com/rust-windowing/winit/wiki/Missing-features-provided-by-other-crates)
-in the wiki.
+For features _outside_ the scope of winit, see [Missing features provided by other crates](https://github.com/rust-windowing/winit/wiki/Missing-features-provided-by-other-crates) in the wiki.
 
 ## Contact Us
 
@@ -25,15 +23,15 @@ Join us in any of these:
 [![Matrix](https://img.shields.io/badge/Matrix-%23Glutin%3Amatrix.org-blueviolet.svg)](https://matrix.to/#/#Glutin:matrix.org)
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/tomaka/glutin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-## 🛠️ Usage
+## Usage
 
-Winit is a window creation and management library. It can create windows and
-lets you handle events (for example: the window being resized, a key being
-pressed, a mouse movement, etc.) produced by window.
+Winit is a window creation and management library. It can create windows and lets you handle
+events (for example: the window being resized, a key being pressed, a mouse movement, etc.)
+produced by window.
 
-Winit is designed to be a low-level brick in a hierarchy of libraries.
-Consequently, in order to show something on the window you need to use the
-platform-specific getters provided by winit, or another library.
+Winit is designed to be a low-level brick in a hierarchy of libraries. Consequently, in order to
+show something on the window you need to use the platform-specific getters provided by winit, or
+another library.
 
 ```rust
 use winit::{
@@ -60,19 +58,14 @@ fn main() {
 }
 ```
 
-Winit is only officially supported on the latest stable version of the Rust
-compiler.
+Winit is only officially supported on the latest stable version of the Rust compiler.
 
 ### Cargo Features
 
-Winit provides the following features, which can be enabled in your `Cargo.toml`
-file:
-
--   `serde`: Enables serialization/deserialization of certain types with
-    [Serde](https://crates.io/crates/serde).
--   `x11` (enabled by default): On Unix platform, compiles with the X11 backend
--   `wayland` (enabled by default): On Unix platform, compiles with the Wayland
-    backend
+Winit provides the following features, which can be enabled in your `Cargo.toml` file:
+* `serde`: Enables serialization/deserialization of certain types with [Serde](https://crates.io/crates/serde).
+* `x11` (enabled by default): On Unix platform, compiles with the X11 backend
+* `wayland` (enabled by default): On Unix platform, compiles with the Wayland backend
 
 ### Platform-specific usage
 
@@ -88,25 +81,20 @@ either [provide Winit with a `<canvas>` element][web with_canvas], or [let Winit
 create a `<canvas>` element which you can then retrieve][web canvas getter] and
 insert it into the DOM yourself.
 
-For example code using Winit with WebAssembly, check out the [web example]. For information
-on using Rust on WebAssembly, check out the [Rust and WebAssembly book].
+For example code using Winit with WebAssembly, check out the [web example]. For
+information on using Rust on WebAssembly, check out the [Rust and WebAssembly
+book].
 
-[web with_canvas]:
-	https://docs.rs/winit/latest/wasm32-unknown-unknown/winit/platform/web/trait.WindowBuilderExtWebSys.html#tymethod.with_canvas
-[web canvas getter]:
-	https://docs.rs/winit/latest/wasm32-unknown-unknown/winit/platform/web/trait.WindowExtWebSys.html#tymethod.canvas
+[web with_canvas]: https://docs.rs/winit/latest/wasm32-unknown-unknown/winit/platform/web/trait.WindowBuilderExtWebSys.html#tymethod.with_canvas
+[web canvas getter]: https://docs.rs/winit/latest/wasm32-unknown-unknown/winit/platform/web/trait.WindowExtWebSys.html#tymethod.canvas
 [web example]: ./examples/web.rs
 [Rust and WebAssembly book]: https://rustwasm.github.io/book/
 
 #### Android
 
-This library makes use of the
-[ndk-rs](https://github.com/rust-windowing/android-ndk-rs) crates, refer to that
-repo for more documentation.
+This library makes use of the [ndk-rs](https://github.com/rust-windowing/android-ndk-rs) crates, refer to that repo for more documentation.
 
-Running on an Android device needs a dynamic system library, add this to
-Cargo.toml:
-
+Running on an Android device needs a dynamic system library, add this to Cargo.toml:
 ```toml
 [[example]]
 name = "request_redraw_threaded"
@@ -114,7 +102,6 @@ crate-type = ["cdylib"]
 ```
 
 And add this to the example file to add the native activity glue:
-
 ```rust
 #[cfg_attr(target_os = "android", ndk_glue::main(backtrace = "on"))]
 fn main() {
@@ -127,8 +114,9 @@ And run the application with `cargo apk run --example request_redraw_threaded`
 #### MacOS
 
 To ensure compatibility with older MacOS systems, winit links to
-CGDisplayCreateUUIDFromDisplayID through the CoreGraphics framework. However,
-under certain setups this function is only available to be linked through the
-newer ColorSync framework. So, winit provides the `WINIT_LINK_COLORSYNC`
-environment variable which can be set to `1` or `true` while compiling to enable
-linking via ColorSync.
+CGDisplayCreateUUIDFromDisplayID through the CoreGraphics framework.
+However, under certain setups this function is only available to be linked
+through the newer ColorSync framework. So, winit provides the
+`WINIT_LINK_COLORSYNC` environment variable which can be set to `1` or `true` 
+while compiling to enable linking via ColorSync.
+
