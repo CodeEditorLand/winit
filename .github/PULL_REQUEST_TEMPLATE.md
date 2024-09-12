@@ -1,0 +1,8 @@
+- [ ] Tested on all platforms changed
+- [ ] Compilation warnings were addressed
+- [ ] `cargo fmt` has been run on this branch
+- [ ] `cargo doc` builds successfully
+- [ ] Added an entry to `CHANGELOG.md` if knowledge of this change could be valuable to users
+- [ ] Updated documentation to reflect any user-facing changes, including notes of platform-specific behavior
+- [ ] Created or updated an example program if it would help users understand this functionality
+- [ ] Updated [feature matrix](https://github.com/rust-windowing/winit/blob/master/FEATURES.md), if new features were added or implemented
