@@ -37,21 +37,21 @@ mod backend;
 #[cfg(not(any(feature = "web-sys", feature = "stdweb")))]
 compile_error!("Please select a feature to build for web: `web-sys`, `stdweb`");
 
-pub use self::device::Id as DeviceId;
-pub use self::error::OsError;
-pub use self::event_loop::{
-    EventLoop, Proxy as EventLoopProxy, WindowTarget as EventLoopWindowTarget,
-};
-pub use self::monitor::{Handle as MonitorHandle, Mode as VideoMode};
-pub use self::window::{
-    Id as WindowId, PlatformSpecificBuilderAttributes as PlatformSpecificWindowBuilderAttributes,
-    Window,
+pub use self::{
+	device::Id as DeviceId,
+	error::OsError,
+	event_loop::{EventLoop, Proxy as EventLoopProxy, WindowTarget as EventLoopWindowTarget},
+	monitor::{Handle as MonitorHandle, Mode as VideoMode},
+	window::{
+		Id as WindowId,
+		PlatformSpecificBuilderAttributes as PlatformSpecificWindowBuilderAttributes, Window,
+	},
 };
 
 pub(crate) use crate::icon::NoIcon as PlatformIcon;
 
 #[derive(Clone, Copy)]
 pub(crate) struct ScaleChangeArgs {
-    old_scale: f64,
-    new_scale: f64,
+	old_scale: f64,
+	new_scale: f64,
 }
