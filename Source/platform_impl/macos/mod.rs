@@ -20,30 +20,35 @@ pub use self::{
 	app_delegate::{get_aux_state_mut, AuxDelegateState},
 	event_loop::{EventLoop, EventLoopWindowTarget, Proxy as EventLoopProxy},
 	monitor::{MonitorHandle, VideoMode},
-	window::{Id as WindowId, PlatformSpecificWindowBuilderAttributes, UnownedWindow},
+	window::{
+		Id as WindowId,
+		PlatformSpecificWindowBuilderAttributes,
+		UnownedWindow,
+	},
 };
-use crate::{
-	error::OsError as RootOsError, event::DeviceId as RootDeviceId, window::WindowAttributes,
-};
-
 pub(crate) use crate::icon::NoIcon as PlatformIcon;
+use crate::{
+	error::OsError as RootOsError,
+	event::DeviceId as RootDeviceId,
+	window::WindowAttributes,
+};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DeviceId;
 
 impl DeviceId {
-	pub unsafe fn dummy() -> Self {
-		DeviceId
-	}
+	pub unsafe fn dummy() -> Self { DeviceId }
 }
 
-// Constant device ID; to be removed when if backend is updated to report real device IDs.
-pub(crate) const DEVICE_ID: RootDeviceId = RootDeviceId(DeviceId);
+// Constant device ID; to be removed when if backend is updated to report real
+// device IDs.
+pub(crate) const DEVICE_ID:RootDeviceId = RootDeviceId(DeviceId);
 
 pub struct Window {
-	window: Arc<UnownedWindow>,
-	// We keep this around so that it doesn't get dropped until the window does.
-	_delegate: util::IdRef,
+	window:Arc<UnownedWindow>,
+	// We keep this around so that it doesn't get dropped until the window
+	// does.
+	_delegate:util::IdRef,
 }
 
 #[derive(Debug)]
@@ -57,17 +62,16 @@ unsafe impl Sync for Window {}
 
 impl Deref for Window {
 	type Target = UnownedWindow;
+
 	#[inline]
-	fn deref(&self) -> &Self::Target {
-		&*self.window
-	}
+	fn deref(&self) -> &Self::Target { &*self.window }
 }
 
 impl Window {
-	pub fn new<T: 'static>(
-		_window_target: &EventLoopWindowTarget<T>,
-		attributes: WindowAttributes,
-		pl_attribs: PlatformSpecificWindowBuilderAttributes,
+	pub fn new<T:'static>(
+		_window_target:&EventLoopWindowTarget<T>,
+		attributes:WindowAttributes,
+		pl_attribs:PlatformSpecificWindowBuilderAttributes,
 	) -> Result<Self, RootOsError> {
 		let (window, _delegate) = UnownedWindow::new(attributes, pl_attribs)?;
 		Ok(Window { window, _delegate })
@@ -75,7 +79,7 @@ impl Window {
 }
 
 impl fmt::Display for OsError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			OsError::CGError(e) => f.pad(&format!("CGError {}", e)),
 			OsError::CreationError(e) => f.pad(e),

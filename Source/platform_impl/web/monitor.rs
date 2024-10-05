@@ -7,20 +7,16 @@ use crate::{
 pub struct Handle;
 
 impl Handle {
-	pub fn scale_factor(&self) -> f64 {
-		1.0
-	}
+	pub fn scale_factor(&self) -> f64 { 1.0 }
 
 	pub fn position(&self) -> PhysicalPosition<i32> {
-		PhysicalPosition { x: 0, y: 0 }
+		PhysicalPosition { x:0, y:0 }
 	}
 
-	pub fn name(&self) -> Option<String> {
-		None
-	}
+	pub fn name(&self) -> Option<String> { None }
 
 	pub fn size(&self) -> PhysicalSize<u32> {
-		PhysicalSize { width: 0, height: 0 }
+		PhysicalSize { width:0, height:0 }
 	}
 
 	pub fn video_modes(&self) -> impl Iterator<Item = VideoMode> {
@@ -40,11 +36,7 @@ impl Mode {
 		unimplemented!();
 	}
 
-	pub fn refresh_rate(&self) -> u16 {
-		32
-	}
+	pub fn refresh_rate(&self) -> u16 { 32 }
 
-	pub fn monitor(&self) -> MonitorHandle {
-		MonitorHandle { inner: Handle }
-	}
+	pub fn monitor(&self) -> MonitorHandle { MonitorHandle { inner:Handle } }
 }

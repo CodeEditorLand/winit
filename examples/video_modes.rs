@@ -9,7 +9,7 @@ fn main() {
 		None => {
 			println!("No primary monitor detected.");
 			return;
-		}
+		},
 	};
 
 	println!("Listing available video modes:");

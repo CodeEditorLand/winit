@@ -11,50 +11,56 @@ pub enum ExternalError {
 	Os(OsError),
 }
 
-/// The error type for when the requested operation is not supported by the backend.
+/// The error type for when the requested operation is not supported by the
+/// backend.
 #[derive(Clone)]
 pub struct NotSupportedError {
-	_marker: (),
+	_marker:(),
 }
 
 /// The error type for when the OS cannot perform the requested operation.
 #[derive(Debug)]
 pub struct OsError {
-	line: u32,
-	file: &'static str,
-	error: platform_impl::OsError,
+	line:u32,
+	file:&'static str,
+	error:platform_impl::OsError,
 }
 
 impl NotSupportedError {
 	#[inline]
 	#[allow(dead_code)]
 	pub(crate) fn new() -> NotSupportedError {
-		NotSupportedError { _marker: () }
+		NotSupportedError { _marker:() }
 	}
 }
 
 impl OsError {
 	#[allow(dead_code)]
-	pub(crate) fn new(line: u32, file: &'static str, error: platform_impl::OsError) -> OsError {
+	pub(crate) fn new(
+		line:u32,
+		file:&'static str,
+		error:platform_impl::OsError,
+	) -> OsError {
 		OsError { line, file, error }
 	}
 }
 
 #[allow(unused_macros)]
 macro_rules! os_error {
-	($error:expr) => {{
-		crate::error::OsError::new(line!(), file!(), $error)
-	}};
+	($error:expr) => {{ crate::error::OsError::new(line!(), file!(), $error) }};
 }
 
 impl fmt::Display for OsError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-		f.pad(&format!("os error at {}:{}: {}", self.file, self.line, self.error))
+	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+		f.pad(&format!(
+			"os error at {}:{}: {}",
+			self.file, self.line, self.error
+		))
 	}
 }
 
 impl fmt::Display for ExternalError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
 		match self {
 			ExternalError::NotSupported(e) => e.fmt(f),
 			ExternalError::Os(e) => e.fmt(f),
@@ -63,13 +69,13 @@ impl fmt::Display for ExternalError {
 }
 
 impl fmt::Debug for NotSupportedError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
 		f.debug_struct("NotSupportedError").finish()
 	}
 }
 
 impl fmt::Display for NotSupportedError {
-	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
 		f.pad("the requested operation is not supported by Winit")
 	}
 }

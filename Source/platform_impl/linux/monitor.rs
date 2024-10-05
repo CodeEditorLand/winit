@@ -8,24 +8,16 @@ pub struct MonitorHandle;
 
 impl MonitorHandle {
 	#[inline]
-	pub fn name(&self) -> Option<String> {
-		todo!()
-	}
+	pub fn name(&self) -> Option<String> { todo!() }
 
 	#[inline]
-	pub fn size(&self) -> PhysicalSize<u32> {
-		todo!()
-	}
+	pub fn size(&self) -> PhysicalSize<u32> { todo!() }
 
 	#[inline]
-	pub fn position(&self) -> PhysicalPosition<i32> {
-		todo!()
-	}
+	pub fn position(&self) -> PhysicalPosition<i32> { todo!() }
 
 	#[inline]
-	pub fn scale_factor(&self) -> f64 {
-		todo!()
-	}
+	pub fn scale_factor(&self) -> f64 { todo!() }
 
 	#[inline]
 	pub fn video_modes(&self) -> Box<dyn Iterator<Item = RootVideoMode>> {
@@ -38,22 +30,14 @@ pub struct VideoMode;
 
 impl VideoMode {
 	#[inline]
-	pub fn size(&self) -> PhysicalSize<u32> {
-		todo!()
-	}
+	pub fn size(&self) -> PhysicalSize<u32> { todo!() }
 
 	#[inline]
-	pub fn bit_depth(&self) -> u16 {
-		todo!()
-	}
+	pub fn bit_depth(&self) -> u16 { todo!() }
 
 	#[inline]
-	pub fn refresh_rate(&self) -> u16 {
-		todo!()
-	}
+	pub fn refresh_rate(&self) -> u16 { todo!() }
 
 	#[inline]
-	pub fn monitor(&self) -> RootMonitorHandle {
-		todo!()
-	}
+	pub fn monitor(&self) -> RootMonitorHandle { todo!() }
 }

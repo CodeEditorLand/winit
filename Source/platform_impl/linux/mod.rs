@@ -12,13 +12,21 @@ mod window;
 
 pub use event_loop::{EventLoop, EventLoopProxy, EventLoopWindowTarget};
 pub use monitor::{MonitorHandle, VideoMode};
-pub use window::{PlatformIcon, PlatformSpecificWindowBuilderAttributes, Window, WindowId};
+pub use window::{
+	PlatformIcon,
+	PlatformSpecificWindowBuilderAttributes,
+	Window,
+	WindowId,
+};
 
 #[derive(Debug, Clone)]
 pub struct OsError;
 
 impl std::fmt::Display for OsError {
-	fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+	fn fmt(
+		&self,
+		_f:&mut std::fmt::Formatter<'_>,
+	) -> Result<(), std::fmt::Error> {
 		Ok(())
 	}
 }
@@ -27,7 +35,5 @@ impl std::fmt::Display for OsError {
 pub struct DeviceId(usize);
 
 impl DeviceId {
-	pub unsafe fn dummy() -> Self {
-		Self(0)
-	}
+	pub unsafe fn dummy() -> Self { Self(0) }
 }

@@ -1,10 +1,13 @@
 //! The `Event` enum and assorted supporting types.
 //!
-//! These are sent to the closure given to [`EventLoop::run(...)`][event_loop_run], where they get
-//! processed and used to modify the program state. For more details, see the root-level documentation.
+//! These are sent to the closure given to
+//! [`EventLoop::run(...)`][event_loop_run], where they get processed and used
+//! to modify the program state. For more details, see the root-level
+//! documentation.
 //!
-//! Some of these events represent different "parts" of a traditional event-handling loop. You could
-//! approximate the basic ordering loop of [`EventLoop::run(...)`][event_loop_run] like this:
+//! Some of these events represent different "parts" of a traditional
+//! event-handling loop. You could approximate the basic ordering loop of
+//! [`EventLoop::run(...)`][event_loop_run] like this:
 //!
 //! ```rust,ignore
 //! let mut control_flow = ControlFlow::Poll;
@@ -33,8 +36,9 @@
 //! describes what happens in what order.
 //!
 //! [event_loop_run]: crate::event_loop::EventLoop::run
-use instant::Instant;
 use std::path::PathBuf;
+
+use instant::Instant;
 
 use crate::{
 	dpi::{PhysicalPosition, PhysicalSize},
@@ -44,24 +48,28 @@ use crate::{
 
 /// Describes a generic event.
 ///
-/// See the module-level docs for more information on the event loop manages each event.
+/// See the module-level docs for more information on the event loop manages
+/// each event.
 #[derive(Debug, PartialEq)]
-pub enum Event<'a, T: 'static> {
+pub enum Event<'a, T:'static> {
 	/// Emitted when new events arrive from the OS to be processed.
 	///
-	/// This event type is useful as a place to put code that should be done before you start
-	/// processing events, such as updating frame timing information for benchmarking or checking
+	/// This event type is useful as a place to put code that should be done
+	/// before you start processing events, such as updating frame timing
+	/// information for benchmarking or checking
 	/// the [`StartCause`][crate::event::StartCause] to see if a timer set by
-	/// [`ControlFlow::WaitUntil`](crate::event_loop::ControlFlow::WaitUntil) has elapsed.
+	/// [`ControlFlow::WaitUntil`](crate::event_loop::ControlFlow::WaitUntil)
+	/// has elapsed.
 	NewEvents(StartCause),
 
 	/// Emitted when the OS sends an event to a winit window.
-	WindowEvent { window_id: WindowId, event: WindowEvent<'a> },
+	WindowEvent { window_id:WindowId, event:WindowEvent<'a> },
 
 	/// Emitted when the OS sends an event to a device.
-	DeviceEvent { device_id: DeviceId, event: DeviceEvent },
+	DeviceEvent { device_id:DeviceId, event:DeviceEvent },
 
-	/// Emitted when an event is sent from [`EventLoopProxy::send_event`](crate::event_loop::EventLoopProxy::send_event)
+	/// Emitted when an event is sent from
+	/// [`EventLoopProxy::send_event`](crate::event_loop::EventLoopProxy::send_event)
 	UserEvent(T),
 
 	/// Emitted when the application has been suspended.
@@ -70,59 +78,64 @@ pub enum Event<'a, T: 'static> {
 	/// Emitted when the application has been resumed.
 	Resumed,
 
-	/// Emitted when all of the event loop's input events have been processed and redraw processing
-	/// is about to begin.
+	/// Emitted when all of the event loop's input events have been processed
+	/// and redraw processing is about to begin.
 	///
-	/// This event is useful as a place to put your code that should be run after all
-	/// state-changing events have been handled and you want to do stuff (updating state, performing
-	/// calculations, etc) that happens as the "main body" of your event loop. If your program only draws
-	/// graphics when something changes, it's usually better to do it in response to
-	/// [`Event::RedrawRequested`](crate::event::Event::RedrawRequested), which gets emitted
-	/// immediately after this event. Programs that draw graphics continuously, like most games,
-	/// can render here unconditionally for simplicity.
+	/// This event is useful as a place to put your code that should be run
+	/// after all state-changing events have been handled and you want to do
+	/// stuff (updating state, performing calculations, etc) that happens as
+	/// the "main body" of your event loop. If your program only draws graphics
+	/// when something changes, it's usually better to do it in response to
+	/// [`Event::RedrawRequested`](crate::event::Event::RedrawRequested), which
+	/// gets emitted immediately after this event. Programs that draw graphics
+	/// continuously, like most games, can render here unconditionally for
+	/// simplicity.
 	MainEventsCleared,
 
 	/// Emitted after `MainEventsCleared` when a window should be redrawn.
 	///
 	/// This gets triggered in two scenarios:
-	/// - The OS has performed an operation that's invalidated the window's contents (such as
-	///   resizing the window).
+	/// - The OS has performed an operation that's invalidated the window's
+	///   contents (such as resizing the window).
 	/// - The application has explicitly requested a redraw via
 	///   [`Window::request_redraw`](crate::window::Window::request_redraw).
 	///
-	/// During each iteration of the event loop, Winit will aggregate duplicate redraw requests
-	/// into a single event, to help avoid duplicating rendering work.
+	/// During each iteration of the event loop, Winit will aggregate duplicate
+	/// redraw requests into a single event, to help avoid duplicating
+	/// rendering work.
 	///
-	/// Mainly of interest to applications with mostly-static graphics that avoid redrawing unless
-	/// something changes, like most non-game GUIs.
+	/// Mainly of interest to applications with mostly-static graphics that
+	/// avoid redrawing unless something changes, like most non-game GUIs.
 	RedrawRequested(WindowId),
 
-	/// Emitted after all `RedrawRequested` events have been processed and control flow is about to
-	/// be taken away from the program. If there are no `RedrawRequested` events, it is emitted
-	/// immediately after `MainEventsCleared`.
+	/// Emitted after all `RedrawRequested` events have been processed and
+	/// control flow is about to be taken away from the program. If there are
+	/// no `RedrawRequested` events, it is emitted immediately after
+	/// `MainEventsCleared`.
 	///
-	/// This event is useful for doing any cleanup or bookkeeping work after all the rendering
-	/// tasks have been completed.
+	/// This event is useful for doing any cleanup or bookkeeping work after all
+	/// the rendering tasks have been completed.
 	RedrawEventsCleared,
 
 	/// Emitted when the event loop is being shut down.
 	///
-	/// This is irreversable - if this event is emitted, it is guaranteed to be the last event that
-	/// gets emitted. You generally want to treat this as an "do on quit" event.
+	/// This is irreversable - if this event is emitted, it is guaranteed to be
+	/// the last event that gets emitted. You generally want to treat this as
+	/// an "do on quit" event.
 	LoopDestroyed,
 }
 
-impl<T: Clone> Clone for Event<'static, T> {
+impl<T:Clone> Clone for Event<'static, T> {
 	fn clone(&self) -> Self {
 		use self::Event::*;
 		match self {
 			WindowEvent { window_id, event } => {
-				WindowEvent { window_id: *window_id, event: event.clone() }
-			}
+				WindowEvent { window_id:*window_id, event:event.clone() }
+			},
 			UserEvent(event) => UserEvent(event.clone()),
 			DeviceEvent { device_id, event } => {
-				DeviceEvent { device_id: *device_id, event: event.clone() }
-			}
+				DeviceEvent { device_id:*device_id, event:event.clone() }
+			},
 			NewEvents(cause) => NewEvents(cause.clone()),
 			MainEventsCleared => MainEventsCleared,
 			RedrawRequested(wid) => RedrawRequested(*wid),
@@ -139,8 +152,12 @@ impl<'a, T> Event<'a, T> {
 		use self::Event::*;
 		match self {
 			UserEvent(_) => Err(self),
-			WindowEvent { window_id, event } => Ok(WindowEvent { window_id, event }),
-			DeviceEvent { device_id, event } => Ok(DeviceEvent { device_id, event }),
+			WindowEvent { window_id, event } => {
+				Ok(WindowEvent { window_id, event })
+			},
+			DeviceEvent { device_id, event } => {
+				Ok(DeviceEvent { device_id, event })
+			},
 			NewEvents(cause) => Ok(NewEvents(cause)),
 			MainEventsCleared => Ok(MainEventsCleared),
 			RedrawRequested(wid) => Ok(RedrawRequested(wid)),
@@ -151,16 +168,18 @@ impl<'a, T> Event<'a, T> {
 		}
 	}
 
-	/// If the event doesn't contain a reference, turn it into an event with a `'static` lifetime.
-	/// Otherwise, return `None`.
+	/// If the event doesn't contain a reference, turn it into an event with a
+	/// `'static` lifetime. Otherwise, return `None`.
 	pub fn to_static(self) -> Option<Event<'static, T>> {
 		use self::Event::*;
 		match self {
 			WindowEvent { window_id, event } => {
 				event.to_static().map(|event| WindowEvent { window_id, event })
-			}
+			},
 			UserEvent(event) => Some(UserEvent(event)),
-			DeviceEvent { device_id, event } => Some(DeviceEvent { device_id, event }),
+			DeviceEvent { device_id, event } => {
+				Some(DeviceEvent { device_id, event })
+			},
 			NewEvents(cause) => Some(NewEvents(cause)),
 			MainEventsCleared => Some(MainEventsCleared),
 			RedrawRequested(wid) => Some(RedrawRequested(wid)),
@@ -175,30 +194,35 @@ impl<'a, T> Event<'a, T> {
 /// Describes the reason the event loop is resuming.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum StartCause {
-	/// Sent if the time specified by `ControlFlow::WaitUntil` has been reached. Contains the
-	/// moment the timeout was requested and the requested resume time. The actual resume time is
-	/// guaranteed to be equal to or after the requested resume time.
-	ResumeTimeReached { start: Instant, requested_resume: Instant },
+	/// Sent if the time specified by `ControlFlow::WaitUntil` has been reached.
+	/// Contains the moment the timeout was requested and the requested resume
+	/// time. The actual resume time is guaranteed to be equal to or after the
+	/// requested resume time.
+	ResumeTimeReached { start:Instant, requested_resume:Instant },
 
-	/// Sent if the OS has new events to send to the window, after a wait was requested. Contains
-	/// the moment the wait was requested and the resume time, if requested.
-	WaitCancelled { start: Instant, requested_resume: Option<Instant> },
+	/// Sent if the OS has new events to send to the window, after a wait was
+	/// requested. Contains the moment the wait was requested and the resume
+	/// time, if requested.
+	WaitCancelled { start:Instant, requested_resume:Option<Instant> },
 
-	/// Sent if the event loop is being resumed after the loop's control flow was set to
-	/// `ControlFlow::Poll`.
+	/// Sent if the event loop is being resumed after the loop's control flow
+	/// was set to `ControlFlow::Poll`.
 	Poll,
 
-	/// Sent once, immediately after `run` is called. Indicates that the loop was just initialized.
+	/// Sent once, immediately after `run` is called. Indicates that the loop
+	/// was just initialized.
 	Init,
 }
 
 /// Describes an event from a `Window`.
 #[derive(Debug, PartialEq)]
 pub enum WindowEvent<'a> {
-	/// The size of the window has changed. Contains the client area's new dimensions.
+	/// The size of the window has changed. Contains the client area's new
+	/// dimensions.
 	Resized(PhysicalSize<u32>),
 
-	/// The position of the window has changed. Contains the window's new position.
+	/// The position of the window has changed. Contains the window's new
+	/// position.
 	Moved(PhysicalPosition<i32>),
 
 	/// The window has been requested to close.
@@ -209,20 +233,20 @@ pub enum WindowEvent<'a> {
 
 	/// A file has been dropped into the window.
 	///
-	/// When the user drops multiple files at once, this event will be emitted for each file
-	/// separately.
+	/// When the user drops multiple files at once, this event will be emitted
+	/// for each file separately.
 	DroppedFile(PathBuf),
 
 	/// A file is being hovered over the window.
 	///
-	/// When the user hovers multiple files at once, this event will be emitted for each file
-	/// separately.
+	/// When the user hovers multiple files at once, this event will be emitted
+	/// for each file separately.
 	HoveredFile(PathBuf),
 
 	/// A file was hovered, but has exited the window.
 	///
-	/// There will be a single `HoveredFileCancelled` event triggered even if multiple files were
-	/// hovered.
+	/// There will be a single `HoveredFileCancelled` event triggered even if
+	/// multiple files were hovered.
 	HoveredFileCancelled,
 
 	/// The window received a unicode character.
@@ -230,77 +254,84 @@ pub enum WindowEvent<'a> {
 
 	/// The window gained or lost focus.
 	///
-	/// The parameter is true if the window has gained focus, and false if it has lost focus.
+	/// The parameter is true if the window has gained focus, and false if it
+	/// has lost focus.
 	Focused(bool),
 
 	/// An event from the keyboard has been received.
 	KeyboardInput {
-		device_id: DeviceId,
-		input: KeyboardInput,
+		device_id:DeviceId,
+		input:KeyboardInput,
 		/// If `true`, the event was generated synthetically by winit
 		/// in one of the following circumstances:
 		///
 		/// * Synthetic key press events are generated for all keys pressed
 		///   when a window gains focus. Likewise, synthetic key release events
-		///   are generated for all keys pressed when a window goes out of focus.
-		///   ***Currently, this is only functional on X11 and Windows***
+		///   are generated for all keys pressed when a window goes out of
+		///   focus. ***Currently, this is only functional on X11 and
+		///   Windows***
 		///
 		/// Otherwise, this value is always `false`.
-		is_synthetic: bool,
+		is_synthetic:bool,
 	},
 
 	/// The keyboard modifiers have changed.
 	///
 	/// Platform-specific behavior:
-	/// - **Web**: This API is currently unimplemented on the web. This isn't by design - it's an
-	///   issue, and it should get fixed - but it's the current state of the API.
+	/// - **Web**: This API is currently unimplemented on the web. This isn't by
+	///   design - it's an issue, and it should get fixed - but it's the current
+	///   state of the API.
 	ModifiersChanged(ModifiersState),
 
 	/// The cursor has moved on the window.
 	CursorMoved {
-		device_id: DeviceId,
+		device_id:DeviceId,
 
-		/// (x,y) coords in pixels relative to the top-left corner of the window. Because the range of this data is
-		/// limited by the display area and it may have been transformed by the OS to implement effects such as cursor
-		/// acceleration, it should not be used to implement non-cursor-like interactions such as 3D camera control.
-		position: PhysicalPosition<f64>,
+		/// (x,y) coords in pixels relative to the top-left corner of the
+		/// window. Because the range of this data is limited by the display
+		/// area and it may have been transformed by the OS to implement
+		/// effects such as cursor acceleration, it should not be used to
+		/// implement non-cursor-like interactions such as 3D camera control.
+		position:PhysicalPosition<f64>,
 		#[deprecated = "Deprecated in favor of WindowEvent::ModifiersChanged"]
-		modifiers: ModifiersState,
+		modifiers:ModifiersState,
 	},
 
 	/// The cursor has entered the window.
-	CursorEntered { device_id: DeviceId },
+	CursorEntered { device_id:DeviceId },
 
 	/// The cursor has left the window.
-	CursorLeft { device_id: DeviceId },
+	CursorLeft { device_id:DeviceId },
 
 	/// A mouse wheel movement or touchpad scroll occurred.
 	MouseWheel {
-		device_id: DeviceId,
-		delta: MouseScrollDelta,
-		phase: TouchPhase,
+		device_id:DeviceId,
+		delta:MouseScrollDelta,
+		phase:TouchPhase,
 		#[deprecated = "Deprecated in favor of WindowEvent::ModifiersChanged"]
-		modifiers: ModifiersState,
+		modifiers:ModifiersState,
 	},
 
 	/// An mouse button press has been received.
 	MouseInput {
-		device_id: DeviceId,
-		state: ElementState,
-		button: MouseButton,
+		device_id:DeviceId,
+		state:ElementState,
+		button:MouseButton,
 		#[deprecated = "Deprecated in favor of WindowEvent::ModifiersChanged"]
-		modifiers: ModifiersState,
+		modifiers:ModifiersState,
 	},
 
 	/// Touchpad pressure event.
 	///
 	/// At the moment, only supported on Apple forcetouch-capable macbooks.
-	/// The parameters are: pressure level (value between 0 and 1 representing how hard the touchpad
-	/// is being pressed) and stage (integer representing the click level).
-	TouchpadPressure { device_id: DeviceId, pressure: f32, stage: i64 },
+	/// The parameters are: pressure level (value between 0 and 1 representing
+	/// how hard the touchpad is being pressed) and stage (integer representing
+	/// the click level).
+	TouchpadPressure { device_id:DeviceId, pressure:f32, stage:i64 },
 
-	/// Motion on some analog axis. May report data redundant to other, more specific events.
-	AxisMotion { device_id: DeviceId, axis: AxisId, value: f64 },
+	/// Motion on some analog axis. May report data redundant to other, more
+	/// specific events.
+	AxisMotion { device_id:DeviceId, axis:AxisId, value:f64 },
 
 	/// Touch event has been received
 	Touch(Touch),
@@ -310,20 +341,26 @@ pub enum WindowEvent<'a> {
 	/// The following user actions can cause DPI changes:
 	///
 	/// * Changing the display's resolution.
-	/// * Changing the display's scale factor (e.g. in Control Panel on Windows).
+	/// * Changing the display's scale factor (e.g. in Control Panel on
+	///   Windows).
 	/// * Moving the window to a display with a different scale factor.
 	///
-	/// After this event callback has been processed, the window will be resized to whatever value
-	/// is pointed to by the `new_inner_size` reference. By default, this will contain the size suggested
-	/// by the OS, but it can be changed to any value.
+	/// After this event callback has been processed, the window will be resized
+	/// to whatever value is pointed to by the `new_inner_size` reference. By
+	/// default, this will contain the size suggested by the OS, but it can be
+	/// changed to any value.
 	///
-	/// For more information about DPI in general, see the [`dpi`](crate::dpi) module.
-	ScaleFactorChanged { scale_factor: f64, new_inner_size: &'a mut PhysicalSize<u32> },
+	/// For more information about DPI in general, see the [`dpi`](crate::dpi)
+	/// module.
+	ScaleFactorChanged {
+		scale_factor:f64,
+		new_inner_size:&'a mut PhysicalSize<u32>,
+	},
 
 	/// The system window theme has changed.
 	///
-	/// Applications might wish to react to this to change the theme of the content of the window
-	/// when the system changes the window theme.
+	/// Applications might wish to react to this to change the theme of the
+	/// content of the window when the system changes the window theme.
 	///
 	/// At the moment this is only supported on Windows.
 	ThemeChanged(Theme),
@@ -343,41 +380,61 @@ impl Clone for WindowEvent<'static> {
 			ReceivedCharacter(c) => ReceivedCharacter(*c),
 			Focused(f) => Focused(*f),
 			KeyboardInput { device_id, input, is_synthetic } => {
-				KeyboardInput { device_id: *device_id, input: *input, is_synthetic: *is_synthetic }
-			}
+				KeyboardInput {
+					device_id:*device_id,
+					input:*input,
+					is_synthetic:*is_synthetic,
+				}
+			},
 
 			ModifiersChanged(modifiers) => ModifiersChanged(modifiers.clone()),
 			#[allow(deprecated)]
 			CursorMoved { device_id, position, modifiers } => {
-				CursorMoved { device_id: *device_id, position: *position, modifiers: *modifiers }
-			}
-			CursorEntered { device_id } => CursorEntered { device_id: *device_id },
-			CursorLeft { device_id } => CursorLeft { device_id: *device_id },
+				CursorMoved {
+					device_id:*device_id,
+					position:*position,
+					modifiers:*modifiers,
+				}
+			},
+			CursorEntered { device_id } => {
+				CursorEntered { device_id:*device_id }
+			},
+			CursorLeft { device_id } => CursorLeft { device_id:*device_id },
 			#[allow(deprecated)]
-			MouseWheel { device_id, delta, phase, modifiers } => MouseWheel {
-				device_id: *device_id,
-				delta: *delta,
-				phase: *phase,
-				modifiers: *modifiers,
+			MouseWheel { device_id, delta, phase, modifiers } => {
+				MouseWheel {
+					device_id:*device_id,
+					delta:*delta,
+					phase:*phase,
+					modifiers:*modifiers,
+				}
 			},
 			#[allow(deprecated)]
-			MouseInput { device_id, state, button, modifiers } => MouseInput {
-				device_id: *device_id,
-				state: *state,
-				button: *button,
-				modifiers: *modifiers,
+			MouseInput { device_id, state, button, modifiers } => {
+				MouseInput {
+					device_id:*device_id,
+					state:*state,
+					button:*button,
+					modifiers:*modifiers,
+				}
 			},
 			TouchpadPressure { device_id, pressure, stage } => {
-				TouchpadPressure { device_id: *device_id, pressure: *pressure, stage: *stage }
-			}
+				TouchpadPressure {
+					device_id:*device_id,
+					pressure:*pressure,
+					stage:*stage,
+				}
+			},
 			AxisMotion { device_id, axis, value } => {
-				AxisMotion { device_id: *device_id, axis: *axis, value: *value }
-			}
+				AxisMotion { device_id:*device_id, axis:*axis, value:*value }
+			},
 			Touch(touch) => Touch(*touch),
 			ThemeChanged(theme) => ThemeChanged(theme.clone()),
 			ScaleFactorChanged { .. } => {
-				unreachable!("Static event can't be about scale factor changing")
-			}
+				unreachable!(
+					"Static event can't be about scale factor changing"
+				)
+			},
 		};
 	}
 }
@@ -397,26 +454,28 @@ impl<'a> WindowEvent<'a> {
 			Focused(focused) => Some(Focused(focused)),
 			KeyboardInput { device_id, input, is_synthetic } => {
 				Some(KeyboardInput { device_id, input, is_synthetic })
-			}
+			},
 			ModifiersChanged(modifiers) => Some(ModifiersChanged(modifiers)),
 			#[allow(deprecated)]
 			CursorMoved { device_id, position, modifiers } => {
 				Some(CursorMoved { device_id, position, modifiers })
-			}
+			},
 			CursorEntered { device_id } => Some(CursorEntered { device_id }),
 			CursorLeft { device_id } => Some(CursorLeft { device_id }),
 			#[allow(deprecated)]
 			MouseWheel { device_id, delta, phase, modifiers } => {
 				Some(MouseWheel { device_id, delta, phase, modifiers })
-			}
+			},
 			#[allow(deprecated)]
 			MouseInput { device_id, state, button, modifiers } => {
 				Some(MouseInput { device_id, state, button, modifiers })
-			}
+			},
 			TouchpadPressure { device_id, pressure, stage } => {
 				Some(TouchpadPressure { device_id, pressure, stage })
-			}
-			AxisMotion { device_id, axis, value } => Some(AxisMotion { device_id, axis, value }),
+			},
+			AxisMotion { device_id, axis, value } => {
+				Some(AxisMotion { device_id, axis, value })
+			},
 			Touch(touch) => Some(Touch(touch)),
 			ThemeChanged(theme) => Some(ThemeChanged(theme)),
 			ScaleFactorChanged { .. } => None,
@@ -426,29 +485,33 @@ impl<'a> WindowEvent<'a> {
 
 /// Identifier of an input device.
 ///
-/// Whenever you receive an event arising from a particular input device, this event contains a `DeviceId` which
-/// identifies its origin. Note that devices may be virtual (representing an on-screen cursor and keyboard focus) or
-/// physical. Virtual devices typically aggregate inputs from multiple physical devices.
+/// Whenever you receive an event arising from a particular input device, this
+/// event contains a `DeviceId` which identifies its origin. Note that devices
+/// may be virtual (representing an on-screen cursor and keyboard focus) or
+/// physical. Virtual devices typically aggregate inputs from multiple physical
+/// devices.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DeviceId(pub(crate) platform_impl::DeviceId);
 
 impl DeviceId {
-	/// Returns a dummy `DeviceId`, useful for unit testing. The only guarantee made about the return
-	/// value of this function is that it will always be equal to itself and to future values returned
-	/// by this function.  No other guarantees are made. This may be equal to a real `DeviceId`.
+	/// Returns a dummy `DeviceId`, useful for unit testing. The only guarantee
+	/// made about the return value of this function is that it will always be
+	/// equal to itself and to future values returned by this function.  No
+	/// other guarantees are made. This may be equal to a real `DeviceId`.
 	///
-	/// **Passing this into a winit function will result in undefined behavior.**
-	pub unsafe fn dummy() -> Self {
-		DeviceId(platform_impl::DeviceId::dummy())
-	}
+	/// **Passing this into a winit function will result in undefined
+	/// behavior.**
+	pub unsafe fn dummy() -> Self { DeviceId(platform_impl::DeviceId::dummy()) }
 }
 
-/// Represents raw hardware events that are not associated with any particular window.
+/// Represents raw hardware events that are not associated with any particular
+/// window.
 ///
-/// Useful for interactions that diverge significantly from a conventional 2D GUI, such as 3D camera or first-person
-/// game controls. Many physical actions, such as mouse movement, can produce both device and window events. Because
-/// window events typically arise from virtual devices (corresponding to GUI cursors and keyboard focus) the device IDs
-/// may not match.
+/// Useful for interactions that diverge significantly from a conventional 2D
+/// GUI, such as 3D camera or first-person game controls. Many physical actions,
+/// such as mouse movement, can produce both device and window events. Because
+/// window events typically arise from virtual devices (corresponding to GUI
+/// cursors and keyboard focus) the device IDs may not match.
 ///
 /// Note that these events are delivered regardless of input focus.
 #[derive(Clone, Debug, PartialEq)]
@@ -458,36 +521,38 @@ pub enum DeviceEvent {
 
 	/// Change in physical position of a pointing device.
 	///
-	/// This represents raw, unfiltered physical motion. Not to be confused with `WindowEvent::CursorMoved`.
+	/// This represents raw, unfiltered physical motion. Not to be confused with
+	/// `WindowEvent::CursorMoved`.
 	MouseMotion {
 		/// (x, y) change in position in unspecified units.
 		///
 		/// Different devices may use different units.
-		delta: (f64, f64),
+		delta:(f64, f64),
 	},
 
 	/// Physical scroll event
 	MouseWheel {
-		delta: MouseScrollDelta,
+		delta:MouseScrollDelta,
 	},
 
-	/// Motion on some analog axis.  This event will be reported for all arbitrary input devices
-	/// that winit supports on this platform, including mouse devices.  If the device is a mouse
-	/// device then this will be reported alongside the MouseMotion event.
+	/// Motion on some analog axis.  This event will be reported for all
+	/// arbitrary input devices that winit supports on this platform, including
+	/// mouse devices.  If the device is a mouse device then this will be
+	/// reported alongside the MouseMotion event.
 	Motion {
-		axis: AxisId,
-		value: f64,
+		axis:AxisId,
+		value:f64,
 	},
 
 	Button {
-		button: ButtonId,
-		state: ElementState,
+		button:ButtonId,
+		state:ElementState,
 	},
 
 	Key(KeyboardInput),
 
 	Text {
-		codepoint: char,
+		codepoint:char,
 	},
 }
 
@@ -497,25 +562,29 @@ pub enum DeviceEvent {
 pub struct KeyboardInput {
 	/// Identifies the physical key pressed
 	///
-	/// This should not change if the user adjusts the host's keyboard map. Use when the physical location of the
-	/// key is more important than the key's host GUI semantics, such as for movement controls in a first-person
+	/// This should not change if the user adjusts the host's keyboard map. Use
+	/// when the physical location of the key is more important than the key's
+	/// host GUI semantics, such as for movement controls in a first-person
 	/// game.
-	pub scancode: ScanCode,
+	pub scancode:ScanCode,
 
-	pub state: ElementState,
+	pub state:ElementState,
 
 	/// Identifies the semantic meaning of the key
 	///
-	/// Use when the semantics of the key are more important than the physical location of the key, such as when
-	/// implementing appropriate behavior for "page up."
-	pub virtual_keycode: Option<VirtualKeyCode>,
+	/// Use when the semantics of the key are more important than the physical
+	/// location of the key, such as when implementing appropriate behavior
+	/// for "page up."
+	pub virtual_keycode:Option<VirtualKeyCode>,
 
 	/// Modifier keys active at the time of this input.
 	///
-	/// This is tracked internally to avoid tracking errors arising from modifier key state changes when events from
-	/// this device are not being delivered to the application, e.g. due to keyboard focus being elsewhere.
+	/// This is tracked internally to avoid tracking errors arising from
+	/// modifier key state changes when events from this device are not being
+	/// delivered to the application, e.g. due to keyboard focus being
+	/// elsewhere.
 	#[deprecated = "Deprecated in favor of WindowEvent::ModifiersChanged"]
-	pub modifiers: ModifiersState,
+	pub modifiers:ModifiersState,
 }
 
 /// Describes touch-screen input state.
@@ -546,18 +615,18 @@ pub enum TouchPhase {
 /// device against their face.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Touch {
-	pub device_id: DeviceId,
-	pub phase: TouchPhase,
-	pub location: PhysicalPosition<f64>,
-	/// Describes how hard the screen was pressed. May be `None` if the platform
-	/// does not support pressure sensitivity.
+	pub device_id:DeviceId,
+	pub phase:TouchPhase,
+	pub location:PhysicalPosition<f64>,
+	/// Describes how hard the screen was pressed. May be `None` if the
+	/// platform does not support pressure sensitivity.
 	///
 	/// ## Platform-specific
 	///
 	/// - Only available on **iOS** 9.0+ and **Windows** 8+.
-	pub force: Option<Force>,
+	pub force:Option<Force>,
 	/// Unique identifier of a finger.
-	pub id: u64,
+	pub id:u64,
 }
 
 /// Describes the force of a touch event
@@ -567,24 +636,25 @@ pub enum Force {
 	/// roughly the same amount of pressure on the screen regardless of the
 	/// device.
 	Calibrated {
-		/// The force of the touch, where a value of 1.0 represents the force of
-		/// an average touch (predetermined by the system, not user-specific).
+		/// The force of the touch, where a value of 1.0 represents the force
+		/// of an average touch (predetermined by the system, not
+		/// user-specific).
 		///
-		/// The force reported by Apple Pencil is measured along the axis of the
-		/// pencil. If you want a force perpendicular to the device, you need to
-		/// calculate this value using the `altitude_angle` value.
-		force: f64,
+		/// The force reported by Apple Pencil is measured along the axis of
+		/// the pencil. If you want a force perpendicular to the device, you
+		/// need to calculate this value using the `altitude_angle` value.
+		force:f64,
 		/// The maximum possible force for a touch.
 		///
 		/// The value of this field is sufficiently high to provide a wide
 		/// dynamic range for values of the `force` field.
-		max_possible_force: f64,
+		max_possible_force:f64,
 		/// The altitude (in radians) of the stylus.
 		///
 		/// A value of 0 radians indicates that the stylus is parallel to the
 		/// surface. The value of this property is Pi/2 when the stylus is
 		/// perpendicular to the surface.
-		altitude_angle: Option<f64>,
+		altitude_angle:Option<f64>,
 	},
 	/// If the platform reports the force as normalized, we have no way of
 	/// knowing how much pressure 1.0 corresponds to – we know it's the maximum
@@ -606,7 +676,7 @@ impl Force {
 					None => *force,
 				};
 				force / max_possible_force
-			}
+			},
 			Force::Normalized(force) => *force,
 		}
 	}
@@ -863,21 +933,16 @@ pub enum VirtualKeyCode {
 
 impl ModifiersState {
 	/// Returns `true` if the shift key is pressed.
-	pub fn shift(&self) -> bool {
-		self.intersects(Self::SHIFT)
-	}
+	pub fn shift(&self) -> bool { self.intersects(Self::SHIFT) }
+
 	/// Returns `true` if the control key is pressed.
-	pub fn ctrl(&self) -> bool {
-		self.intersects(Self::CTRL)
-	}
+	pub fn ctrl(&self) -> bool { self.intersects(Self::CTRL) }
+
 	/// Returns `true` if the alt key is pressed.
-	pub fn alt(&self) -> bool {
-		self.intersects(Self::ALT)
-	}
+	pub fn alt(&self) -> bool { self.intersects(Self::ALT) }
+
 	/// Returns `true` if the logo key is pressed.
-	pub fn logo(&self) -> bool {
-		self.intersects(Self::LOGO)
-	}
+	pub fn logo(&self) -> bool { self.intersects(Self::LOGO) }
 }
 
 bitflags! {
@@ -909,39 +974,38 @@ bitflags! {
 
 #[cfg(feature = "serde")]
 mod modifiers_serde {
-	use super::ModifiersState;
 	use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+	use super::ModifiersState;
 
 	#[derive(Default, Serialize, Deserialize)]
 	#[serde(default)]
 	#[serde(rename = "ModifiersState")]
 	pub struct ModifiersStateSerialize {
-		pub shift: bool,
-		pub ctrl: bool,
-		pub alt: bool,
-		pub logo: bool,
+		pub shift:bool,
+		pub ctrl:bool,
+		pub alt:bool,
+		pub logo:bool,
 	}
 
 	impl Serialize for ModifiersState {
-		fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+		fn serialize<S>(&self, serializer:S) -> Result<S::Ok, S::Error>
 		where
-			S: Serializer,
-		{
+			S: Serializer, {
 			let s = ModifiersStateSerialize {
-				shift: self.shift(),
-				ctrl: self.ctrl(),
-				alt: self.alt(),
-				logo: self.logo(),
+				shift:self.shift(),
+				ctrl:self.ctrl(),
+				alt:self.alt(),
+				logo:self.logo(),
 			};
 			s.serialize(serializer)
 		}
 	}
 
 	impl<'de> Deserialize<'de> for ModifiersState {
-		fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+		fn deserialize<D>(deserializer:D) -> Result<Self, D::Error>
 		where
-			D: Deserializer<'de>,
-		{
+			D: Deserializer<'de>, {
 			let ModifiersStateSerialize { shift, ctrl, alt, logo } =
 				ModifiersStateSerialize::deserialize(deserializer)?;
 			let mut m = ModifiersState::empty();

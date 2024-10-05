@@ -28,7 +28,8 @@
 //! }
 //! ```
 //!
-//! Compile project and then drag resulting .a into Xcode project. Add winit.h to xcode.
+//! Compile project and then drag resulting .a into Xcode project. Add winit.h
+//! to xcode.
 //!
 //! ```ignore
 //! void start_winit_app();
@@ -50,16 +51,17 @@
 //!  - applicationWillResignActive is Suspended
 //!  - applicationWillTerminate is LoopDestroyed
 //!
-//! Keep in mind that after LoopDestroyed event is received every attempt to draw with
-//! opengl will result in segfault.
+//! Keep in mind that after LoopDestroyed event is received every attempt to
+//! draw with opengl will result in segfault.
 //!
-//! Also note that app may not receive the LoopDestroyed event if suspended; it might be SIGKILL'ed.
+//! Also note that app may not receive the LoopDestroyed event if suspended; it
+//! might be SIGKILL'ed.
 
 #![cfg(target_os = "ios")]
 
-// TODO: (mtak-) UIKit requires main thread for virtually all function/method calls. This could be
-// worked around in the future by using GCD (grand central dispatch) and/or caching of values like
-// window size/position.
+// TODO: (mtak-) UIKit requires main thread for virtually all function/method
+// calls. This could be worked around in the future by using GCD (grand central
+// dispatch) and/or caching of values like window size/position.
 macro_rules! assert_main_thread {
     ($($t:tt)*) => {
         if !msg_send![class!(NSThread), isMainThread] {
@@ -82,18 +84,15 @@ pub use self::{
 	monitor::{MonitorHandle, VideoMode},
 	window::{PlatformSpecificWindowBuilderAttributes, Window, WindowId},
 };
-
 pub(crate) use crate::icon::NoIcon as PlatformIcon;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct DeviceId {
-	uiscreen: ffi::id,
+	uiscreen:ffi::id,
 }
 
 impl DeviceId {
-	pub unsafe fn dummy() -> Self {
-		DeviceId { uiscreen: std::ptr::null_mut() }
-	}
+	pub unsafe fn dummy() -> Self { DeviceId { uiscreen:std::ptr::null_mut() } }
 }
 
 unsafe impl Send for DeviceId {}
@@ -103,7 +102,7 @@ unsafe impl Sync for DeviceId {}
 pub enum OsError {}
 
 impl fmt::Display for OsError {
-	fn fmt(&self, _: &mut fmt::Formatter<'_>) -> fmt::Result {
+	fn fmt(&self, _:&mut fmt::Formatter<'_>) -> fmt::Result {
 		match self {
 			_ => unreachable!(),
 		}

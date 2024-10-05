@@ -21,8 +21,10 @@ fn main() {
 	let mut event_loop = EventLoop::new();
 
 	SimpleLogger::new().init().unwrap();
-	let _window =
-		WindowBuilder::new().with_title("A fantastic window!").build(&event_loop).unwrap();
+	let _window = WindowBuilder::new()
+		.with_title("A fantastic window!")
+		.build(&event_loop)
+		.unwrap();
 
 	let mut quit = false;
 
@@ -36,12 +38,15 @@ fn main() {
 			}
 
 			match event {
-				Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
+				Event::WindowEvent {
+					event: WindowEvent::CloseRequested,
+					..
+				} => {
 					quit = true;
-				}
+				},
 				Event::MainEventsCleared => {
 					*control_flow = ControlFlow::Exit;
-				}
+				},
 				_ => (),
 			}
 		});

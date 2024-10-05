@@ -1,6 +1,13 @@
 use simple_logger::SimpleLogger;
 use winit::{
-	event::{DeviceEvent, ElementState, Event, KeyboardInput, ModifiersState, WindowEvent},
+	event::{
+		DeviceEvent,
+		ElementState,
+		Event,
+		KeyboardInput,
+		ModifiersState,
+		WindowEvent,
+	},
 	event_loop::{ControlFlow, EventLoop},
 	window::WindowBuilder,
 };
@@ -20,33 +27,53 @@ fn main() {
 		*control_flow = ControlFlow::Wait;
 
 		match event {
-			Event::WindowEvent { event, .. } => match event {
-				WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-				WindowEvent::KeyboardInput {
-					input:
-						KeyboardInput {
-							state: ElementState::Released, virtual_keycode: Some(key), ..
-						},
-					..
-				} => {
-					use winit::event::VirtualKeyCode::*;
-					match key {
-						Escape => *control_flow = ControlFlow::Exit,
-						G => window.set_cursor_grab(!modifiers.shift()).unwrap(),
-						H => window.set_cursor_visible(modifiers.shift()),
-						_ => (),
-					}
+			Event::WindowEvent { event, .. } => {
+				match event {
+					WindowEvent::CloseRequested => {
+						*control_flow = ControlFlow::Exit
+					},
+					WindowEvent::KeyboardInput {
+						input:
+							KeyboardInput {
+								state: ElementState::Released,
+								virtual_keycode: Some(key),
+								..
+							},
+						..
+					} => {
+						use winit::event::VirtualKeyCode::*;
+						match key {
+							Escape => *control_flow = ControlFlow::Exit,
+							G => {
+								window
+									.set_cursor_grab(!modifiers.shift())
+									.unwrap()
+							},
+							H => window.set_cursor_visible(modifiers.shift()),
+							_ => (),
+						}
+					},
+					WindowEvent::ModifiersChanged(m) => modifiers = m,
+					_ => (),
 				}
-				WindowEvent::ModifiersChanged(m) => modifiers = m,
-				_ => (),
 			},
-			Event::DeviceEvent { event, .. } => match event {
-				DeviceEvent::MouseMotion { delta } => println!("mouse moved: {:?}", delta),
-				DeviceEvent::Button { button, state } => match state {
-					ElementState::Pressed => println!("mouse button {} pressed", button),
-					ElementState::Released => println!("mouse button {} released", button),
-				},
-				_ => (),
+			Event::DeviceEvent { event, .. } => {
+				match event {
+					DeviceEvent::MouseMotion { delta } => {
+						println!("mouse moved: {:?}", delta)
+					},
+					DeviceEvent::Button { button, state } => {
+						match state {
+							ElementState::Pressed => {
+								println!("mouse button {} pressed", button)
+							},
+							ElementState::Released => {
+								println!("mouse button {} released", button)
+							},
+						}
+					},
+					_ => (),
+				}
 			},
 			_ => (),
 		}

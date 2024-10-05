@@ -7,14 +7,29 @@ use objc::{
 
 use crate::{
 	dpi::PhysicalPosition,
-	event::{DeviceId as RootDeviceId, Event, Force, Touch, TouchPhase, WindowEvent},
+	event::{
+		DeviceId as RootDeviceId,
+		Event,
+		Force,
+		Touch,
+		TouchPhase,
+		WindowEvent,
+	},
 	platform::ios::MonitorHandleExtIOS,
 	platform_impl::platform::{
 		app_state::{self, OSCapabilities},
 		event_loop::{self, EventProxy, EventWrapper},
 		ffi::{
-			id, nil, CGFloat, CGPoint, CGRect, UIForceTouchCapability, UIInterfaceOrientationMask,
-			UIRectEdge, UITouchPhase, UITouchType,
+			id,
+			nil,
+			CGFloat,
+			CGPoint,
+			CGRect,
+			UIForceTouchCapability,
+			UIInterfaceOrientationMask,
+			UIRectEdge,
+			UITouchPhase,
+			UITouchType,
 		},
 		window::PlatformSpecificWindowBuilderAttributes,
 		DeviceId,
@@ -81,9 +96,9 @@ macro_rules! add_property {
 }
 
 // requires main thread
-unsafe fn get_view_class(root_view_class: &'static Class) -> &'static Class {
-	static mut CLASSES: Option<HashMap<*const Class, &'static Class>> = None;
-	static mut ID: usize = 0;
+unsafe fn get_view_class(root_view_class:&'static Class) -> &'static Class {
+	static mut CLASSES:Option<HashMap<*const Class, &'static Class>> = None;
+	static mut ID:usize = 0;
 
 	if CLASSES.is_none() {
 		CLASSES = Some(HashMap::default());
@@ -306,18 +321,17 @@ unsafe fn get_view_class(root_view_class: &'static Class) -> &'static Class {
 
 // requires main thread
 unsafe fn get_view_controller_class() -> &'static Class {
-	static mut CLASS: Option<&'static Class> = None;
+	static mut CLASS:Option<&'static Class> = None;
 	if CLASS.is_none() {
 		let os_capabilities = app_state::os_capabilities();
 
 		let uiviewcontroller_class = class!(UIViewController);
 
-		extern fn should_autorotate(_: &Object, _: Sel) -> BOOL {
-			YES
-		}
+		extern fn should_autorotate(_:&Object, _:Sel) -> BOOL { YES }
 
-		let mut decl = ClassDecl::new("WinitUIViewController", uiviewcontroller_class)
-			.expect("Failed to declare class `WinitUIViewController`");
+		let mut decl =
+			ClassDecl::new("WinitUIViewController", uiviewcontroller_class)
+				.expect("Failed to declare class `WinitUIViewController`");
 		decl.add_method(
 			sel!(shouldAutorotate),
 			should_autorotate as extern fn(&Object, Sel) -> BOOL,
@@ -375,34 +389,46 @@ unsafe fn get_view_controller_class() -> &'static Class {
 
 // requires main thread
 unsafe fn get_window_class() -> &'static Class {
-	static mut CLASS: Option<&'static Class> = None;
+	static mut CLASS:Option<&'static Class> = None;
 	if CLASS.is_none() {
 		let uiwindow_class = class!(UIWindow);
 
-		extern fn become_key_window(object: &Object, _: Sel) {
+		extern fn become_key_window(object:&Object, _:Sel) {
 			unsafe {
-				app_state::handle_nonuser_event(EventWrapper::StaticEvent(Event::WindowEvent {
-					window_id: RootWindowId(object.into()),
-					event: WindowEvent::Focused(true),
-				}));
-				let () = msg_send![super(object, class!(UIWindow)), becomeKeyWindow];
+				app_state::handle_nonuser_event(EventWrapper::StaticEvent(
+					Event::WindowEvent {
+						window_id:RootWindowId(object.into()),
+						event:WindowEvent::Focused(true),
+					},
+				));
+				let () =
+					msg_send![super(object, class!(UIWindow)), becomeKeyWindow];
 			}
 		}
 
-		extern fn resign_key_window(object: &Object, _: Sel) {
+		extern fn resign_key_window(object:&Object, _:Sel) {
 			unsafe {
-				app_state::handle_nonuser_event(EventWrapper::StaticEvent(Event::WindowEvent {
-					window_id: RootWindowId(object.into()),
-					event: WindowEvent::Focused(false),
-				}));
-				let () = msg_send![super(object, class!(UIWindow)), resignKeyWindow];
+				app_state::handle_nonuser_event(EventWrapper::StaticEvent(
+					Event::WindowEvent {
+						window_id:RootWindowId(object.into()),
+						event:WindowEvent::Focused(false),
+					},
+				));
+				let () =
+					msg_send![super(object, class!(UIWindow)), resignKeyWindow];
 			}
 		}
 
 		let mut decl = ClassDecl::new("WinitUIWindow", uiwindow_class)
 			.expect("Failed to declare class `WinitUIWindow`");
-		decl.add_method(sel!(becomeKeyWindow), become_key_window as extern fn(&Object, Sel));
-		decl.add_method(sel!(resignKeyWindow), resign_key_window as extern fn(&Object, Sel));
+		decl.add_method(
+			sel!(becomeKeyWindow),
+			become_key_window as extern fn(&Object, Sel),
+		);
+		decl.add_method(
+			sel!(resignKeyWindow),
+			resign_key_window as extern fn(&Object, Sel),
+		);
 
 		CLASS = Some(decl.register());
 	}
@@ -411,19 +437,20 @@ unsafe fn get_window_class() -> &'static Class {
 
 // requires main thread
 pub unsafe fn create_view(
-	_window_attributes: &WindowAttributes,
-	platform_attributes: &PlatformSpecificWindowBuilderAttributes,
-	frame: CGRect,
+	_window_attributes:&WindowAttributes,
+	platform_attributes:&PlatformSpecificWindowBuilderAttributes,
+	frame:CGRect,
 ) -> id {
 	let class = get_view_class(platform_attributes.root_view_class);
 
-	let view: id = msg_send![class, alloc];
+	let view:id = msg_send![class, alloc];
 	assert!(!view.is_null(), "Failed to create `UIView` instance");
-	let view: id = msg_send![view, initWithFrame: frame];
+	let view:id = msg_send![view, initWithFrame: frame];
 	assert!(!view.is_null(), "Failed to initialize `UIView` instance");
 	let () = msg_send![view, setMultipleTouchEnabled: YES];
 	if let Some(scale_factor) = platform_attributes.scale_factor {
-		let () = msg_send![view, setContentScaleFactor: scale_factor as CGFloat];
+		let () =
+			msg_send![view, setContentScaleFactor: scale_factor as CGFloat];
 	}
 
 	view
@@ -431,26 +458,39 @@ pub unsafe fn create_view(
 
 // requires main thread
 pub unsafe fn create_view_controller(
-	_window_attributes: &WindowAttributes,
-	platform_attributes: &PlatformSpecificWindowBuilderAttributes,
-	view: id,
+	_window_attributes:&WindowAttributes,
+	platform_attributes:&PlatformSpecificWindowBuilderAttributes,
+	view:id,
 ) -> id {
 	let class = get_view_controller_class();
 
-	let view_controller: id = msg_send![class, alloc];
-	assert!(!view_controller.is_null(), "Failed to create `UIViewController` instance");
-	let view_controller: id = msg_send![view_controller, init];
-	assert!(!view_controller.is_null(), "Failed to initialize `UIViewController` instance");
-	let status_bar_hidden = if platform_attributes.prefers_status_bar_hidden { YES } else { NO };
-	let idiom = event_loop::get_idiom();
-	let supported_orientations = UIInterfaceOrientationMask::from_valid_orientations_idiom(
-		platform_attributes.valid_orientations,
-		idiom,
+	let view_controller:id = msg_send![class, alloc];
+	assert!(
+		!view_controller.is_null(),
+		"Failed to create `UIViewController` instance"
 	);
+	let view_controller:id = msg_send![view_controller, init];
+	assert!(
+		!view_controller.is_null(),
+		"Failed to initialize `UIViewController` instance"
+	);
+	let status_bar_hidden =
+		if platform_attributes.prefers_status_bar_hidden { YES } else { NO };
+	let idiom = event_loop::get_idiom();
+	let supported_orientations =
+		UIInterfaceOrientationMask::from_valid_orientations_idiom(
+			platform_attributes.valid_orientations,
+			idiom,
+		);
 	let prefers_home_indicator_hidden =
-		if platform_attributes.prefers_home_indicator_hidden { YES } else { NO };
-	let edges: UIRectEdge =
-		platform_attributes.preferred_screen_edges_deferring_system_gestures.into();
+		if platform_attributes.prefers_home_indicator_hidden {
+			YES
+		} else {
+			NO
+		};
+	let edges:UIRectEdge = platform_attributes
+		.preferred_screen_edges_deferring_system_gestures
+		.into();
 	let () = msg_send![
 		view_controller,
 		setPrefersStatusBarHidden: status_bar_hidden
@@ -473,16 +513,16 @@ pub unsafe fn create_view_controller(
 
 // requires main thread
 pub unsafe fn create_window(
-	window_attributes: &WindowAttributes,
-	_platform_attributes: &PlatformSpecificWindowBuilderAttributes,
-	frame: CGRect,
-	view_controller: id,
+	window_attributes:&WindowAttributes,
+	_platform_attributes:&PlatformSpecificWindowBuilderAttributes,
+	frame:CGRect,
+	view_controller:id,
 ) -> id {
 	let class = get_window_class();
 
-	let window: id = msg_send![class, alloc];
+	let window:id = msg_send![class, alloc];
 	assert!(!window.is_null(), "Failed to create `UIWindow` instance");
-	let window: id = msg_send![window, initWithFrame: frame];
+	let window:id = msg_send![window, initWithFrame: frame];
 	assert!(!window.is_null(), "Failed to initialize `UIWindow` instance");
 	let () = msg_send![window, setRootViewController: view_controller];
 	match window_attributes.fullscreen {
@@ -490,18 +530,18 @@ pub unsafe fn create_window(
 			let uiscreen = video_mode.monitor().ui_screen() as id;
 			let () = msg_send![uiscreen, setCurrentMode: video_mode.video_mode.screen_mode.0];
 			msg_send![window, setScreen:video_mode.monitor().ui_screen()]
-		}
+		},
 		Some(Fullscreen::Borderless(ref monitor)) => {
-			let uiscreen: id = match &monitor {
+			let uiscreen:id = match &monitor {
 				Some(monitor) => monitor.ui_screen() as id,
 				None => {
-					let uiscreen: id = msg_send![window, screen];
+					let uiscreen:id = msg_send![window, screen];
 					uiscreen
-				}
+				},
 			};
 
 			msg_send![window, setScreen: uiscreen]
-		}
+		},
 		None => (),
 	}
 
@@ -509,41 +549,52 @@ pub unsafe fn create_window(
 }
 
 pub fn create_delegate_class() {
-	extern fn did_finish_launching(_: &mut Object, _: Sel, _: id, _: id) -> BOOL {
+	extern fn did_finish_launching(_:&mut Object, _:Sel, _:id, _:id) -> BOOL {
 		unsafe {
 			app_state::did_finish_launching();
 		}
 		YES
 	}
 
-	extern fn did_become_active(_: &Object, _: Sel, _: id) {
-		unsafe { app_state::handle_nonuser_event(EventWrapper::StaticEvent(Event::Resumed)) }
-	}
-
-	extern fn will_resign_active(_: &Object, _: Sel, _: id) {
-		unsafe { app_state::handle_nonuser_event(EventWrapper::StaticEvent(Event::Suspended)) }
-	}
-
-	extern fn will_enter_foreground(_: &Object, _: Sel, _: id) {}
-	extern fn did_enter_background(_: &Object, _: Sel, _: id) {}
-
-	extern fn will_terminate(_: &Object, _: Sel, _: id) {
+	extern fn did_become_active(_:&Object, _:Sel, _:id) {
 		unsafe {
-			let app: id = msg_send![class!(UIApplication), sharedApplication];
-			let windows: id = msg_send![app, windows];
-			let windows_enum: id = msg_send![windows, objectEnumerator];
+			app_state::handle_nonuser_event(EventWrapper::StaticEvent(
+				Event::Resumed,
+			))
+		}
+	}
+
+	extern fn will_resign_active(_:&Object, _:Sel, _:id) {
+		unsafe {
+			app_state::handle_nonuser_event(EventWrapper::StaticEvent(
+				Event::Suspended,
+			))
+		}
+	}
+
+	extern fn will_enter_foreground(_:&Object, _:Sel, _:id) {}
+	extern fn did_enter_background(_:&Object, _:Sel, _:id) {}
+
+	extern fn will_terminate(_:&Object, _:Sel, _:id) {
+		unsafe {
+			let app:id = msg_send![class!(UIApplication), sharedApplication];
+			let windows:id = msg_send![app, windows];
+			let windows_enum:id = msg_send![windows, objectEnumerator];
 			let mut events = Vec::new();
 			loop {
-				let window: id = msg_send![windows_enum, nextObject];
+				let window:id = msg_send![windows_enum, nextObject];
 				if window == nil {
 					break;
 				}
-				let is_winit_window: BOOL = msg_send![window, isKindOfClass: class!(WinitUIWindow)];
+				let is_winit_window:BOOL =
+					msg_send![window, isKindOfClass: class!(WinitUIWindow)];
 				if is_winit_window == YES {
-					events.push(EventWrapper::StaticEvent(Event::WindowEvent {
-						window_id: RootWindowId(window.into()),
-						event: WindowEvent::Destroyed,
-					}));
+					events.push(EventWrapper::StaticEvent(
+						Event::WindowEvent {
+							window_id:RootWindowId(window.into()),
+							event:WindowEvent::Destroyed,
+						},
+					));
 				}
 			}
 			app_state::handle_nonuser_events(events);
@@ -552,8 +603,8 @@ pub fn create_delegate_class() {
 	}
 
 	let ui_responder = class!(UIResponder);
-	let mut decl =
-		ClassDecl::new("AppDelegate", ui_responder).expect("Failed to declare class `AppDelegate`");
+	let mut decl = ClassDecl::new("AppDelegate", ui_responder)
+		.expect("Failed to declare class `AppDelegate`");
 
 	unsafe {
 		decl.add_method(

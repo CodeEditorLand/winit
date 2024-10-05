@@ -23,22 +23,26 @@ fn main() {
 		*control_flow = ControlFlow::Wait;
 
 		match event {
-			Event::WindowEvent { event, .. } => match event {
-				WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
-				WindowEvent::KeyboardInput {
-					input:
-						KeyboardInput {
-							virtual_keycode: Some(VirtualKeyCode::Space),
-							state: ElementState::Released,
-							..
-						},
-					..
-				} => {
-					resizable = !resizable;
-					println!("Resizable: {}", resizable);
-					window.set_resizable(resizable);
+			Event::WindowEvent { event, .. } => {
+				match event {
+					WindowEvent::CloseRequested => {
+						*control_flow = ControlFlow::Exit
+					},
+					WindowEvent::KeyboardInput {
+						input:
+							KeyboardInput {
+								virtual_keycode: Some(VirtualKeyCode::Space),
+								state: ElementState::Released,
+								..
+							},
+						..
+					} => {
+						resizable = !resizable;
+						println!("Resizable: {}", resizable);
+						window.set_resizable(resizable);
+					},
+					_ => (),
 				}
-				_ => (),
 			},
 			_ => (),
 		};

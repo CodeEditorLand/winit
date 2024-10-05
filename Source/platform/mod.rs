@@ -13,7 +13,8 @@
 //!
 //! - `run_return` (available on `windows`, `unix`, `macos`, and `android`)
 //!
-//! However only the module corresponding to the platform you're compiling to will be available.
+//! However only the module corresponding to the platform you're compiling to
+//! will be available.
 
 pub mod android;
 pub mod ios;

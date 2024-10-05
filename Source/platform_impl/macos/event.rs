@@ -7,7 +7,14 @@ use cocoa::{
 
 use crate::{
 	dpi::LogicalSize,
-	event::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent},
+	event::{
+		ElementState,
+		Event,
+		KeyboardInput,
+		ModifiersState,
+		VirtualKeyCode,
+		WindowEvent,
+	},
 	platform_impl::platform::{
 		util::{IdRef, Never},
 		DEVICE_ID,
@@ -22,15 +29,19 @@ pub enum EventWrapper {
 
 #[derive(Debug, PartialEq)]
 pub enum EventProxy {
-	DpiChangedProxy { ns_window: IdRef, suggested_size: LogicalSize<f64>, scale_factor: f64 },
+	DpiChangedProxy {
+		ns_window:IdRef,
+		suggested_size:LogicalSize<f64>,
+		scale_factor:f64,
+	},
 }
 
-pub fn char_to_keycode(c: char) -> Option<VirtualKeyCode> {
+pub fn char_to_keycode(c:char) -> Option<VirtualKeyCode> {
 	// We only translate keys that are affected by keyboard layout.
 	//
-	// Note that since keys are translated in a somewhat "dumb" way (reading character)
-	// there is a concern that some combination, i.e. Cmd+char, causes the wrong
-	// letter to be received, and so we receive the wrong key.
+	// Note that since keys are translated in a somewhat "dumb" way (reading
+	// character) there is a concern that some combination, i.e. Cmd+char,
+	// causes the wrong letter to be received, and so we receive the wrong key.
 	//
 	// Implementation reference: https://github.com/WebKit/webkit/blob/82bae82cf0f329dbe21059ef0986c4e92fea4ba6/Source/WebCore/platform/cocoa/KeyEventCocoa.mm#L626
 	Some(match c {
@@ -85,7 +96,7 @@ pub fn char_to_keycode(c: char) -> Option<VirtualKeyCode> {
 	})
 }
 
-pub fn scancode_to_keycode(scancode: c_ushort) -> Option<VirtualKeyCode> {
+pub fn scancode_to_keycode(scancode:c_ushort) -> Option<VirtualKeyCode> {
 	Some(match scancode {
 		0x00 => VirtualKeyCode::A,
 		0x01 => VirtualKeyCode::S,
@@ -97,12 +108,12 @@ pub fn scancode_to_keycode(scancode: c_ushort) -> Option<VirtualKeyCode> {
 		0x07 => VirtualKeyCode::X,
 		0x08 => VirtualKeyCode::C,
 		0x09 => VirtualKeyCode::V,
-		//0x0a => World 1,
-		0x0b => VirtualKeyCode::B,
-		0x0c => VirtualKeyCode::Q,
-		0x0d => VirtualKeyCode::W,
-		0x0e => VirtualKeyCode::E,
-		0x0f => VirtualKeyCode::R,
+		// 0x0a => World 1,
+		0x0B => VirtualKeyCode::B,
+		0x0C => VirtualKeyCode::Q,
+		0x0D => VirtualKeyCode::W,
+		0x0E => VirtualKeyCode::E,
+		0x0F => VirtualKeyCode::R,
 		0x10 => VirtualKeyCode::Y,
 		0x11 => VirtualKeyCode::T,
 		0x12 => VirtualKeyCode::Key1,
@@ -113,12 +124,12 @@ pub fn scancode_to_keycode(scancode: c_ushort) -> Option<VirtualKeyCode> {
 		0x17 => VirtualKeyCode::Key5,
 		0x18 => VirtualKeyCode::Equals,
 		0x19 => VirtualKeyCode::Key9,
-		0x1a => VirtualKeyCode::Key7,
-		0x1b => VirtualKeyCode::Minus,
-		0x1c => VirtualKeyCode::Key8,
-		0x1d => VirtualKeyCode::Key0,
-		0x1e => VirtualKeyCode::RBracket,
-		0x1f => VirtualKeyCode::O,
+		0x1A => VirtualKeyCode::Key7,
+		0x1B => VirtualKeyCode::Minus,
+		0x1C => VirtualKeyCode::Key8,
+		0x1D => VirtualKeyCode::Key0,
+		0x1E => VirtualKeyCode::RBracket,
+		0x1F => VirtualKeyCode::O,
 		0x20 => VirtualKeyCode::U,
 		0x21 => VirtualKeyCode::LBracket,
 		0x22 => VirtualKeyCode::I,
@@ -129,44 +140,44 @@ pub fn scancode_to_keycode(scancode: c_ushort) -> Option<VirtualKeyCode> {
 		0x27 => VirtualKeyCode::Apostrophe,
 		0x28 => VirtualKeyCode::K,
 		0x29 => VirtualKeyCode::Semicolon,
-		0x2a => VirtualKeyCode::Backslash,
-		0x2b => VirtualKeyCode::Comma,
-		0x2c => VirtualKeyCode::Slash,
-		0x2d => VirtualKeyCode::N,
-		0x2e => VirtualKeyCode::M,
-		0x2f => VirtualKeyCode::Period,
+		0x2A => VirtualKeyCode::Backslash,
+		0x2B => VirtualKeyCode::Comma,
+		0x2C => VirtualKeyCode::Slash,
+		0x2D => VirtualKeyCode::N,
+		0x2E => VirtualKeyCode::M,
+		0x2F => VirtualKeyCode::Period,
 		0x30 => VirtualKeyCode::Tab,
 		0x31 => VirtualKeyCode::Space,
 		0x32 => VirtualKeyCode::Grave,
 		0x33 => VirtualKeyCode::Back,
-		//0x34 => unkown,
+		// 0x34 => unkown,
 		0x35 => VirtualKeyCode::Escape,
 		0x36 => VirtualKeyCode::RWin,
 		0x37 => VirtualKeyCode::LWin,
 		0x38 => VirtualKeyCode::LShift,
-		//0x39 => Caps lock,
-		0x3a => VirtualKeyCode::LAlt,
-		0x3b => VirtualKeyCode::LControl,
-		0x3c => VirtualKeyCode::RShift,
-		0x3d => VirtualKeyCode::RAlt,
-		0x3e => VirtualKeyCode::RControl,
-		//0x3f => Fn key,
+		// 0x39 => Caps lock,
+		0x3A => VirtualKeyCode::LAlt,
+		0x3B => VirtualKeyCode::LControl,
+		0x3C => VirtualKeyCode::RShift,
+		0x3D => VirtualKeyCode::RAlt,
+		0x3E => VirtualKeyCode::RControl,
+		// 0x3f => Fn key,
 		0x40 => VirtualKeyCode::F17,
 		0x41 => VirtualKeyCode::NumpadDecimal,
-		//0x42 -> unkown,
+		// 0x42 -> unkown,
 		0x43 => VirtualKeyCode::NumpadMultiply,
-		//0x44 => unkown,
+		// 0x44 => unkown,
 		0x45 => VirtualKeyCode::NumpadAdd,
-		//0x46 => unkown,
+		// 0x46 => unkown,
 		0x47 => VirtualKeyCode::Numlock,
-		//0x48 => KeypadClear,
+		// 0x48 => KeypadClear,
 		0x49 => VirtualKeyCode::VolumeUp,
-		0x4a => VirtualKeyCode::VolumeDown,
-		0x4b => VirtualKeyCode::NumpadDivide,
-		0x4c => VirtualKeyCode::NumpadEnter,
-		//0x4d => unkown,
-		0x4e => VirtualKeyCode::NumpadSubtract,
-		0x4f => VirtualKeyCode::F18,
+		0x4A => VirtualKeyCode::VolumeDown,
+		0x4B => VirtualKeyCode::NumpadDivide,
+		0x4C => VirtualKeyCode::NumpadEnter,
+		// 0x4d => unkown,
+		0x4E => VirtualKeyCode::NumpadSubtract,
+		0x4F => VirtualKeyCode::F18,
 		0x50 => VirtualKeyCode::F19,
 		0x51 => VirtualKeyCode::NumpadEquals,
 		0x52 => VirtualKeyCode::Numpad0,
@@ -177,29 +188,29 @@ pub fn scancode_to_keycode(scancode: c_ushort) -> Option<VirtualKeyCode> {
 		0x57 => VirtualKeyCode::Numpad5,
 		0x58 => VirtualKeyCode::Numpad6,
 		0x59 => VirtualKeyCode::Numpad7,
-		0x5a => VirtualKeyCode::F20,
-		0x5b => VirtualKeyCode::Numpad8,
-		0x5c => VirtualKeyCode::Numpad9,
-		0x5d => VirtualKeyCode::Yen,
-		//0x5e => JIS Ro,
-		//0x5f => unkown,
+		0x5A => VirtualKeyCode::F20,
+		0x5B => VirtualKeyCode::Numpad8,
+		0x5C => VirtualKeyCode::Numpad9,
+		0x5D => VirtualKeyCode::Yen,
+		// 0x5e => JIS Ro,
+		// 0x5f => unkown,
 		0x60 => VirtualKeyCode::F5,
 		0x61 => VirtualKeyCode::F6,
 		0x62 => VirtualKeyCode::F7,
 		0x63 => VirtualKeyCode::F3,
 		0x64 => VirtualKeyCode::F8,
 		0x65 => VirtualKeyCode::F9,
-		//0x66 => JIS Eisuu (macOS),
+		// 0x66 => JIS Eisuu (macOS),
 		0x67 => VirtualKeyCode::F11,
-		//0x68 => JIS Kanna (macOS),
+		// 0x68 => JIS Kanna (macOS),
 		0x69 => VirtualKeyCode::F13,
-		0x6a => VirtualKeyCode::F16,
-		0x6b => VirtualKeyCode::F14,
-		//0x6c => unkown,
-		0x6d => VirtualKeyCode::F10,
-		//0x6e => unkown,
-		0x6f => VirtualKeyCode::F12,
-		//0x70 => unkown,
+		0x6A => VirtualKeyCode::F16,
+		0x6B => VirtualKeyCode::F14,
+		// 0x6c => unkown,
+		0x6D => VirtualKeyCode::F10,
+		// 0x6e => unkown,
+		0x6F => VirtualKeyCode::F12,
+		// 0x70 => unkown,
 		0x71 => VirtualKeyCode::F15,
 		0x72 => VirtualKeyCode::Insert,
 		0x73 => VirtualKeyCode::Home,
@@ -209,13 +220,13 @@ pub fn scancode_to_keycode(scancode: c_ushort) -> Option<VirtualKeyCode> {
 		0x77 => VirtualKeyCode::End,
 		0x78 => VirtualKeyCode::F2,
 		0x79 => VirtualKeyCode::PageDown,
-		0x7a => VirtualKeyCode::F1,
-		0x7b => VirtualKeyCode::Left,
-		0x7c => VirtualKeyCode::Right,
-		0x7d => VirtualKeyCode::Down,
-		0x7e => VirtualKeyCode::Up,
-		//0x7f =>  unkown,
-		0xa => VirtualKeyCode::Caret,
+		0x7A => VirtualKeyCode::F1,
+		0x7B => VirtualKeyCode::Left,
+		0x7C => VirtualKeyCode::Right,
+		0x7D => VirtualKeyCode::Down,
+		0x7E => VirtualKeyCode::Up,
+		// 0x7f =>  unkown,
+		0xA => VirtualKeyCode::Caret,
 		_ => return None,
 	})
 }
@@ -223,13 +234,13 @@ pub fn scancode_to_keycode(scancode: c_ushort) -> Option<VirtualKeyCode> {
 // While F1-F20 have scancodes we can match on, we have to check against UTF-16
 // constants for the rest.
 // https://developer.apple.com/documentation/appkit/1535851-function-key_unicodes?preferredLanguage=occ
-pub fn check_function_keys(string: &str) -> Option<VirtualKeyCode> {
+pub fn check_function_keys(string:&str) -> Option<VirtualKeyCode> {
 	if let Some(ch) = string.encode_utf16().next() {
 		return Some(match ch {
-			0xf718 => VirtualKeyCode::F21,
-			0xf719 => VirtualKeyCode::F22,
-			0xf71a => VirtualKeyCode::F23,
-			0xf71b => VirtualKeyCode::F24,
+			0xF718 => VirtualKeyCode::F21,
+			0xF719 => VirtualKeyCode::F22,
+			0xF71A => VirtualKeyCode::F23,
+			0xF71B => VirtualKeyCode::F24,
 			_ => return None,
 		});
 	}
@@ -237,46 +248,64 @@ pub fn check_function_keys(string: &str) -> Option<VirtualKeyCode> {
 	None
 }
 
-pub fn event_mods(event: id) -> ModifiersState {
+pub fn event_mods(event:id) -> ModifiersState {
 	let flags = unsafe { NSEvent::modifierFlags(event) };
 	let mut m = ModifiersState::empty();
-	m.set(ModifiersState::SHIFT, flags.contains(NSEventModifierFlags::NSShiftKeyMask));
-	m.set(ModifiersState::CTRL, flags.contains(NSEventModifierFlags::NSControlKeyMask));
-	m.set(ModifiersState::ALT, flags.contains(NSEventModifierFlags::NSAlternateKeyMask));
-	m.set(ModifiersState::LOGO, flags.contains(NSEventModifierFlags::NSCommandKeyMask));
+	m.set(
+		ModifiersState::SHIFT,
+		flags.contains(NSEventModifierFlags::NSShiftKeyMask),
+	);
+	m.set(
+		ModifiersState::CTRL,
+		flags.contains(NSEventModifierFlags::NSControlKeyMask),
+	);
+	m.set(
+		ModifiersState::ALT,
+		flags.contains(NSEventModifierFlags::NSAlternateKeyMask),
+	);
+	m.set(
+		ModifiersState::LOGO,
+		flags.contains(NSEventModifierFlags::NSCommandKeyMask),
+	);
 	m
 }
 
-pub fn get_scancode(event: cocoa::base::id) -> c_ushort {
-	// In AppKit, `keyCode` refers to the position (scancode) of a key rather than its character,
-	// and there is no easy way to navtively retrieve the layout-dependent character.
-	// In winit, we use keycode to refer to the key's character, and so this function aligns
-	// AppKit's terminology with ours.
+pub fn get_scancode(event:cocoa::base::id) -> c_ushort {
+	// In AppKit, `keyCode` refers to the position (scancode) of a key rather
+	// than its character, and there is no easy way to navtively retrieve the
+	// layout-dependent character. In winit, we use keycode to refer to the
+	// key's character, and so this function aligns AppKit's terminology with
+	// ours.
 	unsafe { msg_send![event, keyCode] }
 }
 
 pub unsafe fn modifier_event(
-	ns_event: id,
-	keymask: NSEventModifierFlags,
-	was_key_pressed: bool,
+	ns_event:id,
+	keymask:NSEventModifierFlags,
+	was_key_pressed:bool,
 ) -> Option<WindowEvent<'static>> {
 	if !was_key_pressed && NSEvent::modifierFlags(ns_event).contains(keymask)
-		|| was_key_pressed && !NSEvent::modifierFlags(ns_event).contains(keymask)
+		|| was_key_pressed
+			&& !NSEvent::modifierFlags(ns_event).contains(keymask)
 	{
-		let state = if was_key_pressed { ElementState::Released } else { ElementState::Pressed };
+		let state = if was_key_pressed {
+			ElementState::Released
+		} else {
+			ElementState::Pressed
+		};
 
 		let scancode = get_scancode(ns_event);
 		let virtual_keycode = scancode_to_keycode(scancode);
 		#[allow(deprecated)]
 		Some(WindowEvent::KeyboardInput {
-			device_id: DEVICE_ID,
-			input: KeyboardInput {
+			device_id:DEVICE_ID,
+			input:KeyboardInput {
 				state,
-				scancode: scancode as _,
+				scancode:scancode as _,
 				virtual_keycode,
-				modifiers: event_mods(ns_event),
+				modifiers:event_mods(ns_event),
 			},
-			is_synthetic: false,
+			is_synthetic:false,
 		})
 	} else {
 		None

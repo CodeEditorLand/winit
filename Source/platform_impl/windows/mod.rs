@@ -7,13 +7,10 @@ use winapi::{
 
 pub use self::{
 	event_loop::{EventLoop, EventLoopProxy, EventLoopWindowTarget},
-	icon::WinIcon,
+	icon::{WinIcon, WinIcon as PlatformIcon},
 	monitor::{MonitorHandle, VideoMode},
 	window::Window,
 };
-
-pub use self::icon::WinIcon as PlatformIcon;
-
 use crate::{event::DeviceId as RootDeviceId, icon::Icon, window::Theme};
 
 #[derive(Clone)]
@@ -25,23 +22,23 @@ pub enum Parent {
 
 #[derive(Clone)]
 pub struct PlatformSpecificWindowBuilderAttributes {
-	pub parent: Parent,
-	pub menu: Option<HMENU>,
-	pub taskbar_icon: Option<Icon>,
-	pub no_redirection_bitmap: bool,
-	pub drag_and_drop: bool,
-	pub preferred_theme: Option<Theme>,
+	pub parent:Parent,
+	pub menu:Option<HMENU>,
+	pub taskbar_icon:Option<Icon>,
+	pub no_redirection_bitmap:bool,
+	pub drag_and_drop:bool,
+	pub preferred_theme:Option<Theme>,
 }
 
 impl Default for PlatformSpecificWindowBuilderAttributes {
 	fn default() -> Self {
 		Self {
-			parent: Parent::None,
-			menu: None,
-			taskbar_icon: None,
-			no_redirection_bitmap: false,
-			drag_and_drop: true,
-			preferred_theme: None,
+			parent:Parent::None,
+			menu:None,
+			taskbar_icon:None,
+			no_redirection_bitmap:false,
+			drag_and_drop:true,
+			preferred_theme:None,
 		}
 	}
 }
@@ -59,9 +56,7 @@ unsafe impl Sync for Cursor {}
 pub struct DeviceId(u32);
 
 impl DeviceId {
-	pub unsafe fn dummy() -> Self {
-		DeviceId(0)
-	}
+	pub unsafe fn dummy() -> Self { DeviceId(0) }
 }
 
 impl DeviceId {
@@ -74,12 +69,11 @@ impl DeviceId {
 	}
 }
 
-// Constant device ID, to be removed when this backend is updated to report real device IDs.
-const DEVICE_ID: RootDeviceId = RootDeviceId(DeviceId(0));
+// Constant device ID, to be removed when this backend is updated to report real
+// device IDs.
+const DEVICE_ID:RootDeviceId = RootDeviceId(DeviceId(0));
 
-fn wrap_device_id(id: u32) -> RootDeviceId {
-	RootDeviceId(DeviceId(id))
-}
+fn wrap_device_id(id:u32) -> RootDeviceId { RootDeviceId(DeviceId(id)) }
 
 pub type OsError = std::io::Error;
 

@@ -7,7 +7,10 @@ use winit::{
 pub fn main() {
 	let event_loop = EventLoop::new();
 
-	let window = WindowBuilder::new().with_title("A fantastic window!").build(&event_loop).unwrap();
+	let window = WindowBuilder::new()
+		.with_title("A fantastic window!")
+		.build(&event_loop)
+		.unwrap();
 
 	#[cfg(feature = "web-sys")]
 	{
@@ -30,7 +33,8 @@ pub fn main() {
 		let canvas = window.canvas();
 
 		let document = std_web::web::document();
-		let body: std_web::web::Node = document.body().expect("Get HTML body").into();
+		let body:std_web::web::Node =
+			document.body().expect("Get HTML body").into();
 
 		body.append_child(&canvas);
 	}
@@ -45,14 +49,13 @@ pub fn main() {
 		std_web::console!(log, "%s", format!("{:?}", event));
 
 		match event {
-			Event::WindowEvent { event: WindowEvent::CloseRequested, window_id }
-				if window_id == window.id() =>
-			{
-				*control_flow = ControlFlow::Exit
-			}
+			Event::WindowEvent {
+				event: WindowEvent::CloseRequested,
+				window_id,
+			} if window_id == window.id() => *control_flow = ControlFlow::Exit,
 			Event::MainEventsCleared => {
 				window.request_redraw();
-			}
+			},
 			_ => (),
 		}
 	});

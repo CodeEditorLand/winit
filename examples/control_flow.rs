@@ -14,8 +14,8 @@ enum Mode {
 	Poll,
 }
 
-const WAIT_TIME: time::Duration = time::Duration::from_millis(100);
-const POLL_SLEEP_TIME: time::Duration = time::Duration::from_millis(100);
+const WAIT_TIME:time::Duration = time::Duration::from_millis(100);
+const POLL_SLEEP_TIME:time::Duration = time::Duration::from_millis(100);
 
 fn main() {
 	SimpleLogger::new().init().unwrap();
@@ -28,7 +28,10 @@ fn main() {
 
 	let event_loop = EventLoop::new();
 	let window = WindowBuilder::new()
-		.with_title("Press 1, 2, 3 to change control flow mode. Press R to toggle redraw requests.")
+		.with_title(
+			"Press 1, 2, 3 to change control flow mode. Press R to toggle \
+			 redraw requests.",
+		)
 		.build(&event_loop)
 		.unwrap();
 
@@ -46,42 +49,49 @@ fn main() {
 					StartCause::WaitCancelled { .. } => mode == Mode::WaitUntil,
 					_ => false,
 				}
-			}
-			Event::WindowEvent { event, .. } => match event {
-				WindowEvent::CloseRequested => {
-					close_requested = true;
-				}
-				WindowEvent::KeyboardInput {
-					input:
-						KeyboardInput {
-							virtual_keycode: Some(virtual_code),
-							state: ElementState::Pressed,
-							..
-						},
-					..
-				} => match virtual_code {
-					VirtualKeyCode::Key1 => {
-						mode = Mode::Wait;
-						println!("\nmode: {:?}\n", mode);
-					}
-					VirtualKeyCode::Key2 => {
-						mode = Mode::WaitUntil;
-						println!("\nmode: {:?}\n", mode);
-					}
-					VirtualKeyCode::Key3 => {
-						mode = Mode::Poll;
-						println!("\nmode: {:?}\n", mode);
-					}
-					VirtualKeyCode::R => {
-						request_redraw = !request_redraw;
-						println!("\nrequest_redraw: {}\n", request_redraw);
-					}
-					VirtualKeyCode::Escape => {
+			},
+			Event::WindowEvent { event, .. } => {
+				match event {
+					WindowEvent::CloseRequested => {
 						close_requested = true;
-					}
+					},
+					WindowEvent::KeyboardInput {
+						input:
+							KeyboardInput {
+								virtual_keycode: Some(virtual_code),
+								state: ElementState::Pressed,
+								..
+							},
+						..
+					} => {
+						match virtual_code {
+							VirtualKeyCode::Key1 => {
+								mode = Mode::Wait;
+								println!("\nmode: {:?}\n", mode);
+							},
+							VirtualKeyCode::Key2 => {
+								mode = Mode::WaitUntil;
+								println!("\nmode: {:?}\n", mode);
+							},
+							VirtualKeyCode::Key3 => {
+								mode = Mode::Poll;
+								println!("\nmode: {:?}\n", mode);
+							},
+							VirtualKeyCode::R => {
+								request_redraw = !request_redraw;
+								println!(
+									"\nrequest_redraw: {}\n",
+									request_redraw
+								);
+							},
+							VirtualKeyCode::Escape => {
+								close_requested = true;
+							},
+							_ => (),
+						}
+					},
 					_ => (),
-				},
-				_ => (),
+				}
 			},
 			Event::MainEventsCleared => {
 				if request_redraw && !wait_cancelled && !close_requested {
@@ -90,8 +100,8 @@ fn main() {
 				if close_requested {
 					*control_flow = ControlFlow::Exit;
 				}
-			}
-			Event::RedrawRequested(_window_id) => {}
+			},
+			Event::RedrawRequested(_window_id) => {},
 			Event::RedrawEventsCleared => {
 				*control_flow = match mode {
 					Mode::Wait => ControlFlow::Wait,
@@ -99,15 +109,17 @@ fn main() {
 						if wait_cancelled {
 							*control_flow
 						} else {
-							ControlFlow::WaitUntil(time::Instant::now() + WAIT_TIME)
+							ControlFlow::WaitUntil(
+								time::Instant::now() + WAIT_TIME,
+							)
 						}
-					}
+					},
 					Mode::Poll => {
 						thread::sleep(POLL_SLEEP_TIME);
 						ControlFlow::Poll
-					}
+					},
 				};
-			}
+			},
 			_ => (),
 		}
 	});

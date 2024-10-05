@@ -5,25 +5,35 @@ use std::{
 	sync::atomic::{AtomicBool, AtomicPtr, Ordering},
 };
 
-use crate::event::{ModifiersState, ScanCode, VirtualKeyCode};
-
 use winapi::{
 	shared::minwindef::{HKL, HKL__, LPARAM, UINT, WPARAM},
 	um::winuser,
 };
 
-fn key_pressed(vkey: c_int) -> bool {
+use crate::event::{ModifiersState, ScanCode, VirtualKeyCode};
+
+fn key_pressed(vkey:c_int) -> bool {
 	unsafe { (winuser::GetKeyState(vkey) & (1 << 15)) == (1 << 15) }
 }
 
 pub fn get_key_mods() -> ModifiersState {
-	let filter_out_altgr = layout_uses_altgr() && key_pressed(winuser::VK_RMENU);
+	let filter_out_altgr =
+		layout_uses_altgr() && key_pressed(winuser::VK_RMENU);
 
 	let mut mods = ModifiersState::empty();
 	mods.set(ModifiersState::SHIFT, key_pressed(winuser::VK_SHIFT));
-	mods.set(ModifiersState::CTRL, key_pressed(winuser::VK_CONTROL) && !filter_out_altgr);
-	mods.set(ModifiersState::ALT, key_pressed(winuser::VK_MENU) && !filter_out_altgr);
-	mods.set(ModifiersState::LOGO, key_pressed(winuser::VK_LWIN) || key_pressed(winuser::VK_RWIN));
+	mods.set(
+		ModifiersState::CTRL,
+		key_pressed(winuser::VK_CONTROL) && !filter_out_altgr,
+	);
+	mods.set(
+		ModifiersState::ALT,
+		key_pressed(winuser::VK_MENU) && !filter_out_altgr,
+	);
+	mods.set(
+		ModifiersState::LOGO,
+		key_pressed(winuser::VK_LWIN) || key_pressed(winuser::VK_RWIN),
+	);
 	mods
 }
 
@@ -48,26 +58,39 @@ impl ModifiersStateSide {
 	pub fn filter_out_altgr(&self) -> ModifiersStateSide {
 		match layout_uses_altgr() && self.contains(Self::RALT) {
 			false => *self,
-			true => *self & !(Self::LCTRL | Self::RCTRL | Self::LALT | Self::RALT),
+			true => {
+				*self & !(Self::LCTRL | Self::RCTRL | Self::LALT | Self::RALT)
+			},
 		}
 	}
 }
 
 impl From<ModifiersStateSide> for ModifiersState {
-	fn from(side: ModifiersStateSide) -> Self {
+	fn from(side:ModifiersStateSide) -> Self {
 		let mut state = ModifiersState::default();
 		state.set(
 			Self::SHIFT,
-			side.intersects(ModifiersStateSide::LSHIFT | ModifiersStateSide::RSHIFT),
+			side.intersects(
+				ModifiersStateSide::LSHIFT | ModifiersStateSide::RSHIFT,
+			),
 		);
 		state.set(
 			Self::CTRL,
-			side.intersects(ModifiersStateSide::LCTRL | ModifiersStateSide::RCTRL),
+			side.intersects(
+				ModifiersStateSide::LCTRL | ModifiersStateSide::RCTRL,
+			),
 		);
-		state.set(Self::ALT, side.intersects(ModifiersStateSide::LALT | ModifiersStateSide::RALT));
+		state.set(
+			Self::ALT,
+			side.intersects(
+				ModifiersStateSide::LALT | ModifiersStateSide::RALT,
+			),
+		);
 		state.set(
 			Self::LOGO,
-			side.intersects(ModifiersStateSide::LLOGO | ModifiersStateSide::RLOGO),
+			side.intersects(
+				ModifiersStateSide::LLOGO | ModifiersStateSide::RLOGO,
+			),
 		);
 		state
 	}
@@ -83,7 +106,11 @@ pub fn get_pressed_keys() -> impl Iterator<Item = c_int> {
         .map(|(i, _)| i as c_int)
 }
 
-unsafe fn get_char(keyboard_state: &[u8; 256], v_key: u32, hkl: HKL) -> Option<char> {
+unsafe fn get_char(
+	keyboard_state:&[u8; 256],
+	v_key:u32,
+	hkl:HKL,
+) -> Option<char> {
 	let mut unicode_bytes = [0u16; 5];
 	let len = winuser::ToUnicodeEx(
 		v_key,
@@ -95,7 +122,9 @@ unsafe fn get_char(keyboard_state: &[u8; 256], v_key: u32, hkl: HKL) -> Option<c
 		hkl,
 	);
 	if len >= 1 {
-		char::decode_utf16(unicode_bytes.iter().cloned()).next().and_then(|c| c.ok())
+		char::decode_utf16(unicode_bytes.iter().cloned())
+			.next()
+			.and_then(|c| c.ok())
 	} else {
 		None
 	}
@@ -103,17 +132,18 @@ unsafe fn get_char(keyboard_state: &[u8; 256], v_key: u32, hkl: HKL) -> Option<c
 
 /// Figures out if the keyboard layout has an AltGr key instead of an Alt key.
 ///
-/// Unfortunately, the Windows API doesn't give a way for us to conveniently figure that out. So,
-/// we use a technique blatantly stolen from [the Firefox source code][source]: iterate over every
-/// possible virtual key and compare the `char` output when AltGr is pressed vs when it isn't. If
-/// pressing AltGr outputs characters that are different from the standard characters, the layout
-/// uses AltGr. Otherwise, it doesn't.
+/// Unfortunately, the Windows API doesn't give a way for us to conveniently
+/// figure that out. So, we use a technique blatantly stolen from [the Firefox
+/// source code][source]: iterate over every possible virtual key and compare
+/// the `char` output when AltGr is pressed vs when it isn't. If pressing AltGr
+/// outputs characters that are different from the standard characters, the
+/// layout uses AltGr. Otherwise, it doesn't.
 ///
 /// [source]: https://github.com/mozilla/gecko-dev/blob/265e6721798a455604328ed5262f430cfcc37c2f/widget/windows/KeyboardLayout.cpp#L4356-L4416
 fn layout_uses_altgr() -> bool {
 	unsafe {
-		static ACTIVE_LAYOUT: AtomicPtr<HKL__> = AtomicPtr::new(ptr::null_mut());
-		static USES_ALTGR: AtomicBool = AtomicBool::new(false);
+		static ACTIVE_LAYOUT:AtomicPtr<HKL__> = AtomicPtr::new(ptr::null_mut());
+		static USES_ALTGR:AtomicBool = AtomicBool::new(false);
 
 		let hkl = winuser::GetKeyboardLayout(0);
 		let old_hkl = ACTIVE_LAYOUT.swap(hkl, Ordering::SeqCst);
@@ -123,8 +153,8 @@ fn layout_uses_altgr() -> bool {
 		}
 
 		let mut keyboard_state_altgr = [0u8; 256];
-		// AltGr is an alias for Ctrl+Alt for... some reason. Whatever it is, those are the keypresses
-		// we have to emulate to do an AltGr test.
+		// AltGr is an alias for Ctrl+Alt for... some reason. Whatever it is,
+		// those are the keypresses we have to emulate to do an AltGr test.
 		keyboard_state_altgr[winuser::VK_MENU as usize] = 0x80;
 		keyboard_state_altgr[winuser::VK_CONTROL as usize] = 0x80;
 
@@ -146,18 +176,18 @@ fn layout_uses_altgr() -> bool {
 	}
 }
 
-pub fn vkey_to_winit_vkey(vkey: c_int) -> Option<VirtualKeyCode> {
+pub fn vkey_to_winit_vkey(vkey:c_int) -> Option<VirtualKeyCode> {
 	// VK_* codes are documented here https://msdn.microsoft.com/en-us/library/windows/desktop/dd375731(v=vs.85).aspx
 	match vkey {
-		//winuser::VK_LBUTTON => Some(VirtualKeyCode::Lbutton),
-		//winuser::VK_RBUTTON => Some(VirtualKeyCode::Rbutton),
-		//winuser::VK_CANCEL => Some(VirtualKeyCode::Cancel),
-		//winuser::VK_MBUTTON => Some(VirtualKeyCode::Mbutton),
-		//winuser::VK_XBUTTON1 => Some(VirtualKeyCode::Xbutton1),
-		//winuser::VK_XBUTTON2 => Some(VirtualKeyCode::Xbutton2),
+		// winuser::VK_LBUTTON => Some(VirtualKeyCode::Lbutton),
+		// winuser::VK_RBUTTON => Some(VirtualKeyCode::Rbutton),
+		// winuser::VK_CANCEL => Some(VirtualKeyCode::Cancel),
+		// winuser::VK_MBUTTON => Some(VirtualKeyCode::Mbutton),
+		// winuser::VK_XBUTTON1 => Some(VirtualKeyCode::Xbutton1),
+		// winuser::VK_XBUTTON2 => Some(VirtualKeyCode::Xbutton2),
 		winuser::VK_BACK => Some(VirtualKeyCode::Back),
 		winuser::VK_TAB => Some(VirtualKeyCode::Tab),
-		//winuser::VK_CLEAR => Some(VirtualKeyCode::Clear),
+		// winuser::VK_CLEAR => Some(VirtualKeyCode::Clear),
 		winuser::VK_RETURN => Some(VirtualKeyCode::Return),
 		winuser::VK_LSHIFT => Some(VirtualKeyCode::LShift),
 		winuser::VK_RSHIFT => Some(VirtualKeyCode::RShift),
@@ -168,17 +198,17 @@ pub fn vkey_to_winit_vkey(vkey: c_int) -> Option<VirtualKeyCode> {
 		winuser::VK_PAUSE => Some(VirtualKeyCode::Pause),
 		winuser::VK_CAPITAL => Some(VirtualKeyCode::Capital),
 		winuser::VK_KANA => Some(VirtualKeyCode::Kana),
-		//winuser::VK_HANGUEL => Some(VirtualKeyCode::Hanguel),
-		//winuser::VK_HANGUL => Some(VirtualKeyCode::Hangul),
-		//winuser::VK_JUNJA => Some(VirtualKeyCode::Junja),
-		//winuser::VK_FINAL => Some(VirtualKeyCode::Final),
-		//winuser::VK_HANJA => Some(VirtualKeyCode::Hanja),
+		// winuser::VK_HANGUEL => Some(VirtualKeyCode::Hanguel),
+		// winuser::VK_HANGUL => Some(VirtualKeyCode::Hangul),
+		// winuser::VK_JUNJA => Some(VirtualKeyCode::Junja),
+		// winuser::VK_FINAL => Some(VirtualKeyCode::Final),
+		// winuser::VK_HANJA => Some(VirtualKeyCode::Hanja),
 		winuser::VK_KANJI => Some(VirtualKeyCode::Kanji),
 		winuser::VK_ESCAPE => Some(VirtualKeyCode::Escape),
 		winuser::VK_CONVERT => Some(VirtualKeyCode::Convert),
 		winuser::VK_NONCONVERT => Some(VirtualKeyCode::NoConvert),
-		//winuser::VK_ACCEPT => Some(VirtualKeyCode::Accept),
-		//winuser::VK_MODECHANGE => Some(VirtualKeyCode::Modechange),
+		// winuser::VK_ACCEPT => Some(VirtualKeyCode::Accept),
+		// winuser::VK_MODECHANGE => Some(VirtualKeyCode::Modechange),
 		winuser::VK_SPACE => Some(VirtualKeyCode::Space),
 		winuser::VK_PRIOR => Some(VirtualKeyCode::PageUp),
 		winuser::VK_NEXT => Some(VirtualKeyCode::PageDown),
@@ -188,13 +218,13 @@ pub fn vkey_to_winit_vkey(vkey: c_int) -> Option<VirtualKeyCode> {
 		winuser::VK_UP => Some(VirtualKeyCode::Up),
 		winuser::VK_RIGHT => Some(VirtualKeyCode::Right),
 		winuser::VK_DOWN => Some(VirtualKeyCode::Down),
-		//winuser::VK_SELECT => Some(VirtualKeyCode::Select),
-		//winuser::VK_PRINT => Some(VirtualKeyCode::Print),
-		//winuser::VK_EXECUTE => Some(VirtualKeyCode::Execute),
+		// winuser::VK_SELECT => Some(VirtualKeyCode::Select),
+		// winuser::VK_PRINT => Some(VirtualKeyCode::Print),
+		// winuser::VK_EXECUTE => Some(VirtualKeyCode::Execute),
 		winuser::VK_SNAPSHOT => Some(VirtualKeyCode::Snapshot),
 		winuser::VK_INSERT => Some(VirtualKeyCode::Insert),
 		winuser::VK_DELETE => Some(VirtualKeyCode::Delete),
-		//winuser::VK_HELP => Some(VirtualKeyCode::Help),
+		// winuser::VK_HELP => Some(VirtualKeyCode::Help),
 		0x30 => Some(VirtualKeyCode::Key0),
 		0x31 => Some(VirtualKeyCode::Key1),
 		0x32 => Some(VirtualKeyCode::Key2),
@@ -247,7 +277,7 @@ pub fn vkey_to_winit_vkey(vkey: c_int) -> Option<VirtualKeyCode> {
 		winuser::VK_NUMPAD9 => Some(VirtualKeyCode::Numpad9),
 		winuser::VK_MULTIPLY => Some(VirtualKeyCode::NumpadMultiply),
 		winuser::VK_ADD => Some(VirtualKeyCode::NumpadAdd),
-		//winuser::VK_SEPARATOR => Some(VirtualKeyCode::Separator),
+		// winuser::VK_SEPARATOR => Some(VirtualKeyCode::Separator),
 		winuser::VK_SUBTRACT => Some(VirtualKeyCode::NumpadSubtract),
 		winuser::VK_DECIMAL => Some(VirtualKeyCode::NumpadDecimal),
 		winuser::VK_DIVIDE => Some(VirtualKeyCode::NumpadDivide),
@@ -293,8 +323,8 @@ pub fn vkey_to_winit_vkey(vkey: c_int) -> Option<VirtualKeyCode> {
 		winuser::VK_MEDIA_PLAY_PAUSE => Some(VirtualKeyCode::PlayPause),
 		winuser::VK_LAUNCH_MAIL => Some(VirtualKeyCode::Mail),
 		winuser::VK_LAUNCH_MEDIA_SELECT => Some(VirtualKeyCode::MediaSelect),
-		/*winuser::VK_LAUNCH_APP1 => Some(VirtualKeyCode::Launch_app1),
-		winuser::VK_LAUNCH_APP2 => Some(VirtualKeyCode::Launch_app2),*/
+		// winuser::VK_LAUNCH_APP1 => Some(VirtualKeyCode::Launch_app1),
+		// winuser::VK_LAUNCH_APP2 => Some(VirtualKeyCode::Launch_app2),
 		winuser::VK_OEM_PLUS => Some(VirtualKeyCode::Equals),
 		winuser::VK_OEM_COMMA => Some(VirtualKeyCode::Comma),
 		winuser::VK_OEM_MINUS => Some(VirtualKeyCode::Minus),
@@ -306,27 +336,27 @@ pub fn vkey_to_winit_vkey(vkey: c_int) -> Option<VirtualKeyCode> {
 		winuser::VK_OEM_5 => map_text_keys(vkey),
 		winuser::VK_OEM_6 => map_text_keys(vkey),
 		winuser::VK_OEM_7 => map_text_keys(vkey),
-		/* winuser::VK_OEM_8 => Some(VirtualKeyCode::Oem_8), */
+		// winuser::VK_OEM_8 => Some(VirtualKeyCode::Oem_8),
 		winuser::VK_OEM_102 => Some(VirtualKeyCode::OEM102),
-		/*winuser::VK_PROCESSKEY => Some(VirtualKeyCode::Processkey),
-		winuser::VK_PACKET => Some(VirtualKeyCode::Packet),
-		winuser::VK_ATTN => Some(VirtualKeyCode::Attn),
-		winuser::VK_CRSEL => Some(VirtualKeyCode::Crsel),
-		winuser::VK_EXSEL => Some(VirtualKeyCode::Exsel),
-		winuser::VK_EREOF => Some(VirtualKeyCode::Ereof),
-		winuser::VK_PLAY => Some(VirtualKeyCode::Play),
-		winuser::VK_ZOOM => Some(VirtualKeyCode::Zoom),
-		winuser::VK_NONAME => Some(VirtualKeyCode::Noname),
-		winuser::VK_PA1 => Some(VirtualKeyCode::Pa1),
-		winuser::VK_OEM_CLEAR => Some(VirtualKeyCode::Oem_clear),*/
+		// winuser::VK_PROCESSKEY => Some(VirtualKeyCode::Processkey),
+		// winuser::VK_PACKET => Some(VirtualKeyCode::Packet),
+		// winuser::VK_ATTN => Some(VirtualKeyCode::Attn),
+		// winuser::VK_CRSEL => Some(VirtualKeyCode::Crsel),
+		// winuser::VK_EXSEL => Some(VirtualKeyCode::Exsel),
+		// winuser::VK_EREOF => Some(VirtualKeyCode::Ereof),
+		// winuser::VK_PLAY => Some(VirtualKeyCode::Play),
+		// winuser::VK_ZOOM => Some(VirtualKeyCode::Zoom),
+		// winuser::VK_NONAME => Some(VirtualKeyCode::Noname),
+		// winuser::VK_PA1 => Some(VirtualKeyCode::Pa1),
+		// winuser::VK_OEM_CLEAR => Some(VirtualKeyCode::Oem_clear),
 		_ => None,
 	}
 }
 
 pub fn handle_extended_keys(
-	vkey: c_int,
-	mut scancode: UINT,
-	extended: bool,
+	vkey:c_int,
+	mut scancode:UINT,
+	extended:bool,
 ) -> Option<(c_int, UINT)> {
 	// Welcome to hell https://blog.molecular-matters.com/2011/09/05/properly-handling-keyboard-input/
 	scancode = if extended { 0xE000 } else { 0x0000 } | scancode;
@@ -340,45 +370,49 @@ pub fn handle_extended_keys(
 			} else {
 				winuser::VK_LCONTROL
 			}
-		}
+		},
 		winuser::VK_MENU => {
 			if extended {
 				winuser::VK_RMENU
 			} else {
 				winuser::VK_LMENU
 			}
-		}
+		},
 		_ => {
 			match scancode {
-				// When VK_PAUSE is pressed it emits a LeftControl + NumLock scancode event sequence, but reports VK_PAUSE
-				// as the virtual key on both events, or VK_PAUSE on the first event or 0xFF when using raw input.
-				// Don't emit anything for the LeftControl event in the pair...
+				// When VK_PAUSE is pressed it emits a LeftControl + NumLock
+				// scancode event sequence, but reports VK_PAUSE
+				// as the virtual key on both events, or VK_PAUSE on the first
+				// event or 0xFF when using raw input. Don't emit anything
+				// for the LeftControl event in the pair...
 				0xE01D if vkey == winuser::VK_PAUSE => return None,
 				// ...and emit the Pause event for the second event in the pair.
 				0x45 if vkey == winuser::VK_PAUSE || vkey == 0xFF as _ => {
 					scancode = 0xE059;
 					winuser::VK_PAUSE
-				}
-				// VK_PAUSE has an incorrect vkey value when used with modifiers. VK_PAUSE also reports a different
+				},
+				// VK_PAUSE has an incorrect vkey value when used with
+				// modifiers. VK_PAUSE also reports a different
 				// scancode when used with modifiers than when used without
 				0xE046 => {
 					scancode = 0xE059;
 					winuser::VK_PAUSE
-				}
-				// VK_SCROLL has an incorrect vkey value when used with modifiers.
+				},
+				// VK_SCROLL has an incorrect vkey value when used with
+				// modifiers.
 				0x46 => winuser::VK_SCROLL,
 				_ => vkey,
 			}
-		}
+		},
 	};
 	Some((vkey, scancode))
 }
 
 pub fn process_key_params(
-	wparam: WPARAM,
-	lparam: LPARAM,
+	wparam:WPARAM,
+	lparam:LPARAM,
 ) -> Option<(ScanCode, Option<VirtualKeyCode>)> {
-	let scancode = ((lparam >> 16) & 0xff) as UINT;
+	let scancode = ((lparam >> 16) & 0xFF) as UINT;
 	let extended = (lparam & 0x01000000) != 0;
 	handle_extended_keys(wparam as _, scancode, extended)
 		.map(|(vkey, scancode)| (scancode, vkey_to_winit_vkey(vkey)))
@@ -386,10 +420,13 @@ pub fn process_key_params(
 
 // This is needed as windows doesn't properly distinguish
 // some virtual key codes for different keyboard layouts
-fn map_text_keys(win_virtual_key: i32) -> Option<VirtualKeyCode> {
-	let char_key =
-		unsafe { winuser::MapVirtualKeyA(win_virtual_key as u32, winuser::MAPVK_VK_TO_CHAR) }
-			& 0x7FFF;
+fn map_text_keys(win_virtual_key:i32) -> Option<VirtualKeyCode> {
+	let char_key = unsafe {
+		winuser::MapVirtualKeyA(
+			win_virtual_key as u32,
+			winuser::MAPVK_VK_TO_CHAR,
+		)
+	} & 0x7FFF;
 	match char::from_u32(char_key) {
 		Some(';') => Some(VirtualKeyCode::Semicolon),
 		Some('/') => Some(VirtualKeyCode::Slash),

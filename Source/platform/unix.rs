@@ -10,9 +10,11 @@ use crate::window::Window;
 
 /// Additional methods on `Window` that are specific to Unix.
 pub trait WindowExtUnix {
-	/// Returns the `ApplicatonWindow` from gtk crate that is used by this window.
+	/// Returns the `ApplicatonWindow` from gtk crate that is used by this
+	/// window.
 	///
-	/// Returns `None` if the window doesn't use xlib (if it uses wayland for example).
+	/// Returns `None` if the window doesn't use xlib (if it uses wayland for
+	/// example).
 	fn gtk_window(&self) -> &gtk::ApplicationWindow;
 
 	/// Not to display window icon in the task bar.
@@ -20,11 +22,7 @@ pub trait WindowExtUnix {
 }
 
 impl WindowExtUnix for Window {
-	fn gtk_window(&self) -> &gtk::ApplicationWindow {
-		&self.window.window
-	}
+	fn gtk_window(&self) -> &gtk::ApplicationWindow { &self.window.window }
 
-	fn skip_taskbar(&self) {
-		self.window.skip_taskbar()
-	}
+	fn skip_taskbar(&self) { self.window.skip_taskbar() }
 }
