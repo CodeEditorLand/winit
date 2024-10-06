@@ -26,21 +26,16 @@ pub fn initialize() {
 
 		// About menu item
 		let about_item_prefix = NSString::alloc(nil).init_str("About ");
-		let about_item_title =
-			about_item_prefix.stringByAppendingString_(process_name);
-		let about_item = menu_item(
-			about_item_title,
-			selector("orderFrontStandardAboutPanel:"),
-			None,
-		);
+		let about_item_title = about_item_prefix.stringByAppendingString_(process_name);
+		let about_item =
+			menu_item(about_item_title, selector("orderFrontStandardAboutPanel:"), None);
 
 		// Seperator menu item
 		let sep_first = NSMenuItem::separatorItem(nil);
 
 		// Hide application menu item
 		let hide_item_prefix = NSString::alloc(nil).init_str("Hide ");
-		let hide_item_title =
-			hide_item_prefix.stringByAppendingString_(process_name);
+		let hide_item_title = hide_item_prefix.stringByAppendingString_(process_name);
 		let hide_item = menu_item(
 			hide_item_title,
 			selector("hide:"),
@@ -48,8 +43,7 @@ pub fn initialize() {
 		);
 
 		// Hide other applications menu item
-		let hide_others_item_title =
-			NSString::alloc(nil).init_str("Hide Others");
+		let hide_others_item_title = NSString::alloc(nil).init_str("Hide Others");
 		let hide_others_item = menu_item(
 			hide_others_item_title,
 			selector("hideOtherApplications:"),
@@ -64,19 +58,15 @@ pub fn initialize() {
 
 		// Show applications menu item
 		let show_all_item_title = NSString::alloc(nil).init_str("Show All");
-		let show_all_item = menu_item(
-			show_all_item_title,
-			selector("unhideAllApplications:"),
-			None,
-		);
+		let show_all_item =
+			menu_item(show_all_item_title, selector("unhideAllApplications:"), None);
 
 		// Seperator menu item
 		let sep = NSMenuItem::separatorItem(nil);
 
 		// Quit application menu item
 		let quit_item_prefix = NSString::alloc(nil).init_str("Quit ");
-		let quit_item_title =
-			quit_item_prefix.stringByAppendingString_(process_name);
+		let quit_item_title = quit_item_prefix.stringByAppendingString_(process_name);
 		let quit_item = menu_item(
 			quit_item_title,
 			selector("terminate:"),
@@ -104,8 +94,7 @@ fn menu_item(
 			Some(ke) => (NSString::alloc(nil).init_str(ke.key), ke.masks),
 			None => (NSString::alloc(nil).init_str(""), None),
 		};
-		let item = NSMenuItem::alloc(nil)
-			.initWithTitle_action_keyEquivalent_(title, selector, key);
+		let item = NSMenuItem::alloc(nil).initWithTitle_action_keyEquivalent_(title, selector, key);
 		if let Some(masks) = masks {
 			item.setKeyEquivalentModifierMask_(masks)
 		}

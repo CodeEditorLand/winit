@@ -13,13 +13,7 @@ use crate::{
 	event,
 	icon::Icon,
 	monitor::MonitorHandle as RootMH,
-	window::{
-		CursorIcon,
-		Fullscreen,
-		UserAttentionType,
-		WindowAttributes,
-		WindowId as RootWI,
-	},
+	window::{CursorIcon, Fullscreen, UserAttentionType, WindowAttributes, WindowId as RootWI},
 };
 
 pub struct Window {
@@ -44,8 +38,7 @@ impl Window {
 		let canvas = backend::Canvas::create(platform_attr)?;
 		let mut canvas = Rc::new(RefCell::new(canvas));
 
-		let register_redraw_request =
-			Box::new(move || runner.request_redraw(RootWI(id)));
+		let register_redraw_request = Box::new(move || runner.request_redraw(RootWI(id)));
 
 		target.register(&mut canvas, id);
 
@@ -58,8 +51,7 @@ impl Window {
 		});
 
 		let runner = target.runner.clone();
-		let destroy_fn =
-			Box::new(move || runner.notify_destroy_window(RootWI(id)));
+		let destroy_fn = Box::new(move || runner.notify_destroy_window(RootWI(id)));
 
 		let window = Window {
 			canvas,
@@ -72,10 +64,8 @@ impl Window {
 
 		backend::set_canvas_size(
 			window.canvas.borrow().raw(),
-			attr.inner_size.unwrap_or(Size::Logical(LogicalSize {
-				width:1024.0,
-				height:768.0,
-			})),
+			attr.inner_size
+				.unwrap_or(Size::Logical(LogicalSize { width:1024.0, height:768.0 })),
 		);
 		window.set_title(&attr.title);
 		window.set_maximized(attr.maximized);
@@ -85,13 +75,9 @@ impl Window {
 		Ok(window)
 	}
 
-	pub fn canvas<'a>(&'a self) -> Ref<'a, backend::Canvas> {
-		self.canvas.borrow()
-	}
+	pub fn canvas<'a>(&'a self) -> Ref<'a, backend::Canvas> { self.canvas.borrow() }
 
-	pub fn set_title(&self, title:&str) {
-		self.canvas.borrow().set_attribute("alt", title);
-	}
+	pub fn set_title(&self, title:&str) { self.canvas.borrow().set_attribute("alt", title); }
 
 	pub fn set_visible(&self, _visible:bool) {
 		// Intentionally a no-op
@@ -99,15 +85,11 @@ impl Window {
 
 	pub fn request_redraw(&self) { (self.register_redraw_request)(); }
 
-	pub fn outer_position(
-		&self,
-	) -> Result<PhysicalPosition<i32>, NotSupportedError> {
+	pub fn outer_position(&self) -> Result<PhysicalPosition<i32>, NotSupportedError> {
 		Ok(self.canvas.borrow().position().to_physical(self.scale_factor()))
 	}
 
-	pub fn inner_position(
-		&self,
-	) -> Result<PhysicalPosition<i32>, NotSupportedError> {
+	pub fn inner_position(&self) -> Result<PhysicalPosition<i32>, NotSupportedError> {
 		// Note: the canvas element has no window decorations, so this is equal
 		// to `outer_position`.
 		self.outer_position()
@@ -123,9 +105,7 @@ impl Window {
 	}
 
 	#[inline]
-	pub fn inner_size(&self) -> PhysicalSize<u32> {
-		self.canvas.borrow().size()
-	}
+	pub fn inner_size(&self) -> PhysicalSize<u32> { self.canvas.borrow().size() }
 
 	#[inline]
 	pub fn outer_size(&self) -> PhysicalSize<u32> {
@@ -204,18 +184,11 @@ impl Window {
 			CursorIcon::RowResize => "row-resize",
 		};
 		*self.previous_pointer.borrow_mut() = text;
-		backend::set_canvas_style_property(
-			self.canvas.borrow().raw(),
-			"cursor",
-			text,
-		);
+		backend::set_canvas_style_property(self.canvas.borrow().raw(), "cursor", text);
 	}
 
 	#[inline]
-	pub fn set_cursor_position(
-		&self,
-		_position:Position,
-	) -> Result<(), ExternalError> {
+	pub fn set_cursor_position(&self, _position:Position) -> Result<(), ExternalError> {
 		Err(ExternalError::NotSupported(NotSupportedError::new()))
 	}
 
@@ -229,9 +202,7 @@ impl Window {
 		if !visible {
 			self.canvas.borrow().set_attribute("cursor", "none");
 		} else {
-			self.canvas
-				.borrow()
-				.set_attribute("cursor", *self.previous_pointer.borrow());
+			self.canvas.borrow().set_attribute("cursor", *self.previous_pointer.borrow());
 		}
 	}
 
@@ -296,24 +267,17 @@ impl Window {
 	}
 
 	#[inline]
-	pub fn request_user_attention(
-		&self,
-		_request_type:Option<UserAttentionType>,
-	) {
+	pub fn request_user_attention(&self, _request_type:Option<UserAttentionType>) {
 		// Currently an intentional no-op
 	}
 
 	#[inline]
 	// Allow directly accessing the current monitor internally without
 	// unwrapping.
-	fn current_monitor_inner(&self) -> RootMH {
-		RootMH { inner:monitor::Handle }
-	}
+	fn current_monitor_inner(&self) -> RootMH { RootMH { inner:monitor::Handle } }
 
 	#[inline]
-	pub fn current_monitor(&self) -> Option<RootMH> {
-		Some(self.current_monitor_inner())
-	}
+	pub fn current_monitor(&self) -> Option<RootMH> { Some(self.current_monitor_inner()) }
 
 	#[inline]
 	pub fn available_monitors(&self) -> VecDequeIter<monitor::Handle> {
@@ -321,9 +285,7 @@ impl Window {
 	}
 
 	#[inline]
-	pub fn primary_monitor(&self) -> Option<RootMH> {
-		Some(RootMH { inner:monitor::Handle })
-	}
+	pub fn primary_monitor(&self) -> Option<RootMH> { Some(RootMH { inner:monitor::Handle }) }
 
 	#[inline]
 	pub fn id(&self) -> Id { return self.id; }

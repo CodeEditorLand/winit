@@ -20,11 +20,7 @@ pub use self::{
 	app_delegate::{get_aux_state_mut, AuxDelegateState},
 	event_loop::{EventLoop, EventLoopWindowTarget, Proxy as EventLoopProxy},
 	monitor::{MonitorHandle, VideoMode},
-	window::{
-		Id as WindowId,
-		PlatformSpecificWindowBuilderAttributes,
-		UnownedWindow,
-	},
+	window::{Id as WindowId, PlatformSpecificWindowBuilderAttributes, UnownedWindow},
 };
 pub(crate) use crate::icon::NoIcon as PlatformIcon;
 use crate::{

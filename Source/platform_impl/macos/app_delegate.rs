@@ -9,10 +9,7 @@ use objc::{
 	runtime::{Class, Object, Sel},
 };
 
-use crate::{
-	platform::macos::ActivationPolicy,
-	platform_impl::platform::app_state::AppState,
-};
+use crate::{platform::macos::ActivationPolicy, platform_impl::platform::app_state::AppState};
 
 static AUX_DELEGATE_STATE_NAME:&str = "auxState";
 

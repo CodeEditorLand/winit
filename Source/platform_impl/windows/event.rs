@@ -17,19 +17,12 @@ fn key_pressed(vkey:c_int) -> bool {
 }
 
 pub fn get_key_mods() -> ModifiersState {
-	let filter_out_altgr =
-		layout_uses_altgr() && key_pressed(winuser::VK_RMENU);
+	let filter_out_altgr = layout_uses_altgr() && key_pressed(winuser::VK_RMENU);
 
 	let mut mods = ModifiersState::empty();
 	mods.set(ModifiersState::SHIFT, key_pressed(winuser::VK_SHIFT));
-	mods.set(
-		ModifiersState::CTRL,
-		key_pressed(winuser::VK_CONTROL) && !filter_out_altgr,
-	);
-	mods.set(
-		ModifiersState::ALT,
-		key_pressed(winuser::VK_MENU) && !filter_out_altgr,
-	);
+	mods.set(ModifiersState::CTRL, key_pressed(winuser::VK_CONTROL) && !filter_out_altgr);
+	mods.set(ModifiersState::ALT, key_pressed(winuser::VK_MENU) && !filter_out_altgr);
 	mods.set(
 		ModifiersState::LOGO,
 		key_pressed(winuser::VK_LWIN) || key_pressed(winuser::VK_RWIN),
@@ -58,9 +51,7 @@ impl ModifiersStateSide {
 	pub fn filter_out_altgr(&self) -> ModifiersStateSide {
 		match layout_uses_altgr() && self.contains(Self::RALT) {
 			false => *self,
-			true => {
-				*self & !(Self::LCTRL | Self::RCTRL | Self::LALT | Self::RALT)
-			},
+			true => *self & !(Self::LCTRL | Self::RCTRL | Self::LALT | Self::RALT),
 		}
 	}
 }
@@ -70,27 +61,16 @@ impl From<ModifiersStateSide> for ModifiersState {
 		let mut state = ModifiersState::default();
 		state.set(
 			Self::SHIFT,
-			side.intersects(
-				ModifiersStateSide::LSHIFT | ModifiersStateSide::RSHIFT,
-			),
+			side.intersects(ModifiersStateSide::LSHIFT | ModifiersStateSide::RSHIFT),
 		);
 		state.set(
 			Self::CTRL,
-			side.intersects(
-				ModifiersStateSide::LCTRL | ModifiersStateSide::RCTRL,
-			),
+			side.intersects(ModifiersStateSide::LCTRL | ModifiersStateSide::RCTRL),
 		);
-		state.set(
-			Self::ALT,
-			side.intersects(
-				ModifiersStateSide::LALT | ModifiersStateSide::RALT,
-			),
-		);
+		state.set(Self::ALT, side.intersects(ModifiersStateSide::LALT | ModifiersStateSide::RALT));
 		state.set(
 			Self::LOGO,
-			side.intersects(
-				ModifiersStateSide::LLOGO | ModifiersStateSide::RLOGO,
-			),
+			side.intersects(ModifiersStateSide::LLOGO | ModifiersStateSide::RLOGO),
 		);
 		state
 	}
@@ -106,11 +86,7 @@ pub fn get_pressed_keys() -> impl Iterator<Item = c_int> {
         .map(|(i, _)| i as c_int)
 }
 
-unsafe fn get_char(
-	keyboard_state:&[u8; 256],
-	v_key:u32,
-	hkl:HKL,
-) -> Option<char> {
+unsafe fn get_char(keyboard_state:&[u8; 256], v_key:u32, hkl:HKL) -> Option<char> {
 	let mut unicode_bytes = [0u16; 5];
 	let len = winuser::ToUnicodeEx(
 		v_key,
@@ -122,9 +98,7 @@ unsafe fn get_char(
 		hkl,
 	);
 	if len >= 1 {
-		char::decode_utf16(unicode_bytes.iter().cloned())
-			.next()
-			.and_then(|c| c.ok())
+		char::decode_utf16(unicode_bytes.iter().cloned()).next().and_then(|c| c.ok())
 	} else {
 		None
 	}
@@ -353,11 +327,7 @@ pub fn vkey_to_winit_vkey(vkey:c_int) -> Option<VirtualKeyCode> {
 	}
 }
 
-pub fn handle_extended_keys(
-	vkey:c_int,
-	mut scancode:UINT,
-	extended:bool,
-) -> Option<(c_int, UINT)> {
+pub fn handle_extended_keys(vkey:c_int, mut scancode:UINT, extended:bool) -> Option<(c_int, UINT)> {
 	// Welcome to hell https://blog.molecular-matters.com/2011/09/05/properly-handling-keyboard-input/
 	scancode = if extended { 0xE000 } else { 0x0000 } | scancode;
 	let vkey = match vkey {
@@ -421,12 +391,9 @@ pub fn process_key_params(
 // This is needed as windows doesn't properly distinguish
 // some virtual key codes for different keyboard layouts
 fn map_text_keys(win_virtual_key:i32) -> Option<VirtualKeyCode> {
-	let char_key = unsafe {
-		winuser::MapVirtualKeyA(
-			win_virtual_key as u32,
-			winuser::MAPVK_VK_TO_CHAR,
-		)
-	} & 0x7FFF;
+	let char_key =
+		unsafe { winuser::MapVirtualKeyA(win_virtual_key as u32, winuser::MAPVK_VK_TO_CHAR) }
+			& 0x7FFF;
 	match char::from_u32(char_key) {
 		Some(';') => Some(VirtualKeyCode::Semicolon),
 		Some('/') => Some(VirtualKeyCode::Slash),

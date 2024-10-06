@@ -23,8 +23,7 @@ use crate::{
 };
 
 lazy_static! {
-	static ref CONFIG: RwLock<Configuration> =
-		RwLock::new(Configuration::new());
+	static ref CONFIG: RwLock<Configuration> = RwLock::new(Configuration::new());
 }
 
 enum EventSource {
@@ -37,12 +36,8 @@ fn poll(poll:Poll) -> Option<EventSource> {
 	match poll {
 		Poll::Event { ident, .. } => {
 			match ident {
-				ndk_glue::NDK_GLUE_LOOPER_EVENT_PIPE_IDENT => {
-					Some(EventSource::Callback)
-				},
-				ndk_glue::NDK_GLUE_LOOPER_INPUT_QUEUE_IDENT => {
-					Some(EventSource::InputQueue)
-				},
+				ndk_glue::NDK_GLUE_LOOPER_EVENT_PIPE_IDENT => Some(EventSource::Callback),
+				ndk_glue::NDK_GLUE_LOOPER_INPUT_QUEUE_IDENT => Some(EventSource::InputQueue),
 				_ => unreachable!(),
 			}
 		},
@@ -89,22 +84,14 @@ impl<T:'static> EventLoop<T> {
 	pub fn run<F>(mut self, event_handler:F) -> !
 	where
 		F: 'static
-			+ FnMut(
-				event::Event<'_, T>,
-				&event_loop::EventLoopWindowTarget<T>,
-				&mut ControlFlow,
-			), {
+			+ FnMut(event::Event<'_, T>, &event_loop::EventLoopWindowTarget<T>, &mut ControlFlow), {
 		self.run_return(event_handler);
 		::std::process::exit(0);
 	}
 
 	pub fn run_return<F>(&mut self, mut event_handler:F)
 	where
-		F: FnMut(
-			event::Event<'_, T>,
-			&event_loop::EventLoopWindowTarget<T>,
-			&mut ControlFlow,
-		), {
+		F: FnMut(event::Event<'_, T>, &event_loop::EventLoopWindowTarget<T>, &mut ControlFlow), {
 		let mut control_flow = ControlFlow::default();
 
 		'event_loop: loop {
@@ -142,23 +129,19 @@ impl<T:'static> EventLoop<T> {
 						Event::Pause => self.running = false,
 						Event::Resume => self.running = true,
 						Event::ConfigChanged => {
-							let am =
-								ndk_glue::native_activity().asset_manager();
+							let am = ndk_glue::native_activity().asset_manager();
 							let config = Configuration::from_asset_manager(&am);
 							let old_scale_factor = MonitorHandle.scale_factor();
 							*CONFIG.write().unwrap() = config;
 							let scale_factor = MonitorHandle.scale_factor();
-							if (scale_factor - old_scale_factor).abs()
-								< f64::EPSILON
-							{
+							if (scale_factor - old_scale_factor).abs() < f64::EPSILON {
 								let mut size = MonitorHandle.size();
 								let event = event::Event::WindowEvent {
 									window_id:window::WindowId(WindowId),
-									event:
-										event::WindowEvent::ScaleFactorChanged {
-											new_inner_size:&mut size,
-											scale_factor,
-										},
+									event:event::WindowEvent::ScaleFactorChanged {
+										new_inner_size:&mut size,
+										scale_factor,
+									},
 								};
 								call_event_handler!(
 									event_handler,
@@ -194,66 +177,60 @@ impl<T:'static> EventLoop<T> {
 					}
 				},
 				Some(EventSource::InputQueue) => {
-					if let Some(input_queue) = ndk_glue::input_queue().as_ref()
-					{
+					if let Some(input_queue) = ndk_glue::input_queue().as_ref() {
 						while let Some(event) = input_queue.get_event() {
-							if let Some(event) = input_queue.pre_dispatch(event)
-							{
+							if let Some(event) = input_queue.pre_dispatch(event) {
 								let mut handled = true;
 								let window_id = window::WindowId(WindowId);
 								let device_id = event::DeviceId(DeviceId);
 								match &event {
 									InputEvent::MotionEvent(motion_event) => {
-										let phase = match motion_event.action()
-										{
-											MotionAction::Down
-											| MotionAction::PointerDown => {
+										let phase = match motion_event.action() {
+											MotionAction::Down | MotionAction::PointerDown => {
 												Some(event::TouchPhase::Started)
 											},
-											MotionAction::Up
-											| MotionAction::PointerUp => Some(event::TouchPhase::Ended),
-											MotionAction::Move => {
-												Some(event::TouchPhase::Moved)
+											MotionAction::Up | MotionAction::PointerUp => {
+												Some(event::TouchPhase::Ended)
 											},
-											MotionAction::Cancel => Some(
-												event::TouchPhase::Cancelled,
-											),
+											MotionAction::Move => Some(event::TouchPhase::Moved),
+											MotionAction::Cancel => {
+												Some(event::TouchPhase::Cancelled)
+											},
 											_ => {
 												handled = false;
 												None // TODO mouse events
 											},
 										};
 										if let Some(phase) = phase {
-											let pointers: Box<
+											let pointers:Box<
 												dyn Iterator<Item = ndk::event::Pointer<'_>>,
 											> = match phase {
 												event::TouchPhase::Started
-												| event::TouchPhase::Ended => Box::new(std::iter::once(
-													motion_event.pointer_at_index(
-														motion_event.pointer_index(),
-													),
-												)),
+												| event::TouchPhase::Ended => {
+													Box::new(std::iter::once(
+														motion_event.pointer_at_index(
+															motion_event.pointer_index(),
+														),
+													))
+												},
 												event::TouchPhase::Moved
 												| event::TouchPhase::Cancelled => Box::new(motion_event.pointers()),
 											};
 
 											for pointer in pointers {
-												let location =
-													PhysicalPosition {
-														x:pointer.x() as _,
-														y:pointer.y() as _,
-													};
+												let location = PhysicalPosition {
+													x:pointer.x() as _,
+													y:pointer.y() as _,
+												};
 												let event = event::Event::WindowEvent {
 													window_id,
-													event: event::WindowEvent::Touch(
-														event::Touch {
-															device_id,
-															phase,
-															location,
-															id: pointer.pointer_id() as u64,
-															force: None,
-														},
-													),
+													event:event::WindowEvent::Touch(event::Touch {
+														device_id,
+														phase,
+														location,
+														id:pointer.pointer_id() as u64,
+														force:None,
+													}),
 												};
 												call_event_handler!(
 													event_handler,
@@ -266,26 +243,22 @@ impl<T:'static> EventLoop<T> {
 									},
 									InputEvent::KeyEvent(key) => {
 										let state = match key.action() {
-											KeyAction::Down => {
-												event::ElementState::Pressed
-											},
-											KeyAction::Up => {
-												event::ElementState::Released
-											},
+											KeyAction::Down => event::ElementState::Pressed,
+											KeyAction::Up => event::ElementState::Released,
 											_ => event::ElementState::Released,
 										};
 										#[allow(deprecated)]
 										let event = event::Event::WindowEvent {
 											window_id,
-											event: event::WindowEvent::KeyboardInput {
+											event:event::WindowEvent::KeyboardInput {
 												device_id,
-												input: event::KeyboardInput {
-													scancode: key.scan_code() as u32,
+												input:event::KeyboardInput {
+													scancode:key.scan_code() as u32,
 													state,
-													virtual_keycode: None,
-													modifiers: event::ModifiersState::default(),
+													virtual_keycode:None,
+													modifiers:event::ModifiersState::default(),
 												},
-												is_synthetic: false,
+												is_synthetic:false,
 											},
 										};
 										call_event_handler!(
@@ -328,23 +301,12 @@ impl<T:'static> EventLoop<T> {
 					window_id:window::WindowId(WindowId),
 					event:event::WindowEvent::Resized(size),
 				};
-				call_event_handler!(
-					event_handler,
-					self.window_target(),
-					control_flow,
-					event
-				);
+				call_event_handler!(event_handler, self.window_target(), control_flow, event);
 			}
 
 			if redraw && self.running {
-				let event =
-					event::Event::RedrawRequested(window::WindowId(WindowId));
-				call_event_handler!(
-					event_handler,
-					self.window_target(),
-					control_flow,
-					event
-				);
+				let event = event::Event::RedrawRequested(window::WindowId(WindowId));
+				call_event_handler!(event_handler, self.window_target(), control_flow, event);
 			}
 
 			call_event_handler!(
@@ -356,11 +318,8 @@ impl<T:'static> EventLoop<T> {
 
 			match control_flow {
 				ControlFlow::Exit => {
-					self.first_event = poll(
-						self.looper
-							.poll_once_timeout(Duration::from_millis(0))
-							.unwrap(),
-					);
+					self.first_event =
+						poll(self.looper.poll_once_timeout(Duration::from_millis(0)).unwrap());
 					self.start_cause = event::StartCause::WaitCancelled {
 						start:Instant::now(),
 						requested_resume:None,
@@ -368,11 +327,8 @@ impl<T:'static> EventLoop<T> {
 					break 'event_loop;
 				},
 				ControlFlow::Poll => {
-					self.first_event = poll(
-						self.looper
-							.poll_all_timeout(Duration::from_millis(0))
-							.unwrap(),
-					);
+					self.first_event =
+						poll(self.looper.poll_all_timeout(Duration::from_millis(0)).unwrap());
 					self.start_cause = event::StartCause::Poll;
 				},
 				ControlFlow::Wait => {
@@ -384,38 +340,25 @@ impl<T:'static> EventLoop<T> {
 				},
 				ControlFlow::WaitUntil(instant) => {
 					let start = Instant::now();
-					let duration = if instant <= start {
-						Duration::default()
-					} else {
-						instant - start
-					};
-					self.first_event =
-						poll(self.looper.poll_all_timeout(duration).unwrap());
+					let duration =
+						if instant <= start { Duration::default() } else { instant - start };
+					self.first_event = poll(self.looper.poll_all_timeout(duration).unwrap());
 					self.start_cause = if self.first_event.is_some() {
-						event::StartCause::WaitCancelled {
-							start,
-							requested_resume:Some(instant),
-						}
+						event::StartCause::WaitCancelled { start, requested_resume:Some(instant) }
 					} else {
-						event::StartCause::ResumeTimeReached {
-							start,
-							requested_resume:instant,
-						}
+						event::StartCause::ResumeTimeReached { start, requested_resume:instant }
 					}
 				},
 			}
 		}
 	}
 
-	pub fn window_target(&self) -> &event_loop::EventLoopWindowTarget<T> {
-		&self.window_target
-	}
+	pub fn window_target(&self) -> &event_loop::EventLoopWindowTarget<T> { &self.window_target }
 
 	pub fn create_proxy(&self) -> EventLoopProxy<T> {
 		EventLoopProxy {
 			queue:self.user_queue.clone(),
-			looper:ForeignLooper::for_thread()
-				.expect("called from event loop thread"),
+			looper:ForeignLooper::for_thread().expect("called from event loop thread"),
 		}
 	}
 }
@@ -426,10 +369,7 @@ pub struct EventLoopProxy<T:'static> {
 }
 
 impl<T> EventLoopProxy<T> {
-	pub fn send_event(
-		&self,
-		event:T,
-	) -> Result<(), event_loop::EventLoopClosed<T>> {
+	pub fn send_event(&self, event:T) -> Result<(), event_loop::EventLoopClosed<T>> {
 		self.queue.lock().unwrap().push_back(event);
 		self.looper.wake();
 		Ok(())
@@ -509,15 +449,11 @@ impl Window {
 		// TODO
 	}
 
-	pub fn inner_position(
-		&self,
-	) -> Result<PhysicalPosition<i32>, error::NotSupportedError> {
+	pub fn inner_position(&self) -> Result<PhysicalPosition<i32>, error::NotSupportedError> {
 		Err(error::NotSupportedError::new())
 	}
 
-	pub fn outer_position(
-		&self,
-	) -> Result<PhysicalPosition<i32>, error::NotSupportedError> {
+	pub fn outer_position(&self) -> Result<PhysicalPosition<i32>, error::NotSupportedError> {
 		Err(error::NotSupportedError::new())
 	}
 
@@ -563,18 +499,11 @@ impl Window {
 
 	pub fn set_ime_position(&self, _position:Position) {}
 
-	pub fn request_user_attention(
-		&self,
-		_request_type:Option<window::UserAttentionType>,
-	) {
-	}
+	pub fn request_user_attention(&self, _request_type:Option<window::UserAttentionType>) {}
 
 	pub fn set_cursor_icon(&self, _:window::CursorIcon) {}
 
-	pub fn set_cursor_position(
-		&self,
-		_:Position,
-	) -> Result<(), error::ExternalError> {
+	pub fn set_cursor_position(&self, _:Position) -> Result<(), error::ExternalError> {
 		Err(error::ExternalError::NotSupported(error::NotSupportedError::new()))
 	}
 
@@ -589,15 +518,13 @@ impl Window {
 	}
 
 	pub fn raw_window_handle(&self) -> raw_window_handle::RawWindowHandle {
-		let a_native_window = if let Some(native_window) =
-			ndk_glue::native_window().as_ref()
-		{
+		let a_native_window = if let Some(native_window) = ndk_glue::native_window().as_ref() {
 			unsafe { native_window.ptr().as_mut() as *mut _ as *mut _ }
 		} else {
 			panic!(
-				"Cannot get the native window, it's null and will always be \
-				 null before Event::Resumed and after Event::Suspended. Make \
-				 sure you only call this function between those events."
+				"Cannot get the native window, it's null and will always be null before \
+				 Event::Resumed and after Event::Suspended. Make sure you only call this function \
+				 between those events."
 			);
 		};
 		let mut handle = raw_window_handle::android::AndroidHandle::empty();
@@ -651,12 +578,7 @@ impl MonitorHandle {
 		// FIXME this is not the real refresh rate
 		// (it is guarunteed to support 32 bit color though)
 		v.push(monitor::VideoMode {
-			video_mode:VideoMode {
-				size,
-				bit_depth:32,
-				refresh_rate:60,
-				monitor:self.clone(),
-			},
+			video_mode:VideoMode { size, bit_depth:32, refresh_rate:60, monitor:self.clone() },
 		});
 		v.into_iter()
 	}

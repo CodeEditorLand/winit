@@ -44,11 +44,7 @@ compile_error!("Please select a feature to build for web: `web-sys`, `stdweb`");
 pub use self::{
 	device::Id as DeviceId,
 	error::OsError,
-	event_loop::{
-		EventLoop,
-		Proxy as EventLoopProxy,
-		WindowTarget as EventLoopWindowTarget,
-	},
+	event_loop::{EventLoop, Proxy as EventLoopProxy, WindowTarget as EventLoopWindowTarget},
 	monitor::{Handle as MonitorHandle, Mode as VideoMode},
 	window::{
 		Id as WindowId,

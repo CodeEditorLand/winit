@@ -1,14 +1,14 @@
+use instant::Instant;
+
 use super::backend;
 use crate::event_loop::ControlFlow;
-
-use instant::Instant;
 
 #[derive(Debug)]
 pub enum State {
 	Init,
-	WaitUntil { timeout: backend::Timeout, start: Instant, end: Instant },
-	Wait { start: Instant },
-	Poll { request: backend::AnimationFrameRequest },
+	WaitUntil { timeout:backend::Timeout, start:Instant, end:Instant },
+	Wait { start:Instant },
+	Poll { request:backend::AnimationFrameRequest },
 	Exit,
 }
 

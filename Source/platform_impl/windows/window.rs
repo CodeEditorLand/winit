@@ -51,13 +51,7 @@ use crate::{
 		PlatformSpecificWindowBuilderAttributes,
 		WindowId,
 	},
-	window::{
-		CursorIcon,
-		Fullscreen,
-		Theme,
-		UserAttentionType,
-		WindowAttributes,
-	},
+	window::{CursorIcon, Fullscreen, Theme, UserAttentionType, WindowAttributes},
 };
 
 /// The Win32 implementation of the main `Window` object.
@@ -86,26 +80,18 @@ impl Window {
 			let drag_and_drop = pl_attr.drag_and_drop;
 			init(w_attr, pl_attr, event_loop).map(|win| {
 				let file_drop_handler = if drag_and_drop {
-					use winapi::shared::winerror::{
-						OLE_E_WRONGCOMPOBJ,
-						RPC_E_CHANGED_MODE,
-						S_OK,
-					};
+					use winapi::shared::winerror::{OLE_E_WRONGCOMPOBJ, RPC_E_CHANGED_MODE, S_OK};
 
 					let ole_init_result = ole2::OleInitialize(ptr::null_mut());
 					// It is ok if the initialize result is `S_FALSE` because it
 					// might happen that multiple windows are created on
 					// the same thread.
 					if ole_init_result == OLE_E_WRONGCOMPOBJ {
-						panic!(
-							"OleInitialize failed! Result was: \
-							 `OLE_E_WRONGCOMPOBJ`"
-						);
+						panic!("OleInitialize failed! Result was: `OLE_E_WRONGCOMPOBJ`");
 					} else if ole_init_result == RPC_E_CHANGED_MODE {
 						panic!(
-							"OleInitialize failed! Result was: \
-							 `RPC_E_CHANGED_MODE`. Make sure other crates are \
-							 not using multithreaded COM library on the same \
+							"OleInitialize failed! Result was: `RPC_E_CHANGED_MODE`. Make sure \
+							 other crates are not using multithreaded COM library on the same \
 							 thread or disable drag and drop support."
 						);
 					}
@@ -119,17 +105,10 @@ impl Window {
 							}
 						}),
 					);
-					let handler_interface_ptr = &mut (*file_drop_handler.data)
-						.interface
-						as LPDROPTARGET;
+					let handler_interface_ptr =
+						&mut (*file_drop_handler.data).interface as LPDROPTARGET;
 
-					assert_eq!(
-						ole2::RegisterDragDrop(
-							win.window.0,
-							handler_interface_ptr
-						),
-						S_OK
-					);
+					assert_eq!(ole2::RegisterDragDrop(win.window.0, handler_interface_ptr), S_OK);
 					Some(file_drop_handler)
 				} else {
 					None
@@ -150,10 +129,7 @@ impl Window {
 	}
 
 	pub fn set_title(&self, text:&str) {
-		let text = OsStr::new(text)
-			.encode_wide()
-			.chain(Some(0).into_iter())
-			.collect::<Vec<_>>();
+		let text = OsStr::new(text).encode_wide().chain(Some(0).into_iter()).collect::<Vec<_>>();
 		unsafe {
 			winuser::SetWindowTextW(self.window.0, text.as_ptr() as LPCWSTR);
 		}
@@ -183,21 +159,16 @@ impl Window {
 	}
 
 	#[inline]
-	pub fn outer_position(
-		&self,
-	) -> Result<PhysicalPosition<i32>, NotSupportedError> {
+	pub fn outer_position(&self) -> Result<PhysicalPosition<i32>, NotSupportedError> {
 		util::get_window_rect(self.window.0)
             .map(|rect| Ok(PhysicalPosition::new(rect.left as i32, rect.top as i32)))
             .expect("Unexpected GetWindowRect failure; please report this error to https://github.com/rust-windowing/winit")
 	}
 
 	#[inline]
-	pub fn inner_position(
-		&self,
-	) -> Result<PhysicalPosition<i32>, NotSupportedError> {
+	pub fn inner_position(&self) -> Result<PhysicalPosition<i32>, NotSupportedError> {
 		let mut position:POINT = unsafe { mem::zeroed() };
-		if unsafe { winuser::ClientToScreen(self.window.0, &mut position) } == 0
-		{
+		if unsafe { winuser::ClientToScreen(self.window.0, &mut position) } == 0 {
 			panic!("Unexpected ClientToScreen failure: please report this error to https://github.com/rust-windowing/winit")
 		}
 		Ok(PhysicalPosition::new(position.x as i32, position.y as i32))
@@ -205,8 +176,7 @@ impl Window {
 
 	#[inline]
 	pub fn set_outer_position(&self, position:Position) {
-		let (x, y):(i32, i32) =
-			position.to_physical::<i32>(self.scale_factor()).into();
+		let (x, y):(i32, i32) = position.to_physical::<i32>(self.scale_factor()).into();
 
 		let window_state = Arc::clone(&self.window_state);
 		let window = self.window.clone();
@@ -239,20 +209,14 @@ impl Window {
 		if unsafe { winuser::GetClientRect(self.window.0, &mut rect) } == 0 {
 			panic!("Unexpected GetClientRect failure: please report this error to https://github.com/rust-windowing/winit")
 		}
-		PhysicalSize::new(
-			(rect.right - rect.left) as u32,
-			(rect.bottom - rect.top) as u32,
-		)
+		PhysicalSize::new((rect.right - rect.left) as u32, (rect.bottom - rect.top) as u32)
 	}
 
 	#[inline]
 	pub fn outer_size(&self) -> PhysicalSize<u32> {
 		util::get_window_rect(self.window.0)
 			.map(|rect| {
-				PhysicalSize::new(
-					(rect.right - rect.left) as u32,
-					(rect.bottom - rect.top) as u32,
-				)
+				PhysicalSize::new((rect.right - rect.left) as u32, (rect.bottom - rect.top) as u32)
 			})
 			.unwrap()
 	}
@@ -307,10 +271,7 @@ impl Window {
 
 	#[inline]
 	pub fn hinstance(&self) -> HINSTANCE {
-		unsafe {
-			winuser::GetWindowLongPtrW(self.hwnd(), winuser::GWLP_HINSTANCE)
-				as *mut _
-		}
+		unsafe { winuser::GetWindowLongPtrW(self.hwnd(), winuser::GWLP_HINSTANCE) as *mut _ }
 	}
 
 	#[inline]
@@ -327,10 +288,7 @@ impl Window {
 	pub fn set_cursor_icon(&self, cursor:CursorIcon) {
 		self.window_state.lock().mouse.cursor = cursor;
 		self.thread_executor.execute_in_thread(move || unsafe {
-			let cursor = winuser::LoadCursorW(
-				ptr::null_mut(),
-				cursor.to_windows_cursor(),
-			);
+			let cursor = winuser::LoadCursorW(ptr::null_mut(), cursor.to_windows_cursor());
 			winuser::SetCursor(cursor);
 		});
 	}
@@ -345,9 +303,7 @@ impl Window {
 			let result = window_state
 				.lock()
 				.mouse
-				.set_cursor_flags(window.0, |f| {
-					f.set(CursorFlags::GRABBED, grab)
-				})
+				.set_cursor_flags(window.0, |f| f.set(CursorFlags::GRABBED, grab))
 				.map_err(|e| ExternalError::Os(os_error!(e)));
 			let _ = tx.send(result);
 		});
@@ -364,9 +320,7 @@ impl Window {
 			let result = window_state
 				.lock()
 				.mouse
-				.set_cursor_flags(window.0, |f| {
-					f.set(CursorFlags::HIDDEN, !visible)
-				})
+				.set_cursor_flags(window.0, |f| f.set(CursorFlags::HIDDEN, !visible))
 				.map_err(|e| e.to_string());
 			let _ = tx.send(result);
 		});
@@ -377,24 +331,17 @@ impl Window {
 	pub fn scale_factor(&self) -> f64 { self.window_state.lock().scale_factor }
 
 	#[inline]
-	pub fn set_cursor_position(
-		&self,
-		position:Position,
-	) -> Result<(), ExternalError> {
+	pub fn set_cursor_position(&self, position:Position) -> Result<(), ExternalError> {
 		let scale_factor = self.scale_factor();
 		let (x, y) = position.to_physical::<i32>(scale_factor).into();
 
 		let mut point = POINT { x, y };
 		unsafe {
 			if winuser::ClientToScreen(self.window.0, &mut point) == 0 {
-				return Err(ExternalError::Os(os_error!(
-					io::Error::last_os_error()
-				)));
+				return Err(ExternalError::Os(os_error!(io::Error::last_os_error())));
 			}
 			if winuser::SetCursorPos(point.x, point.y) == 0 {
-				return Err(ExternalError::Os(os_error!(
-					io::Error::last_os_error()
-				)));
+				return Err(ExternalError::Os(os_error!(io::Error::last_os_error())));
 			}
 		}
 		Ok(())
@@ -482,23 +429,18 @@ impl Window {
 					&Some(Fullscreen::Borderless(_)),
 					&Some(Fullscreen::Exclusive(ref video_mode)),
 				)
-				| (
-					&Some(Fullscreen::Exclusive(_)),
-					&Some(Fullscreen::Exclusive(ref video_mode)),
-				) => {
+				| (&Some(Fullscreen::Exclusive(_)), &Some(Fullscreen::Exclusive(ref video_mode))) => {
 					let monitor = video_mode.monitor();
 
-					let mut display_name =
-						OsStr::new(&monitor.inner.native_identifier())
-							.encode_wide()
-							.collect::<Vec<_>>();
+					let mut display_name = OsStr::new(&monitor.inner.native_identifier())
+						.encode_wide()
+						.collect::<Vec<_>>();
 					// `encode_wide` does not add a null-terminator but
 					// `ChangeDisplaySettingsExW` requires a null-terminated
 					// string, so add it
 					display_name.push(0);
 
-					let mut native_video_mode =
-						video_mode.video_mode.native_video_mode.clone();
+					let mut native_video_mode = video_mode.video_mode.native_video_mode.clone();
 
 					let res = unsafe {
 						winuser::ChangeDisplaySettingsExW(
@@ -517,10 +459,7 @@ impl Window {
 					assert_eq!(res, winuser::DISP_CHANGE_SUCCESSFUL);
 				},
 				(&Some(Fullscreen::Exclusive(_)), &None)
-				| (
-					&Some(Fullscreen::Exclusive(_)),
-					&Some(Fullscreen::Borderless(_)),
-				) => {
+				| (&Some(Fullscreen::Exclusive(_)), &Some(Fullscreen::Borderless(_))) => {
 					let res = unsafe {
 						winuser::ChangeDisplaySettingsExW(
 							std::ptr::null_mut(),
@@ -578,20 +517,13 @@ impl Window {
 						placement
 					};
 
-					window_state.lock().saved_window =
-						Some(SavedWindow { placement });
+					window_state.lock().saved_window = Some(SavedWindow { placement });
 
 					let monitor = match &fullscreen {
-						Fullscreen::Exclusive(video_mode) => {
-							video_mode.monitor()
-						},
-						Fullscreen::Borderless(Some(monitor)) => {
-							monitor.clone()
-						},
+						Fullscreen::Exclusive(video_mode) => video_mode.monitor(),
+						Fullscreen::Borderless(Some(monitor)) => monitor.clone(),
 						Fullscreen::Borderless(None) => {
-							RootMonitorHandle {
-								inner:monitor::current_monitor(window.0),
-							}
+							RootMonitorHandle { inner:monitor::current_monitor(window.0) }
 						},
 					};
 
@@ -613,17 +545,11 @@ impl Window {
 				},
 				None => {
 					let mut window_state_lock = window_state.lock();
-					if let Some(SavedWindow { placement }) =
-						window_state_lock.saved_window.take()
-					{
+					if let Some(SavedWindow { placement }) = window_state_lock.saved_window.take() {
 						drop(window_state_lock);
 						unsafe {
 							winuser::SetWindowPlacement(window.0, &placement);
-							winuser::InvalidateRgn(
-								window.0,
-								ptr::null_mut(),
-								0,
-							);
+							winuser::InvalidateRgn(window.0, ptr::null_mut(), 0);
 						}
 					}
 				},
@@ -661,9 +587,7 @@ impl Window {
 
 	#[inline]
 	pub fn current_monitor(&self) -> Option<RootMonitorHandle> {
-		Some(RootMonitorHandle {
-			inner:monitor::current_monitor(self.window.0),
-		})
+		Some(RootMonitorHandle { inner:monitor::current_monitor(self.window.0) })
 	}
 
 	#[inline]
@@ -695,10 +619,7 @@ impl Window {
 			};
 			unsafe {
 				let himc = winapi::um::imm::ImmGetContext(self.window.0);
-				winapi::um::imm::ImmSetCompositionWindow(
-					himc,
-					&mut composition_form,
-				);
+				winapi::um::imm::ImmSetCompositionWindow(himc, &mut composition_form);
 				winapi::um::imm::ImmReleaseContext(self.window.0, himc);
 			}
 		}
@@ -711,10 +632,7 @@ impl Window {
 	}
 
 	#[inline]
-	pub fn request_user_attention(
-		&self,
-		request_type:Option<UserAttentionType>,
-	) {
+	pub fn request_user_attention(&self, request_type:Option<UserAttentionType>) {
 		let window = self.window.clone();
 		let active_window_handle = unsafe { winuser::GetActiveWindow() };
 		if window.0 == active_window_handle {
@@ -726,17 +644,10 @@ impl Window {
 				.map(|ty| {
 					match ty {
 						UserAttentionType::Critical => {
-							(
-								winuser::FLASHW_ALL | winuser::FLASHW_TIMERNOFG,
-								u32::MAX,
-							)
+							(winuser::FLASHW_ALL | winuser::FLASHW_TIMERNOFG, u32::MAX)
 						},
 						UserAttentionType::Informational => {
-							(
-								winuser::FLASHW_TRAY
-									| winuser::FLASHW_TIMERNOFG,
-								0,
-							)
+							(winuser::FLASHW_TRAY | winuser::FLASHW_TIMERNOFG, 0)
 						},
 					}
 				})
@@ -792,16 +703,12 @@ unsafe fn init<T:'static>(
 		.collect::<Vec<_>>();
 
 	// registering the window class
-	let class_name = register_window_class(
-		&attributes.window_icon,
-		&pl_attribs.taskbar_icon,
-	);
+	let class_name = register_window_class(&attributes.window_icon, &pl_attribs.taskbar_icon);
 
 	let mut window_flags = WindowFlags::empty();
 	window_flags.set(WindowFlags::DECORATIONS, attributes.decorations);
 	window_flags.set(WindowFlags::ALWAYS_ON_TOP, attributes.always_on_top);
-	window_flags
-		.set(WindowFlags::NO_BACK_BUFFER, pl_attribs.no_redirection_bitmap);
+	window_flags.set(WindowFlags::NO_BACK_BUFFER, pl_attribs.no_redirection_bitmap);
 	window_flags.set(WindowFlags::TRANSPARENT, attributes.transparent);
 	// WindowFlags::VISIBLE and MAXIMIZED are set down below after the window
 	// has been configured.
@@ -892,11 +799,7 @@ unsafe fn init<T:'static>(
 			pl_attribs.preferred_theme,
 		);
 		let window_state = Arc::new(Mutex::new(window_state));
-		WindowState::set_window_flags(
-			window_state.lock(),
-			real_window.0,
-			|f| *f = window_flags,
-		);
+		WindowState::set_window_flags(window_state.lock(), real_window.0, |f| *f = window_flags);
 		window_state
 	};
 
@@ -906,9 +809,7 @@ unsafe fn init<T:'static>(
 		thread_executor:event_loop.create_thread_executor(),
 	};
 
-	let dimensions = attributes
-		.inner_size
-		.unwrap_or_else(|| PhysicalSize::new(800, 600).into());
+	let dimensions = attributes.inner_size.unwrap_or_else(|| PhysicalSize::new(800, 600).into());
 	win.set_inner_size(dimensions);
 	if attributes.maximized {
 		// Need to set MAXIMIZED after setting `inner_size` as
@@ -929,14 +830,9 @@ unsafe fn init<T:'static>(
 	Ok(win)
 }
 
-unsafe fn register_window_class(
-	window_icon:&Option<Icon>,
-	taskbar_icon:&Option<Icon>,
-) -> Vec<u16> {
-	let class_name:Vec<_> = OsStr::new("Window Class")
-		.encode_wide()
-		.chain(Some(0).into_iter())
-		.collect();
+unsafe fn register_window_class(window_icon:&Option<Icon>, taskbar_icon:&Option<Icon>) -> Vec<u16> {
+	let class_name:Vec<_> =
+		OsStr::new("Window Class").encode_wide().chain(Some(0).into_iter()).collect();
 
 	let h_icon = taskbar_icon
 		.as_ref()
@@ -1024,8 +920,7 @@ unsafe fn taskbar_mark_fullscreen(handle:HWND, fullscreen:bool) {
 		}
 
 		task_bar_list = task_bar_list_ptr.get();
-		(*task_bar_list)
-			.MarkFullscreenWindow(handle, if fullscreen { 1 } else { 0 });
+		(*task_bar_list).MarkFullscreenWindow(handle, if fullscreen { 1 } else { 0 });
 	})
 }
 
@@ -1034,10 +929,7 @@ unsafe fn force_window_active(handle:HWND) {
 	// window, This is a little hack which can "steal" the foreground window
 	// permission We only call this function in the window creation, so it
 	// should be fine. See : https://stackoverflow.com/questions/10740346/setforegroundwindow-only-working-while-visual-studio-is-open
-	let alt_sc = winuser::MapVirtualKeyW(
-		winuser::VK_MENU as _,
-		winuser::MAPVK_VK_TO_VSC,
-	);
+	let alt_sc = winuser::MapVirtualKeyW(winuser::VK_MENU as _, winuser::MAPVK_VK_TO_VSC);
 
 	let mut inputs:[winuser::INPUT; 2] = mem::zeroed();
 	inputs[0].type_ = winuser::INPUT_KEYBOARD;
@@ -1048,8 +940,7 @@ unsafe fn force_window_active(handle:HWND) {
 	inputs[1].type_ = winuser::INPUT_KEYBOARD;
 	inputs[1].u.ki_mut().wVk = winuser::VK_LMENU as _;
 	inputs[1].u.ki_mut().wScan = alt_sc as _;
-	inputs[1].u.ki_mut().dwFlags =
-		winuser::KEYEVENTF_EXTENDEDKEY | winuser::KEYEVENTF_KEYUP;
+	inputs[1].u.ki_mut().dwFlags = winuser::KEYEVENTF_EXTENDEDKEY | winuser::KEYEVENTF_KEYUP;
 
 	// Simulate a key press and release
 	winuser::SendInput(

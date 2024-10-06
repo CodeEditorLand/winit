@@ -32,11 +32,7 @@ use crate::{
 		StartCause,
 		WindowEvent,
 	},
-	event_loop::{
-		ControlFlow,
-		EventLoopClosed,
-		EventLoopWindowTarget as RootELW,
-	},
+	event_loop::{ControlFlow, EventLoopClosed, EventLoopWindowTarget as RootELW},
 	monitor::MonitorHandle as RootMonitorHandle,
 	window::{CursorIcon, WindowId as RootWindowId},
 };
@@ -77,10 +73,7 @@ impl<T:'static> EventLoop<T> {
 	}
 
 	fn new_gtk() -> Result<EventLoop<T>, Box<dyn Error>> {
-		let app = gtk::Application::new(
-			Some("org.tauri"),
-			gio::ApplicationFlags::empty(),
-		)?;
+		let app = gtk::Application::new(Some("org.tauri"), gio::ApplicationFlags::empty())?;
 		let cancellable:Option<&Cancellable> = None;
 		app.register(cancellable)?;
 
@@ -99,10 +92,7 @@ impl<T:'static> EventLoop<T> {
 
 		// Create event loop itself.
 		let event_loop = Self {
-			window_target:RootELW {
-				p:window_target,
-				_marker:std::marker::PhantomData,
-			},
+			window_target:RootELW { p:window_target, _marker:std::marker::PhantomData },
 			user_event_tx,
 			user_event_rx,
 		};
@@ -143,17 +133,12 @@ impl<T:'static> EventLoop<T> {
 			// User event
 			if let Ok(event) = user_event_rx.try_recv() {
 				if let Err(e) = event_tx.send(Event::UserEvent(event)) {
-					log::warn!(
-						"Failed to send user event to event channel: {}",
-						e
-					);
+					log::warn!("Failed to send user event to event channel: {}", e);
 				}
 			}
 
 			// Widnow Request
-			if let Ok((id, request)) =
-				window_target.p.window_requests_rx.try_recv()
-			{
+			if let Ok((id, request)) = window_target.p.window_requests_rx.try_recv() {
 				let window = window_target
 					.p
 					.app
@@ -209,9 +194,7 @@ impl<T:'static> EventLoop<T> {
 							window.hide();
 						}
 					},
-					WindowRequest::Resizable(resizable) => {
-						window.set_resizable(resizable)
-					},
+					WindowRequest::Resizable(resizable) => window.set_resizable(resizable),
 					WindowRequest::Minimized(minimized) => {
 						if minimized {
 							window.iconify();
@@ -230,9 +213,8 @@ impl<T:'static> EventLoop<T> {
 						let display = window.get_display();
 						if let Some(cursor) = display
 							.get_device_manager()
-							.and_then(|device_manager| {
-								device_manager.get_client_pointer()
-							}) {
+							.and_then(|device_manager| device_manager.get_client_pointer())
+						{
 							let (_, x, y) = cursor.get_position();
 							window.begin_move_drag(1, x, y, 0);
 						}
@@ -243,9 +225,7 @@ impl<T:'static> EventLoop<T> {
 							None => window.unfullscreen(),
 						}
 					},
-					WindowRequest::Decorations(decorations) => {
-						window.set_decorated(decorations)
-					},
+					WindowRequest::Decorations(decorations) => window.set_decorated(decorations),
 					WindowRequest::AlwaysOnTop(always_on_top) => {
 						window.set_keep_above(always_on_top)
 					},
@@ -259,9 +239,7 @@ impl<T:'static> EventLoop<T> {
 							window.set_urgency_hint(true)
 						}
 					},
-					WindowRequest::SkipTaskbar => {
-						window.set_skip_taskbar_hint(true)
-					},
+					WindowRequest::SkipTaskbar => window.set_skip_taskbar_hint(true),
 					WindowRequest::CursorIcon(cursor) => {
 						if let Some(gdk_window) = window.get_window() {
 							let display = window.get_display();
@@ -271,101 +249,51 @@ impl<T:'static> EventLoop<T> {
 										Cursor::from_name(
 											&display,
 											match cr {
-												CursorIcon::Crosshair => {
-													"crosshair"
-												},
+												CursorIcon::Crosshair => "crosshair",
 												CursorIcon::Hand => "pointer",
-												CursorIcon::Arrow => {
-													"crosshair"
-												},
+												CursorIcon::Arrow => "crosshair",
 												CursorIcon::Move => "move",
 												CursorIcon::Text => "text",
 												CursorIcon::Wait => "wait",
 												CursorIcon::Help => "help",
-												CursorIcon::Progress => {
-													"progress"
-												},
-												CursorIcon::NotAllowed => {
-													"not-allowed"
-												},
-												CursorIcon::ContextMenu => {
-													"context-menu"
-												},
+												CursorIcon::Progress => "progress",
+												CursorIcon::NotAllowed => "not-allowed",
+												CursorIcon::ContextMenu => "context-menu",
 												CursorIcon::Cell => "cell",
-												CursorIcon::VerticalText => {
-													"vertical-text"
-												},
+												CursorIcon::VerticalText => "vertical-text",
 												CursorIcon::Alias => "alias",
 												CursorIcon::Copy => "copy",
 												CursorIcon::NoDrop => "no-drop",
 												CursorIcon::Grab => "grab",
-												CursorIcon::Grabbing => {
-													"grabbing"
-												},
-												CursorIcon::AllScroll => {
-													"all-scroll"
-												},
+												CursorIcon::Grabbing => "grabbing",
+												CursorIcon::AllScroll => "all-scroll",
 												CursorIcon::ZoomIn => "zoom-in",
-												CursorIcon::ZoomOut => {
-													"zoom-out"
-												},
-												CursorIcon::EResize => {
-													"e-resize"
-												},
-												CursorIcon::NResize => {
-													"n-resize"
-												},
-												CursorIcon::NeResize => {
-													"ne-resize"
-												},
-												CursorIcon::NwResize => {
-													"nw-resize"
-												},
-												CursorIcon::SResize => {
-													"s-resize"
-												},
-												CursorIcon::SeResize => {
-													"se-resize"
-												},
-												CursorIcon::SwResize => {
-													"sw-resize"
-												},
-												CursorIcon::WResize => {
-													"w-resize"
-												},
-												CursorIcon::EwResize => {
-													"ew-resize"
-												},
-												CursorIcon::NsResize => {
-													"ns-resize"
-												},
-												CursorIcon::NeswResize => {
-													"nesw-resize"
-												},
-												CursorIcon::NwseResize => {
-													"nwse-resize"
-												},
-												CursorIcon::ColResize => {
-													"col-resize"
-												},
-												CursorIcon::RowResize => {
-													"row-resize"
-												},
-												CursorIcon::Default => {
-													"default"
-												},
+												CursorIcon::ZoomOut => "zoom-out",
+												CursorIcon::EResize => "e-resize",
+												CursorIcon::NResize => "n-resize",
+												CursorIcon::NeResize => "ne-resize",
+												CursorIcon::NwResize => "nw-resize",
+												CursorIcon::SResize => "s-resize",
+												CursorIcon::SeResize => "se-resize",
+												CursorIcon::SwResize => "sw-resize",
+												CursorIcon::WResize => "w-resize",
+												CursorIcon::EwResize => "ew-resize",
+												CursorIcon::NsResize => "ns-resize",
+												CursorIcon::NeswResize => "nesw-resize",
+												CursorIcon::NwseResize => "nwse-resize",
+												CursorIcon::ColResize => "col-resize",
+												CursorIcon::RowResize => "row-resize",
+												CursorIcon::Default => "default",
 											},
 										)
 										.as_ref(),
 									)
 								},
 								None => {
-									gdk_window.set_cursor(Some(
-										&Cursor::new_for_display(
-											&display,
-											CursorType::BlankCursor,
-										),
-									))
+									gdk_window.set_cursor(Some(&Cursor::new_for_display(
+										&display,
+										CursorType::BlankCursor,
+									)))
 								},
 							}
 						};
@@ -381,8 +309,7 @@ impl<T:'static> EventLoop<T> {
 								event:WindowEvent::CloseRequested,
 							}) {
 								log::warn!(
-									"Failed to send window close event to \
-									 event channel: {}",
+									"Failed to send window close event to event channel: {}",
 									e
 								);
 							}
@@ -394,13 +321,10 @@ impl<T:'static> EventLoop<T> {
 							let (x, y) = event.get_position();
 							if let Err(e) = tx_clone.send(Event::WindowEvent {
 								window_id:RootWindowId(id),
-								event:WindowEvent::Moved(
-									PhysicalPosition::new(x, y),
-								),
+								event:WindowEvent::Moved(PhysicalPosition::new(x, y)),
 							}) {
 								log::warn!(
-									"Failed to send window moved event to \
-									 event channel: {}",
+									"Failed to send window moved event to event channel: {}",
 									e
 								);
 							}
@@ -408,13 +332,10 @@ impl<T:'static> EventLoop<T> {
 							let (w, h) = event.get_size();
 							if let Err(e) = tx_clone.send(Event::WindowEvent {
 								window_id:RootWindowId(id),
-								event:WindowEvent::Resized(PhysicalSize::new(
-									w, h,
-								)),
+								event:WindowEvent::Resized(PhysicalSize::new(w, h)),
 							}) {
 								log::warn!(
-									"Failed to send window resized event to \
-									 event channel: {}",
+									"Failed to send window resized event to event channel: {}",
 									e
 								);
 							}
@@ -422,27 +343,20 @@ impl<T:'static> EventLoop<T> {
 						});
 
 						let tx_clone = event_tx.clone();
-						window.connect_window_state_event(
-							move |_window, event| {
-								let state = event.get_new_window_state();
+						window.connect_window_state_event(move |_window, event| {
+							let state = event.get_new_window_state();
 
-								if let Err(e) =
-									tx_clone.send(Event::WindowEvent {
-										window_id:RootWindowId(id),
-										event:WindowEvent::Focused(
-											state
-												.contains(WindowState::FOCUSED),
-										),
-									}) {
-									log::warn!(
-										"Failed to send window focused event \
-										 to event channel: {}",
-										e
-									);
-								}
-								Inhibit(false)
-							},
-						);
+							if let Err(e) = tx_clone.send(Event::WindowEvent {
+								window_id:RootWindowId(id),
+								event:WindowEvent::Focused(state.contains(WindowState::FOCUSED)),
+							}) {
+								log::warn!(
+									"Failed to send window focused event to event channel: {}",
+									e
+								);
+							}
+							Inhibit(false)
+						});
 
 						let tx_clone = event_tx.clone();
 						window.connect_destroy_event(move |_, _| {
@@ -451,8 +365,7 @@ impl<T:'static> EventLoop<T> {
 								event:WindowEvent::Destroyed,
 							}) {
 								log::warn!(
-									"Failed to send window destroyed event to \
-									 event channel: {}",
+									"Failed to send window destroyed event to event channel: {}",
 									e
 								);
 							}
@@ -470,8 +383,7 @@ impl<T:'static> EventLoop<T> {
 								},
 							}) {
 								log::warn!(
-									"Failed to send cursor entered event to \
-									 event channel: {}",
+									"Failed to send cursor entered event to event channel: {}",
 									e
 								);
 							}
@@ -483,29 +395,24 @@ impl<T:'static> EventLoop<T> {
 							let display = window.get_display();
 							if let Some(cursor) = display
 								.get_device_manager()
-								.and_then(|device_manager| {
-									device_manager.get_client_pointer()
-								}) {
+								.and_then(|device_manager| device_manager.get_client_pointer())
+							{
 								let (_, x, y) = cursor.get_position();
-								if let Err(e) =
-									tx_clone.send(Event::WindowEvent {
-										window_id:RootWindowId(id),
-										event:WindowEvent::CursorMoved {
-											position:PhysicalPosition::new(
-												x as f64, y as f64,
-											),
-											// FIXME: currently we use a dummy
-											// device id, find if we can get
-											// device id from gtk
-											device_id:RootDeviceId(DeviceId(0)),
-											// this field is depracted so it is
-											// fine to pass empty state
-											modifiers:ModifiersState::empty(),
-										},
-									}) {
+								if let Err(e) = tx_clone.send(Event::WindowEvent {
+									window_id:RootWindowId(id),
+									event:WindowEvent::CursorMoved {
+										position:PhysicalPosition::new(x as f64, y as f64),
+										// FIXME: currently we use a dummy
+										// device id, find if we can get
+										// device id from gtk
+										device_id:RootDeviceId(DeviceId(0)),
+										// this field is depracted so it is
+										// fine to pass empty state
+										modifiers:ModifiersState::empty(),
+									},
+								}) {
 									log::warn!(
-										"Failed to send cursor moved event to \
-										 event channel: {}",
+										"Failed to send cursor moved event to event channel: {}",
 										e
 									);
 								}
@@ -524,8 +431,7 @@ impl<T:'static> EventLoop<T> {
 								},
 							}) {
 								log::warn!(
-									"Failed to send cursor left event to \
-									 event channel: {}",
+									"Failed to send cursor left event to event channel: {}",
 									e
 								);
 							}
@@ -554,8 +460,7 @@ impl<T:'static> EventLoop<T> {
 								},
 							}) {
 								log::warn!(
-									"Failed to send mouse input preseed event \
-									 to event channel: {}",
+									"Failed to send mouse input preseed event to event channel: {}",
 									e
 								);
 							}
@@ -584,8 +489,8 @@ impl<T:'static> EventLoop<T> {
 								},
 							}) {
 								log::warn!(
-									"Failed to send mouse input released \
-									 event to event channel: {}",
+									"Failed to send mouse input released event to event channel: \
+									 {}",
 									e
 								);
 							}
@@ -607,11 +512,7 @@ impl<T:'static> EventLoop<T> {
 					if let Ok(event) = event_rx.try_recv() {
 						callback(event, &window_target, &mut control_flow);
 					} else {
-						callback(
-							Event::MainEventsCleared,
-							&window_target,
-							&mut control_flow,
-						);
+						callback(Event::MainEventsCleared, &window_target, &mut control_flow);
 					}
 					Continue(true)
 				},
@@ -641,9 +542,7 @@ pub struct EventLoopProxy<T:'static> {
 }
 
 impl<T:'static> Clone for EventLoopProxy<T> {
-	fn clone(&self) -> Self {
-		Self { user_event_tx:self.user_event_tx.clone() }
-	}
+	fn clone(&self) -> Self { Self { user_event_tx:self.user_event_tx.clone() } }
 }
 
 impl<T:'static> EventLoopProxy<T> {
@@ -662,10 +561,9 @@ impl<T:'static> EventLoopProxy<T> {
 fn assert_is_main_thread(suggested_method:&str) {
 	if !is_main_thread() {
 		panic!(
-			"Initializing the event loop outside of the main thread is a \
-			 significant cross-platform compatibility hazard. If you really, \
-			 absolutely need to create an EventLoop on a different thread, \
-			 please use the `EventLoopExtUnix::{}` function.",
+			"Initializing the event loop outside of the main thread is a significant \
+			 cross-platform compatibility hazard. If you really, absolutely need to create an \
+			 EventLoop on a different thread, please use the `EventLoopExtUnix::{}` function.",
 			suggested_method
 		);
 	}
@@ -678,11 +576,7 @@ fn is_main_thread() -> bool {
 	unsafe { syscall(SYS_gettid) == getpid() as c_long }
 }
 
-#[cfg(any(
-	target_os = "dragonfly",
-	target_os = "freebsd",
-	target_os = "openbsd"
-))]
+#[cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd"))]
 fn is_main_thread() -> bool {
 	use libc::pthread_main_np;
 

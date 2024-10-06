@@ -58,30 +58,26 @@ impl Clone for VideoMode {
 
 impl VideoMode {
 	unsafe fn retained_new(uiscreen:id, screen_mode:id) -> VideoMode {
-		assert_main_thread!(
-			"`VideoMode` can only be created on the main thread on iOS"
-		);
+		assert_main_thread!("`VideoMode` can only be created on the main thread on iOS");
 		let os_capabilities = app_state::os_capabilities();
-		let refresh_rate:NSInteger =
-			if os_capabilities.maximum_frames_per_second {
-				msg_send![uiscreen, maximumFramesPerSecond]
-			} else {
-				// https://developer.apple.com/library/archive/technotes/tn2460/_index.html
-				// https://en.wikipedia.org/wiki/IPad_Pro#Model_comparison
-				//
-				// All iOS devices support 60 fps, and on devices where
-				// `maximumFramesPerSecond` is not supported, they are all
-				// guaranteed to have 60hz refresh rates. This does not
-				// correctly handle external displays. ProMotion displays
-				// support 120fps, but they were introduced at the same time
-				// as the `maximumFramesPerSecond` API.
-				//
-				// FIXME: earlier OSs could calculate the refresh rate using
-				// `-[CADisplayLink duration]`.
-				os_capabilities
-					.maximum_frames_per_second_err_msg("defaulting to 60 fps");
-				60
-			};
+		let refresh_rate:NSInteger = if os_capabilities.maximum_frames_per_second {
+			msg_send![uiscreen, maximumFramesPerSecond]
+		} else {
+			// https://developer.apple.com/library/archive/technotes/tn2460/_index.html
+			// https://en.wikipedia.org/wiki/IPad_Pro#Model_comparison
+			//
+			// All iOS devices support 60 fps, and on devices where
+			// `maximumFramesPerSecond` is not supported, they are all
+			// guaranteed to have 60hz refresh rates. This does not
+			// correctly handle external displays. ProMotion displays
+			// support 120fps, but they were introduced at the same time
+			// as the `maximumFramesPerSecond` API.
+			//
+			// FIXME: earlier OSs could calculate the refresh rate using
+			// `-[CADisplayLink duration]`.
+			os_capabilities.maximum_frames_per_second_err_msg("defaulting to 60 fps");
+			60
+		};
 		let size:CGSize = msg_send![screen_mode, size];
 		let screen_mode:id = msg_send![screen_mode, retain];
 		let screen_mode = NativeDisplayMode(screen_mode);
@@ -100,9 +96,7 @@ impl VideoMode {
 
 	pub fn refresh_rate(&self) -> u16 { self.refresh_rate }
 
-	pub fn monitor(&self) -> RootMonitorHandle {
-		RootMonitorHandle { inner:self.monitor.clone() }
-	}
+	pub fn monitor(&self) -> RootMonitorHandle { RootMonitorHandle { inner:self.monitor.clone() } }
 }
 
 #[derive(PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -129,8 +123,7 @@ impl Deref for MonitorHandle {
 	fn deref(&self) -> &Inner {
 		unsafe {
 			assert_main_thread!(
-				"`MonitorHandle` methods can only be run on the main thread \
-				 on iOS"
+				"`MonitorHandle` methods can only be run on the main thread on iOS"
 			);
 		}
 		&self.inner
@@ -141,8 +134,7 @@ impl DerefMut for MonitorHandle {
 	fn deref_mut(&mut self) -> &mut Inner {
 		unsafe {
 			assert_main_thread!(
-				"`MonitorHandle` methods can only be run on the main thread \
-				 on iOS"
+				"`MonitorHandle` methods can only be run on the main thread on iOS"
 			);
 		}
 		&mut self.inner
@@ -153,17 +145,13 @@ unsafe impl Send for MonitorHandle {}
 unsafe impl Sync for MonitorHandle {}
 
 impl Clone for MonitorHandle {
-	fn clone(&self) -> MonitorHandle {
-		MonitorHandle::retained_new(self.uiscreen)
-	}
+	fn clone(&self) -> MonitorHandle { MonitorHandle::retained_new(self.uiscreen) }
 }
 
 impl Drop for MonitorHandle {
 	fn drop(&mut self) {
 		unsafe {
-			assert_main_thread!(
-				"`MonitorHandle` can only be dropped on the main thread on iOS"
-			);
+			assert_main_thread!("`MonitorHandle` can only be dropped on the main thread on iOS");
 		}
 	}
 }
@@ -192,9 +180,7 @@ impl fmt::Debug for MonitorHandle {
 impl MonitorHandle {
 	pub fn retained_new(uiscreen:id) -> MonitorHandle {
 		unsafe {
-			assert_main_thread!(
-				"`MonitorHandle` can only be cloned on the main thread on iOS"
-			);
+			assert_main_thread!("`MonitorHandle` can only be cloned on the main thread on iOS");
 			let () = msg_send![uiscreen, retain];
 		}
 		MonitorHandle { inner:Inner { uiscreen } }
@@ -221,10 +207,7 @@ impl Inner {
 	pub fn size(&self) -> PhysicalSize<u32> {
 		unsafe {
 			let bounds:CGRect = msg_send![self.ui_screen(), nativeBounds];
-			PhysicalSize::new(
-				bounds.size.width as u32,
-				bounds.size.height as u32,
-			)
+			PhysicalSize::new(bounds.size.width as u32, bounds.size.height as u32)
 		}
 	}
 
@@ -246,8 +229,7 @@ impl Inner {
 		let mut modes = BTreeSet::new();
 		unsafe {
 			let available_modes:id = msg_send![self.uiscreen, availableModes];
-			let available_mode_count:NSUInteger =
-				msg_send![available_modes, count];
+			let available_mode_count:NSUInteger = msg_send![available_modes, count];
 
 			for i in 0..available_mode_count {
 				let mode:id = msg_send![available_modes, objectAtIndex: i];
@@ -268,9 +250,7 @@ impl Inner {
 	pub fn preferred_video_mode(&self) -> RootVideoMode {
 		unsafe {
 			let mode:id = msg_send![self.uiscreen, preferredMode];
-			RootVideoMode {
-				video_mode:VideoMode::retained_new(self.uiscreen, mode),
-			}
+			RootVideoMode { video_mode:VideoMode::retained_new(self.uiscreen, mode) }
 		}
 	}
 }

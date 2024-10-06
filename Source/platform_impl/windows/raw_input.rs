@@ -6,11 +6,7 @@ use std::{
 use winapi::{
 	ctypes::wchar_t,
 	shared::{
-		hidusage::{
-			HID_USAGE_GENERIC_KEYBOARD,
-			HID_USAGE_GENERIC_MOUSE,
-			HID_USAGE_PAGE_GENERIC,
-		},
+		hidusage::{HID_USAGE_GENERIC_KEYBOARD, HID_USAGE_GENERIC_MOUSE, HID_USAGE_PAGE_GENERIC},
 		minwindef::{TRUE, UINT, USHORT},
 		windef::HWND,
 	},
@@ -46,13 +42,8 @@ pub fn get_raw_input_device_list() -> Option<Vec<RAWINPUTDEVICELIST>> {
 	let list_size = size_of::<RAWINPUTDEVICELIST>() as UINT;
 
 	let mut num_devices = 0;
-	let status = unsafe {
-		winuser::GetRawInputDeviceList(
-			ptr::null_mut(),
-			&mut num_devices,
-			list_size,
-		)
-	};
+	let status =
+		unsafe { winuser::GetRawInputDeviceList(ptr::null_mut(), &mut num_devices, list_size) };
 
 	if status == UINT::max_value() {
 		return None;
@@ -61,11 +52,7 @@ pub fn get_raw_input_device_list() -> Option<Vec<RAWINPUTDEVICELIST>> {
 	let mut buffer = Vec::with_capacity(num_devices as _);
 
 	let num_stored = unsafe {
-		winuser::GetRawInputDeviceList(
-			buffer.as_ptr() as _,
-			&mut num_devices,
-			list_size,
-		)
+		winuser::GetRawInputDeviceList(buffer.as_ptr() as _, &mut num_devices, list_size)
 	};
 
 	if num_stored == UINT::max_value() {
@@ -128,12 +115,7 @@ pub fn get_raw_input_device_info(handle:HANDLE) -> Option<RawDeviceInfo> {
 pub fn get_raw_input_device_name(handle:HANDLE) -> Option<String> {
 	let mut minimum_size = 0;
 	let status = unsafe {
-		winuser::GetRawInputDeviceInfoW(
-			handle,
-			RIDI_DEVICENAME,
-			ptr::null_mut(),
-			&mut minimum_size,
-		)
+		winuser::GetRawInputDeviceInfoW(handle, RIDI_DEVICENAME, ptr::null_mut(), &mut minimum_size)
 	};
 
 	if status != 0 {
@@ -166,19 +148,13 @@ pub fn register_raw_input_devices(devices:&[RAWINPUTDEVICE]) -> bool {
 	let device_size = size_of::<RAWINPUTDEVICE>() as UINT;
 
 	let success = unsafe {
-		winuser::RegisterRawInputDevices(
-			devices.as_ptr() as _,
-			devices.len() as _,
-			device_size,
-		)
+		winuser::RegisterRawInputDevices(devices.as_ptr() as _, devices.len() as _, device_size)
 	};
 
 	success == TRUE
 }
 
-pub fn register_all_mice_and_keyboards_for_raw_input(
-	window_handle:HWND,
-) -> bool {
+pub fn register_all_mice_and_keyboards_for_raw_input(window_handle:HWND) -> bool {
 	// RIDEV_DEVNOTIFY: receive hotplug events
 	// RIDEV_INPUTSINK: receive events even if we're not in the foreground
 	let flags = RIDEV_DEVNOTIFY | RIDEV_INPUTSINK;
@@ -238,9 +214,7 @@ fn button_flags_to_element_state(
 	}
 }
 
-pub fn get_raw_mouse_button_state(
-	button_flags:USHORT,
-) -> [Option<ElementState>; 3] {
+pub fn get_raw_mouse_button_state(button_flags:USHORT) -> [Option<ElementState>; 3] {
 	[
 		button_flags_to_element_state(
 			button_flags,

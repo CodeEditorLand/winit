@@ -2,7 +2,9 @@ use std::{
 	any::Any,
 	cell::{Cell, RefCell},
 	collections::{HashSet, VecDeque},
-	mem, panic, ptr,
+	mem,
+	panic,
+	ptr,
 	rc::Rc,
 	time::Instant,
 };
@@ -21,21 +23,21 @@ use crate::{
 };
 
 pub(crate) type EventLoopRunnerShared<T> = Rc<EventLoopRunner<T>>;
-pub(crate) struct EventLoopRunner<T: 'static> {
+pub(crate) struct EventLoopRunner<T:'static> {
 	// The event loop's win32 handles
-	thread_msg_target: HWND,
-	wait_thread_id: DWORD,
+	thread_msg_target:HWND,
+	wait_thread_id:DWORD,
 
-	control_flow: Cell<ControlFlow>,
-	runner_state: Cell<RunnerState>,
-	last_events_cleared: Cell<Instant>,
+	control_flow:Cell<ControlFlow>,
+	runner_state:Cell<RunnerState>,
+	last_events_cleared:Cell<Instant>,
 
-	event_handler: Cell<Option<Box<dyn FnMut(Event<'_, T>, &mut ControlFlow)>>>,
-	event_buffer: RefCell<VecDeque<BufferedEvent<T>>>,
+	event_handler:Cell<Option<Box<dyn FnMut(Event<'_, T>, &mut ControlFlow)>>>,
+	event_buffer:RefCell<VecDeque<BufferedEvent<T>>>,
 
-	owned_windows: Cell<HashSet<HWND>>,
+	owned_windows:Cell<HashSet<HWND>>,
 
-	panic_error: Cell<Option<PanicError>>,
+	panic_error:Cell<Option<PanicError>>,
 }
 
 pub type PanicError = Box<dyn Any + Send + 'static>;
@@ -47,40 +49,41 @@ enum RunnerState {
 	Uninitialized,
 	/// The event loop is idling.
 	Idle,
-	/// The event loop is handling the OS's events and sending them to the user's callback.
-	/// `NewEvents` has been sent, and `MainEventsCleared` hasn't.
+	/// The event loop is handling the OS's events and sending them to the
+	/// user's callback. `NewEvents` has been sent, and `MainEventsCleared`
+	/// hasn't.
 	HandlingMainEvents,
-	/// The event loop is handling the redraw events and sending them to the user's callback.
-	/// `MainEventsCleared` has been sent, and `RedrawEventsCleared` hasn't.
+	/// The event loop is handling the redraw events and sending them to the
+	/// user's callback. `MainEventsCleared` has been sent, and
+	/// `RedrawEventsCleared` hasn't.
 	HandlingRedrawEvents,
 	/// The event loop has been destroyed. No other events will be emitted.
 	Destroyed,
 }
 
-enum BufferedEvent<T: 'static> {
+enum BufferedEvent<T:'static> {
 	Event(Event<'static, T>),
 	ScaleFactorChanged(WindowId, f64, PhysicalSize<u32>),
 }
 
 impl<T> EventLoopRunner<T> {
-	pub(crate) fn new(thread_msg_target: HWND, wait_thread_id: DWORD) -> EventLoopRunner<T> {
+	pub(crate) fn new(thread_msg_target:HWND, wait_thread_id:DWORD) -> EventLoopRunner<T> {
 		EventLoopRunner {
 			thread_msg_target,
 			wait_thread_id,
-			runner_state: Cell::new(RunnerState::Uninitialized),
-			control_flow: Cell::new(ControlFlow::Poll),
-			panic_error: Cell::new(None),
-			last_events_cleared: Cell::new(Instant::now()),
-			event_handler: Cell::new(None),
-			event_buffer: RefCell::new(VecDeque::new()),
-			owned_windows: Cell::new(HashSet::new()),
+			runner_state:Cell::new(RunnerState::Uninitialized),
+			control_flow:Cell::new(ControlFlow::Poll),
+			panic_error:Cell::new(None),
+			last_events_cleared:Cell::new(Instant::now()),
+			event_handler:Cell::new(None),
+			event_buffer:RefCell::new(VecDeque::new()),
+			owned_windows:Cell::new(HashSet::new()),
 		}
 	}
 
-	pub(crate) unsafe fn set_event_handler<F>(&self, f: F)
+	pub(crate) unsafe fn set_event_handler<F>(&self, f:F)
 	where
-		F: FnMut(Event<'_, T>, &mut ControlFlow),
-	{
+		F: FnMut(Event<'_, T>, &mut ControlFlow), {
 		let old_event_handler = self.event_handler.replace(mem::transmute::<
 			Option<Box<dyn FnMut(Event<'_, T>, &mut ControlFlow)>>,
 			Option<Box<dyn FnMut(Event<'_, T>, &mut ControlFlow)>>,
@@ -109,17 +112,11 @@ impl<T> EventLoopRunner<T> {
 
 /// State retrieval functions.
 impl<T> EventLoopRunner<T> {
-	pub fn thread_msg_target(&self) -> HWND {
-		self.thread_msg_target
-	}
+	pub fn thread_msg_target(&self) -> HWND { self.thread_msg_target }
 
-	pub fn wait_thread_id(&self) -> DWORD {
-		self.wait_thread_id
-	}
+	pub fn wait_thread_id(&self) -> DWORD { self.wait_thread_id }
 
-	pub fn redrawing(&self) -> bool {
-		self.runner_state.get() == RunnerState::HandlingRedrawEvents
-	}
+	pub fn redrawing(&self) -> bool { self.runner_state.get() == RunnerState::HandlingRedrawEvents }
 
 	pub fn take_panic_error(&self) -> Result<(), PanicError> {
 		match self.panic_error.take() {
@@ -128,13 +125,9 @@ impl<T> EventLoopRunner<T> {
 		}
 	}
 
-	pub fn control_flow(&self) -> ControlFlow {
-		self.control_flow.get()
-	}
+	pub fn control_flow(&self) -> ControlFlow { self.control_flow.get() }
 
-	pub fn handling_events(&self) -> bool {
-		self.runner_state.get() != RunnerState::Idle
-	}
+	pub fn handling_events(&self) -> bool { self.runner_state.get() != RunnerState::Idle }
 
 	pub fn should_buffer(&self) -> bool {
 		let handler = self.event_handler.take();
@@ -146,45 +139,49 @@ impl<T> EventLoopRunner<T> {
 
 /// Misc. functions
 impl<T> EventLoopRunner<T> {
-	pub fn catch_unwind<R>(&self, f: impl FnOnce() -> R) -> Option<R> {
+	pub fn catch_unwind<R>(&self, f:impl FnOnce() -> R) -> Option<R> {
 		let panic_error = self.panic_error.take();
 		if panic_error.is_none() {
 			let result = panic::catch_unwind(panic::AssertUnwindSafe(f));
 
-			// Check to see if the panic error was set in a re-entrant call to catch_unwind inside
-			// of `f`. If it was, that error takes priority. If it wasn't, check if our call to
-			// catch_unwind caught any panics and set panic_error appropriately.
+			// Check to see if the panic error was set in a re-entrant call to catch_unwind
+			// inside of `f`. If it was, that error takes priority. If it wasn't, check
+			// if our call to catch_unwind caught any panics and set panic_error
+			// appropriately.
 			match self.panic_error.take() {
-				None => match result {
-					Ok(r) => Some(r),
-					Err(e) => {
-						self.panic_error.set(Some(e));
-						None
+				None => {
+					match result {
+						Ok(r) => Some(r),
+						Err(e) => {
+							self.panic_error.set(Some(e));
+							None
+						},
 					}
 				},
 				Some(e) => {
 					self.panic_error.set(Some(e));
 					None
-				}
+				},
 			}
 		} else {
 			self.panic_error.set(panic_error);
 			None
 		}
 	}
-	pub fn register_window(&self, window: HWND) {
+
+	pub fn register_window(&self, window:HWND) {
 		let mut owned_windows = self.owned_windows.take();
 		owned_windows.insert(window);
 		self.owned_windows.set(owned_windows);
 	}
 
-	pub fn remove_window(&self, window: HWND) {
+	pub fn remove_window(&self, window:HWND) {
 		let mut owned_windows = self.owned_windows.take();
 		owned_windows.remove(&window);
 		self.owned_windows.set(owned_windows);
 	}
 
-	pub fn owned_windows(&self, mut f: impl FnMut(HWND)) {
+	pub fn owned_windows(&self, mut f:impl FnMut(HWND)) {
 		let mut owned_windows = self.owned_windows.take();
 		for hwnd in &owned_windows {
 			f(*hwnd);
@@ -197,11 +194,9 @@ impl<T> EventLoopRunner<T> {
 
 /// Event dispatch functions.
 impl<T> EventLoopRunner<T> {
-	pub(crate) unsafe fn poll(&self) {
-		self.move_state_to(RunnerState::HandlingMainEvents);
-	}
+	pub(crate) unsafe fn poll(&self) { self.move_state_to(RunnerState::HandlingMainEvents); }
 
-	pub(crate) unsafe fn send_event(&self, event: Event<'_, T>) {
+	pub(crate) unsafe fn send_event(&self, event:Event<'_, T>) {
 		if let Event::RedrawRequested(_) = event {
 			if self.runner_state.get() != RunnerState::HandlingRedrawEvents {
 				warn!("RedrawRequested dispatched without explicit MainEventsCleared");
@@ -210,8 +205,8 @@ impl<T> EventLoopRunner<T> {
 			self.call_event_handler(event);
 		} else {
 			if self.should_buffer() {
-				// If the runner is already borrowed, we're in the middle of an event loop invocation. Add
-				// the event to a buffer to be processed later.
+				// If the runner is already borrowed, we're in the middle of an event loop
+				// invocation. Add the event to a buffer to be processed later.
 				self.event_buffer.borrow_mut().push_back(BufferedEvent::from_event(event))
 			} else {
 				self.move_state_to(RunnerState::HandlingMainEvents);
@@ -225,37 +220,35 @@ impl<T> EventLoopRunner<T> {
 		self.move_state_to(RunnerState::HandlingRedrawEvents);
 	}
 
-	pub(crate) unsafe fn redraw_events_cleared(&self) {
-		self.move_state_to(RunnerState::Idle);
-	}
+	pub(crate) unsafe fn redraw_events_cleared(&self) { self.move_state_to(RunnerState::Idle); }
 
-	pub(crate) unsafe fn loop_destroyed(&self) {
-		self.move_state_to(RunnerState::Destroyed);
-	}
+	pub(crate) unsafe fn loop_destroyed(&self) { self.move_state_to(RunnerState::Destroyed); }
 
-	unsafe fn call_event_handler(&self, event: Event<'_, T>) {
+	unsafe fn call_event_handler(&self, event:Event<'_, T>) {
 		self.catch_unwind(|| {
-            let mut control_flow = self.control_flow.take();
-            let mut event_handler = self.event_handler.take()
-                .expect("either event handler is re-entrant (likely), or no event handler is registered (very unlikely)");
+			let mut control_flow = self.control_flow.take();
+			let mut event_handler = self.event_handler.take().expect(
+				"either event handler is re-entrant (likely), or no event handler is registered \
+				 (very unlikely)",
+			);
 
-            if control_flow != ControlFlow::Exit {
-                event_handler(event, &mut control_flow);
-            } else {
-                event_handler(event, &mut ControlFlow::Exit);
-            }
+			if control_flow != ControlFlow::Exit {
+				event_handler(event, &mut control_flow);
+			} else {
+				event_handler(event, &mut ControlFlow::Exit);
+			}
 
-            assert!(self.event_handler.replace(Some(event_handler)).is_none());
-            self.control_flow.set(control_flow);
-        });
+			assert!(self.event_handler.replace(Some(event_handler)).is_none());
+			self.control_flow.set(control_flow);
+		});
 	}
 
 	unsafe fn dispatch_buffered_events(&self) {
 		loop {
-			// We do this instead of using a `while let` loop because if we use a `while let`
-			// loop the reference returned `borrow_mut()` doesn't get dropped until the end
-			// of the loop's body and attempts to add events to the event buffer while in
-			// `process_event` will fail.
+			// We do this instead of using a `while let` loop because if we use a `while
+			// let` loop the reference returned `borrow_mut()` doesn't get dropped until
+			// the end of the loop's body and attempts to add events to the event buffer
+			// while in `process_event` will fail.
 			let buffered_event_opt = self.event_buffer.borrow_mut().pop_front();
 			match buffered_event_opt {
 				Some(e) => e.dispatch_event(|e| self.call_event_handler(e)),
@@ -264,8 +257,9 @@ impl<T> EventLoopRunner<T> {
 		}
 	}
 
-	/// Dispatch control flow events (`NewEvents`, `MainEventsCleared`, `RedrawEventsCleared`, and
-	/// `LoopDestroyed`) as necessary to bring the internal `RunnerState` to the new runner state.
+	/// Dispatch control flow events (`NewEvents`, `MainEventsCleared`,
+	/// `RedrawEventsCleared`, and `LoopDestroyed`) as necessary to bring the
+	/// internal `RunnerState` to the new runner state.
 	///
 	/// The state transitions are defined as follows:
 	///
@@ -282,14 +276,20 @@ impl<T> EventLoopRunner<T> {
 	/// Destroyed
 	/// ```
 	///
-	/// Attempting to transition back to `Uninitialized` will result in a panic. Attempting to
-	/// transition *from* `Destroyed` will also reuslt in a panic. Transitioning to the current
-	/// state is a no-op. Even if the `new_runner_state` isn't the immediate next state in the
-	/// runner state machine (e.g. `self.runner_state == HandlingMainEvents` and
-	/// `new_runner_state == Idle`), the intermediate state transitions will still be executed.
-	unsafe fn move_state_to(&self, new_runner_state: RunnerState) {
+	/// Attempting to transition back to `Uninitialized` will result in a panic.
+	/// Attempting to transition *from* `Destroyed` will also reuslt in a
+	/// panic. Transitioning to the current state is a no-op. Even if the
+	/// `new_runner_state` isn't the immediate next state in the runner state
+	/// machine (e.g. `self.runner_state == HandlingMainEvents` and
+	/// `new_runner_state == Idle`), the intermediate state transitions will
+	/// still be executed.
+	unsafe fn move_state_to(&self, new_runner_state:RunnerState) {
 		use RunnerState::{
-			Destroyed, HandlingMainEvents, HandlingRedrawEvents, Idle, Uninitialized,
+			Destroyed,
+			HandlingMainEvents,
+			HandlingRedrawEvents,
+			Idle,
+			Uninitialized,
 		};
 
 		match (self.runner_state.replace(new_runner_state), new_runner_state) {
@@ -302,88 +302,90 @@ impl<T> EventLoopRunner<T> {
 			// State transitions that initialize the event loop.
 			(Uninitialized, HandlingMainEvents) => {
 				self.call_new_events(true);
-			}
+			},
 			(Uninitialized, HandlingRedrawEvents) => {
 				self.call_new_events(true);
 				self.call_event_handler(Event::MainEventsCleared);
-			}
+			},
 			(Uninitialized, Idle) => {
 				self.call_new_events(true);
 				self.call_event_handler(Event::MainEventsCleared);
 				self.call_redraw_events_cleared();
-			}
+			},
 			(Uninitialized, Destroyed) => {
 				self.call_new_events(true);
 				self.call_event_handler(Event::MainEventsCleared);
 				self.call_redraw_events_cleared();
 				self.call_event_handler(Event::LoopDestroyed);
-			}
+			},
 			(_, Uninitialized) => panic!("cannot move state to Uninitialized"),
 
 			// State transitions that start the event handling process.
 			(Idle, HandlingMainEvents) => {
 				self.call_new_events(false);
-			}
+			},
 			(Idle, HandlingRedrawEvents) => {
 				self.call_new_events(false);
 				self.call_event_handler(Event::MainEventsCleared);
-			}
+			},
 			(Idle, Destroyed) => {
 				self.call_event_handler(Event::LoopDestroyed);
-			}
+			},
 
 			(HandlingMainEvents, HandlingRedrawEvents) => {
 				self.call_event_handler(Event::MainEventsCleared);
-			}
+			},
 			(HandlingMainEvents, Idle) => {
 				warn!("RedrawEventsCleared emitted without explicit MainEventsCleared");
 				self.call_event_handler(Event::MainEventsCleared);
 				self.call_redraw_events_cleared();
-			}
+			},
 			(HandlingMainEvents, Destroyed) => {
 				self.call_event_handler(Event::MainEventsCleared);
 				self.call_redraw_events_cleared();
 				self.call_event_handler(Event::LoopDestroyed);
-			}
+			},
 
 			(HandlingRedrawEvents, Idle) => {
 				self.call_redraw_events_cleared();
-			}
+			},
 			(HandlingRedrawEvents, HandlingMainEvents) => {
 				warn!("NewEvents emitted without explicit RedrawEventsCleared");
 				self.call_redraw_events_cleared();
 				self.call_new_events(false);
-			}
+			},
 			(HandlingRedrawEvents, Destroyed) => {
 				self.call_redraw_events_cleared();
 				self.call_event_handler(Event::LoopDestroyed);
-			}
+			},
 
 			(Destroyed, _) => panic!("cannot move state from Destroyed"),
 		}
 	}
 
-	unsafe fn call_new_events(&self, init: bool) {
+	unsafe fn call_new_events(&self, init:bool) {
 		let start_cause = match (init, self.control_flow()) {
 			(true, _) => StartCause::Init,
 			(false, ControlFlow::Poll) => StartCause::Poll,
-			(false, ControlFlow::Exit) | (false, ControlFlow::Wait) => StartCause::WaitCancelled {
-				requested_resume: None,
-				start: self.last_events_cleared.get(),
+			(false, ControlFlow::Exit) | (false, ControlFlow::Wait) => {
+				StartCause::WaitCancelled {
+					requested_resume:None,
+					start:self.last_events_cleared.get(),
+				}
 			},
 			(false, ControlFlow::WaitUntil(requested_resume)) => {
 				if Instant::now() < requested_resume {
 					StartCause::WaitCancelled {
-						requested_resume: Some(requested_resume),
-						start: self.last_events_cleared.get(),
+						requested_resume:Some(requested_resume),
+						start:self.last_events_cleared.get(),
 					}
 				} else {
 					StartCause::ResumeTimeReached {
 						requested_resume,
-						start: self.last_events_cleared.get(),
+						start:self.last_events_cleared.get(),
 					}
 				}
-			}
+			},
 		};
 		self.call_event_handler(Event::NewEvents(start_cause));
 		self.dispatch_buffered_events();
@@ -402,7 +404,7 @@ impl<T> EventLoopRunner<T> {
 }
 
 impl<T> BufferedEvent<T> {
-	pub fn from_event(event: Event<'_, T>) -> BufferedEvent<T> {
+	pub fn from_event(event:Event<'_, T>) -> BufferedEvent<T> {
 		match event {
 			Event::WindowEvent {
 				event: WindowEvent::ScaleFactorChanged { scale_factor, new_inner_size },
@@ -412,15 +414,15 @@ impl<T> BufferedEvent<T> {
 		}
 	}
 
-	pub fn dispatch_event(self, dispatch: impl FnOnce(Event<'_, T>)) {
+	pub fn dispatch_event(self, dispatch:impl FnOnce(Event<'_, T>)) {
 		match self {
 			Self::Event(event) => dispatch(event),
 			Self::ScaleFactorChanged(window_id, scale_factor, mut new_inner_size) => {
 				dispatch(Event::WindowEvent {
 					window_id,
-					event: WindowEvent::ScaleFactorChanged {
+					event:WindowEvent::ScaleFactorChanged {
 						scale_factor,
-						new_inner_size: &mut new_inner_size,
+						new_inner_size:&mut new_inner_size,
 					},
 				});
 				util::set_inner_size_physical(
@@ -428,7 +430,7 @@ impl<T> BufferedEvent<T> {
 					new_inner_size.width as _,
 					new_inner_size.height as _,
 				);
-			}
+			},
 		}
 	}
 }

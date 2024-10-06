@@ -24,17 +24,15 @@ fn main() {
 
 		match event {
 			Event::NewEvents(StartCause::Init) => {
-				*control_flow =
-					ControlFlow::WaitUntil(Instant::now() + timer_length)
+				*control_flow = ControlFlow::WaitUntil(Instant::now() + timer_length)
 			},
 			Event::NewEvents(StartCause::ResumeTimeReached { .. }) => {
-				*control_flow =
-					ControlFlow::WaitUntil(Instant::now() + timer_length);
+				*control_flow = ControlFlow::WaitUntil(Instant::now() + timer_length);
 				println!("\nTimer\n");
 			},
-			Event::WindowEvent {
-				event: WindowEvent::CloseRequested, ..
-			} => *control_flow = ControlFlow::Exit,
+			Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
+				*control_flow = ControlFlow::Exit
+			},
 			_ => (),
 		}
 	});

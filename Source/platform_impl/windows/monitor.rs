@@ -70,9 +70,7 @@ impl VideoMode {
 
 	pub fn refresh_rate(&self) -> u16 { self.refresh_rate }
 
-	pub fn monitor(&self) -> RootMonitorHandle {
-		RootMonitorHandle { inner:self.monitor.clone() }
-	}
+	pub fn monitor(&self) -> RootMonitorHandle { RootMonitorHandle { inner:self.monitor.clone() } }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, PartialOrd, Ord)]
@@ -111,23 +109,17 @@ pub fn available_monitors() -> VecDeque<MonitorHandle> {
 
 pub fn primary_monitor() -> MonitorHandle {
 	const ORIGIN:POINT = POINT { x:0, y:0 };
-	let hmonitor = unsafe {
-		winuser::MonitorFromPoint(ORIGIN, winuser::MONITOR_DEFAULTTOPRIMARY)
-	};
+	let hmonitor = unsafe { winuser::MonitorFromPoint(ORIGIN, winuser::MONITOR_DEFAULTTOPRIMARY) };
 	MonitorHandle::new(hmonitor)
 }
 
 pub fn current_monitor(hwnd:HWND) -> MonitorHandle {
-	let hmonitor = unsafe {
-		winuser::MonitorFromWindow(hwnd, winuser::MONITOR_DEFAULTTONEAREST)
-	};
+	let hmonitor = unsafe { winuser::MonitorFromWindow(hwnd, winuser::MONITOR_DEFAULTTONEAREST) };
 	MonitorHandle::new(hmonitor)
 }
 
 impl Window {
-	pub fn available_monitors(&self) -> VecDeque<MonitorHandle> {
-		available_monitors()
-	}
+	pub fn available_monitors(&self) -> VecDeque<MonitorHandle> { available_monitors() }
 
 	pub fn primary_monitor(&self) -> Option<RootMonitorHandle> {
 		let monitor = primary_monitor();
@@ -135,16 +127,13 @@ impl Window {
 	}
 }
 
-pub(crate) fn get_monitor_info(
-	hmonitor:HMONITOR,
-) -> Result<winuser::MONITORINFOEXW, io::Error> {
+pub(crate) fn get_monitor_info(hmonitor:HMONITOR) -> Result<winuser::MONITORINFOEXW, io::Error> {
 	let mut monitor_info:winuser::MONITORINFOEXW = unsafe { mem::zeroed() };
 	monitor_info.cbSize = mem::size_of::<winuser::MONITORINFOEXW>() as DWORD;
 	let status = unsafe {
 		winuser::GetMonitorInfoW(
 			hmonitor,
-			&mut monitor_info as *mut winuser::MONITORINFOEXW
-				as *mut winuser::MONITORINFO,
+			&mut monitor_info as *mut winuser::MONITORINFOEXW as *mut winuser::MONITORINFO,
 		)
 	};
 	if status == 0 { Err(io::Error::last_os_error()) } else { Ok(monitor_info) }
@@ -169,26 +158,19 @@ impl MonitorHandle {
 	pub fn size(&self) -> PhysicalSize<u32> {
 		let monitor_info = get_monitor_info(self.0).unwrap();
 		PhysicalSize {
-			width:(monitor_info.rcMonitor.right - monitor_info.rcMonitor.left)
-				as u32,
-			height:(monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top)
-				as u32,
+			width:(monitor_info.rcMonitor.right - monitor_info.rcMonitor.left) as u32,
+			height:(monitor_info.rcMonitor.bottom - monitor_info.rcMonitor.top) as u32,
 		}
 	}
 
 	#[inline]
 	pub fn position(&self) -> PhysicalPosition<i32> {
 		let monitor_info = get_monitor_info(self.0).unwrap();
-		PhysicalPosition {
-			x:monitor_info.rcMonitor.left,
-			y:monitor_info.rcMonitor.top,
-		}
+		PhysicalPosition { x:monitor_info.rcMonitor.left, y:monitor_info.rcMonitor.top }
 	}
 
 	#[inline]
-	pub fn scale_factor(&self) -> f64 {
-		dpi_to_scale_factor(get_monitor_dpi(self.0).unwrap_or(96))
-	}
+	pub fn scale_factor(&self) -> f64 { dpi_to_scale_factor(get_monitor_dpi(self.0).unwrap_or(96)) }
 
 	#[inline]
 	pub fn video_modes(&self) -> impl Iterator<Item = RootVideoMode> {
@@ -204,9 +186,7 @@ impl MonitorHandle {
 				let device_name = monitor_info.szDevice.as_ptr();
 				let mut mode:wingdi::DEVMODEW = mem::zeroed();
 				mode.dmSize = mem::size_of_val(&mode) as WORD;
-				if winuser::EnumDisplaySettingsExW(device_name, i, &mut mode, 0)
-					== 0
-				{
+				if winuser::EnumDisplaySettingsExW(device_name, i, &mut mode, 0) == 0 {
 					break;
 				}
 				i += 1;

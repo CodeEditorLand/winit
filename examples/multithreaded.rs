@@ -5,13 +5,7 @@ fn main() {
 	use simple_logger::SimpleLogger;
 	use winit::{
 		dpi::{PhysicalPosition, PhysicalSize, Position, Size},
-		event::{
-			ElementState,
-			Event,
-			KeyboardInput,
-			VirtualKeyCode,
-			WindowEvent,
-		},
+		event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
 		event_loop::{ControlFlow, EventLoop},
 		window::{CursorIcon, Fullscreen, WindowBuilder},
 	};
@@ -23,13 +17,9 @@ fn main() {
 	let event_loop = EventLoop::new();
 	let mut window_senders = HashMap::with_capacity(WINDOW_COUNT);
 	for _ in 0..WINDOW_COUNT {
-		let window = WindowBuilder::new()
-			.with_inner_size(WINDOW_SIZE)
-			.build(&event_loop)
-			.unwrap();
+		let window = WindowBuilder::new().with_inner_size(WINDOW_SIZE).build(&event_loop).unwrap();
 
-		let mut video_modes:Vec<_> =
-			window.current_monitor().unwrap().video_modes().collect();
+		let mut video_modes:Vec<_> = window.current_monitor().unwrap().video_modes().collect();
 		let mut video_mode_id = 0usize;
 
 		let (tx, rx) = mpsc::channel();
@@ -41,13 +31,8 @@ fn main() {
 						// We need to update our chosen video mode if the window
 						// was moved to an another monitor, so that the window
 						// appears on this monitor instead when we go fullscreen
-						let previous_video_mode =
-							video_modes.iter().cloned().nth(video_mode_id);
-						video_modes = window
-							.current_monitor()
-							.unwrap()
-							.video_modes()
-							.collect();
+						let previous_video_mode = video_modes.iter().cloned().nth(video_mode_id);
+						video_modes = window.current_monitor().unwrap().video_modes().collect();
 						video_mode_id = video_mode_id.min(video_modes.len());
 						let video_mode = video_modes.iter().nth(video_mode_id);
 
@@ -56,8 +41,7 @@ fn main() {
 						// completely different video mode, so notify the user
 						if video_mode != previous_video_mode.as_ref() {
 							println!(
-								"Window moved to another monitor, picked \
-								 video mode: {}",
+								"Window moved to another monitor, picked video mode: {}",
 								video_modes.iter().nth(video_mode_id).unwrap()
 							);
 						}
@@ -89,63 +73,34 @@ fn main() {
 							Right | Left => {
 								video_mode_id = match key {
 									Left => video_mode_id.saturating_sub(1),
-									Right => {
-										(video_modes.len() - 1)
-											.min(video_mode_id + 1)
-									},
+									Right => (video_modes.len() - 1).min(video_mode_id + 1),
 									_ => unreachable!(),
 								};
 								println!(
 									"Picking video mode: {}",
-									video_modes
-										.iter()
-										.nth(video_mode_id)
-										.unwrap()
+									video_modes.iter().nth(video_mode_id).unwrap()
 								);
 							},
 							F => {
-								window.set_fullscreen(
-									match (state, modifiers.alt()) {
-										(true, false) => {
-											Some(Fullscreen::Borderless(None))
-										},
-										(true, true) => {
-											Some(Fullscreen::Exclusive(
-												video_modes
-													.iter()
-													.nth(video_mode_id)
-													.unwrap()
-													.clone(),
-											))
-										},
-										(false, _) => None,
+								window.set_fullscreen(match (state, modifiers.alt()) {
+									(true, false) => Some(Fullscreen::Borderless(None)),
+									(true, true) => {
+										Some(Fullscreen::Exclusive(
+											video_modes.iter().nth(video_mode_id).unwrap().clone(),
+										))
 									},
-								)
+									(false, _) => None,
+								})
 							},
 							G => window.set_cursor_grab(state).unwrap(),
 							H => window.set_cursor_visible(!state),
 							I => {
 								println!("Info:");
-								println!(
-									"-> outer_position : {:?}",
-									window.outer_position()
-								);
-								println!(
-									"-> inner_position : {:?}",
-									window.inner_position()
-								);
-								println!(
-									"-> outer_size     : {:?}",
-									window.outer_size()
-								);
-								println!(
-									"-> inner_size     : {:?}",
-									window.inner_size()
-								);
-								println!(
-									"-> fullscreen     : {:?}",
-									window.fullscreen()
-								);
+								println!("-> outer_position : {:?}", window.outer_position());
+								println!("-> inner_position : {:?}", window.inner_position());
+								println!("-> outer_size     : {:?}", window.outer_size());
+								println!("-> inner_size     : {:?}", window.inner_size());
+								println!("-> fullscreen     : {:?}", window.fullscreen());
 							},
 							L => {
 								window.set_min_inner_size(match state {
@@ -156,8 +111,7 @@ fn main() {
 							M => window.set_maximized(state),
 							P => {
 								window.set_outer_position({
-									let mut position =
-										window.outer_position().unwrap();
+									let mut position = window.outer_position().unwrap();
 									let sign = if state { 1 } else { -1 };
 									position.x += 10 * sign;
 									position.y += 10 * sign;
@@ -178,17 +132,14 @@ fn main() {
 								})
 							},
 							W => {
-								if let Size::Physical(size) = WINDOW_SIZE.into()
-								{
+								if let Size::Physical(size) = WINDOW_SIZE.into() {
 									window
-										.set_cursor_position(
-											Position::Physical(
-												PhysicalPosition::new(
-													size.width as i32 / 2,
-													size.height as i32 / 2,
-												),
+										.set_cursor_position(Position::Physical(
+											PhysicalPosition::new(
+												size.width as i32 / 2,
+												size.height as i32 / 2,
 											),
-										)
+										))
 										.unwrap()
 								}
 							},

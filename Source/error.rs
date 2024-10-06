@@ -29,18 +29,12 @@ pub struct OsError {
 impl NotSupportedError {
 	#[inline]
 	#[allow(dead_code)]
-	pub(crate) fn new() -> NotSupportedError {
-		NotSupportedError { _marker:() }
-	}
+	pub(crate) fn new() -> NotSupportedError { NotSupportedError { _marker:() } }
 }
 
 impl OsError {
 	#[allow(dead_code)]
-	pub(crate) fn new(
-		line:u32,
-		file:&'static str,
-		error:platform_impl::OsError,
-	) -> OsError {
+	pub(crate) fn new(line:u32, file:&'static str, error:platform_impl::OsError) -> OsError {
 		OsError { line, file, error }
 	}
 }
@@ -52,10 +46,7 @@ macro_rules! os_error {
 
 impl fmt::Display for OsError {
 	fn fmt(&self, f:&mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-		f.pad(&format!(
-			"os error at {}:{}: {}",
-			self.file, self.line, self.error
-		))
+		f.pad(&format!("os error at {}:{}: {}", self.file, self.line, self.error))
 	}
 }
 

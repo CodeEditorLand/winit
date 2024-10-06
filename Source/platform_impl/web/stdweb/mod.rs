@@ -5,45 +5,44 @@ mod event;
 mod scaling;
 mod timeout;
 
+use stdweb::{
+	js,
+	unstable::TryInto,
+	web::{
+		document,
+		event::BeforeUnloadEvent,
+		html_element::CanvasElement,
+		window,
+		Element,
+		IEventTarget,
+	},
+};
+
 pub use self::{
 	canvas::Canvas,
 	scaling::ScaleChangeDetector,
 	timeout::{AnimationFrameRequest, Timeout},
 };
-
 use crate::{
 	dpi::{LogicalSize, Size},
 	platform::web::WindowExtStdweb,
 	window::Window,
 };
 
-use stdweb::{
-	js,
-	unstable::TryInto,
-	web::{
-		document, event::BeforeUnloadEvent, html_element::CanvasElement, window, Element,
-		IEventTarget,
-	},
-};
-
-pub fn throw(msg: &str) {
+pub fn throw(msg:&str) {
 	js! { throw @{msg} }
 }
 
-pub fn exit_fullscreen() {
-	document().exit_fullscreen();
-}
+pub fn exit_fullscreen() { document().exit_fullscreen(); }
 
 pub type UnloadEventHandle = ();
 
-pub fn on_unload(mut handler: impl FnMut() + 'static) -> UnloadEventHandle {
-	window().add_event_listener(move |_: BeforeUnloadEvent| handler());
+pub fn on_unload(mut handler:impl FnMut() + 'static) -> UnloadEventHandle {
+	window().add_event_listener(move |_:BeforeUnloadEvent| handler());
 }
 
 impl WindowExtStdweb for Window {
-	fn canvas(&self) -> CanvasElement {
-		self.window.canvas().raw().clone()
-	}
+	fn canvas(&self) -> CanvasElement { self.window.canvas().raw().clone() }
 
 	fn is_dark_mode(&self) -> bool {
 		// TODO: upstream to stdweb
@@ -68,7 +67,7 @@ pub fn scale_factor() -> f64 {
 	window.device_pixel_ratio()
 }
 
-pub fn set_canvas_size(raw: &CanvasElement, size: Size) {
+pub fn set_canvas_size(raw:&CanvasElement, size:Size) {
 	let scale_factor = scale_factor();
 
 	let physical_size = size.to_physical::<u32>(scale_factor);
@@ -81,18 +80,18 @@ pub fn set_canvas_size(raw: &CanvasElement, size: Size) {
 	set_canvas_style_property(raw, "height", &format!("{}px", logical_size.height));
 }
 
-pub fn set_canvas_style_property(raw: &CanvasElement, style_attribute: &str, value: &str) {
+pub fn set_canvas_style_property(raw:&CanvasElement, style_attribute:&str, value:&str) {
 	js! {
 		@{raw.as_ref()}.style[@{style_attribute}] = @{value};
 	}
 }
 
-pub fn is_fullscreen(canvas: &CanvasElement) -> bool {
+pub fn is_fullscreen(canvas:&CanvasElement) -> bool {
 	match document().fullscreen_element() {
 		Some(elem) => {
-			let raw: Element = canvas.clone().into();
+			let raw:Element = canvas.clone().into();
 			raw == elem
-		}
+		},
 		None => false,
 	}
 }

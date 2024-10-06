@@ -28,9 +28,9 @@ use crate::{
 /// 	*control_flow = ControlFlow::Wait;
 ///
 /// 	match event {
-/// 		Event::WindowEvent {
-/// 			event: WindowEvent::CloseRequested, ..
-/// 		} => *control_flow = ControlFlow::Exit,
+/// 		Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
+/// 			*control_flow = ControlFlow::Exit
+/// 		},
 /// 		_ => (),
 /// 	}
 /// });
@@ -40,9 +40,7 @@ pub struct Window {
 }
 
 impl fmt::Debug for Window {
-	fn fmt(&self, fmtr:&mut fmt::Formatter<'_>) -> fmt::Result {
-		fmtr.pad("Window { .. }")
-	}
+	fn fmt(&self, fmtr:&mut fmt::Formatter<'_>) -> fmt::Result { fmtr.pad("Window { .. }") }
 }
 
 impl Drop for Window {
@@ -84,15 +82,12 @@ pub struct WindowBuilder {
 	pub window:WindowAttributes,
 
 	// Platform-specific configuration.
-	pub(crate) platform_specific:
-		platform_impl::PlatformSpecificWindowBuilderAttributes,
+	pub(crate) platform_specific:platform_impl::PlatformSpecificWindowBuilderAttributes,
 }
 
 impl fmt::Debug for WindowBuilder {
 	fn fmt(&self, fmtr:&mut fmt::Formatter<'_>) -> fmt::Result {
-		fmtr.debug_struct("WindowBuilder")
-			.field("window", &self.window)
-			.finish()
+		fmtr.debug_struct("WindowBuilder").field("window", &self.window).finish()
 	}
 }
 
@@ -133,8 +128,8 @@ pub struct WindowAttributes {
 	/// If you need to precisely position the top left corner of the whole
 	/// window you have to use [`Window::set_outer_position`] after creating
 	/// the window.
-	/// - **Windows**: The top left corner position of the window title bar,
-	///   the window's "outer"
+	/// - **Windows**: The top left corner position of the window title bar, the
+	///   window's "outer"
 	/// position.
 	/// There may be a small gap between this position and the window due to
 	/// the specifics of the Window Manager.
@@ -374,15 +369,12 @@ impl WindowBuilder {
 		self,
 		window_target:&EventLoopWindowTarget<T>,
 	) -> Result<Window, OsError> {
-		platform_impl::Window::new(
-			&window_target.p,
-			self.window,
-			self.platform_specific,
+		platform_impl::Window::new(&window_target.p, self.window, self.platform_specific).map(
+			|window| {
+				window.request_redraw();
+				Window { window }
+			},
 		)
-		.map(|window| {
-			window.request_redraw();
-			Window { window }
-		})
 	}
 }
 
@@ -403,9 +395,7 @@ impl Window {
 	///
 	/// [`WindowBuilder::new().build(event_loop)`]: crate::window::WindowBuilder::build
 	#[inline]
-	pub fn new<T:'static>(
-		event_loop:&EventLoopWindowTarget<T>,
-	) -> Result<Window, OsError> {
+	pub fn new<T:'static>(event_loop:&EventLoopWindowTarget<T>) -> Result<Window, OsError> {
 		let builder = WindowBuilder::new();
 		builder.build(event_loop)
 	}
@@ -477,9 +467,7 @@ impl Window {
 	///
 	/// [safe area]: https://developer.apple.com/documentation/uikit/uiview/2891103-safeareainsets?language=objc
 	#[inline]
-	pub fn inner_position(
-		&self,
-	) -> Result<PhysicalPosition<i32>, NotSupportedError> {
+	pub fn inner_position(&self) -> Result<PhysicalPosition<i32>, NotSupportedError> {
 		self.window.inner_position()
 	}
 
@@ -501,9 +489,7 @@ impl Window {
 	/// - **Web:** Returns the top-left coordinates relative to the viewport.
 	/// - **Android / Wayland:** Always returns [`NotSupportedError`].
 	#[inline]
-	pub fn outer_position(
-		&self,
-	) -> Result<PhysicalPosition<i32>, NotSupportedError> {
+	pub fn outer_position(&self) -> Result<PhysicalPosition<i32>, NotSupportedError> {
 		self.window.outer_position()
 	}
 
@@ -549,9 +535,7 @@ impl Window {
 	/// - **iOS / Android:** Unsupported.
 	/// - **Web:** Sets the size of the canvas element.
 	#[inline]
-	pub fn set_inner_size<S:Into<Size>>(&self, size:S) {
-		self.window.set_inner_size(size.into())
-	}
+	pub fn set_inner_size<S:Into<Size>>(&self, size:S) { self.window.set_inner_size(size.into()) }
 
 	/// Returns the physical size of the entire window.
 	///
@@ -624,9 +608,7 @@ impl Window {
 	///
 	/// - **iOS / Android / Web:** Unsupported.
 	#[inline]
-	pub fn set_resizable(&self, resizable:bool) {
-		self.window.set_resizable(resizable)
-	}
+	pub fn set_resizable(&self, resizable:bool) { self.window.set_resizable(resizable) }
 
 	/// Sets the window to minimized or back
 	///
@@ -635,9 +617,7 @@ impl Window {
 	/// - **iOS / Android / Web:** Unsupported.
 	/// - **Wayland:** Un-minimize is unsupported.
 	#[inline]
-	pub fn set_minimized(&self, minimized:bool) {
-		self.window.set_minimized(minimized);
-	}
+	pub fn set_minimized(&self, minimized:bool) { self.window.set_minimized(minimized); }
 
 	/// Sets the window to maximized or back.
 	///
@@ -645,9 +625,7 @@ impl Window {
 	///
 	/// - **iOS / Android / Web:** Unsupported.
 	#[inline]
-	pub fn set_maximized(&self, maximized:bool) {
-		self.window.set_maximized(maximized)
-	}
+	pub fn set_maximized(&self, maximized:bool) { self.window.set_maximized(maximized) }
 
 	/// Gets the window's current maximized state.
 	///
@@ -702,9 +680,7 @@ impl Window {
 	///
 	/// [`setPrefersStatusBarHidden`]: https://developer.apple.com/documentation/uikit/uiviewcontroller/1621440-prefersstatusbarhidden?language=objc
 	#[inline]
-	pub fn set_decorations(&self, decorations:bool) {
-		self.window.set_decorations(decorations)
-	}
+	pub fn set_decorations(&self, decorations:bool) { self.window.set_decorations(decorations) }
 
 	/// Change whether or not the window will always be on top of other windows.
 	///
@@ -759,10 +735,7 @@ impl Window {
 	/// - **macOS:** `None` has no effect.
 	/// - **X11:** Requests for user attention must be manually cleared.
 	#[inline]
-	pub fn request_user_attention(
-		&self,
-		request_type:Option<UserAttentionType>,
-	) {
+	pub fn request_user_attention(&self, request_type:Option<UserAttentionType>) {
 		self.window.request_user_attention(request_type)
 	}
 }
@@ -775,9 +748,7 @@ impl Window {
 	///
 	/// - **iOS / Android:** Unsupported.
 	#[inline]
-	pub fn set_cursor_icon(&self, cursor:CursorIcon) {
-		self.window.set_cursor_icon(cursor);
-	}
+	pub fn set_cursor_icon(&self, cursor:CursorIcon) { self.window.set_cursor_icon(cursor); }
 
 	/// Changes the position of the cursor in window coordinates.
 	///
@@ -786,10 +757,7 @@ impl Window {
 	/// - **iOS / Android / Web / Wayland:** Always returns an
 	///   [`ExternalError::NotSupported`].
 	#[inline]
-	pub fn set_cursor_position<P:Into<Position>>(
-		&self,
-		position:P,
-	) -> Result<(), ExternalError> {
+	pub fn set_cursor_position<P:Into<Position>>(&self, position:P) -> Result<(), ExternalError> {
 		self.window.set_cursor_position(position.into())
 	}
 
@@ -825,9 +793,7 @@ impl Window {
 	///   even if the cursor is outside of the window.
 	/// - **iOS / Android:** Unsupported.
 	#[inline]
-	pub fn set_cursor_visible(&self, visible:bool) {
-		self.window.set_cursor_visible(visible)
-	}
+	pub fn set_cursor_visible(&self, visible:bool) { self.window.set_cursor_visible(visible) }
 
 	/// Moves the window with the left mouse button until the button is
 	/// released.
@@ -844,9 +810,7 @@ impl Window {
 	/// - **iOS / Android / Web:** Always returns an
 	///   [`ExternalError::NotSupported`].
 	#[inline]
-	pub fn drag_window(&self) -> Result<(), ExternalError> {
-		self.window.drag_window()
-	}
+	pub fn drag_window(&self) -> Result<(), ExternalError> { self.window.drag_window() }
 }
 
 /// Monitor info functions.
@@ -859,9 +823,7 @@ impl Window {
 	///
 	/// **iOS:** Can only be called on the main thread.
 	#[inline]
-	pub fn current_monitor(&self) -> Option<MonitorHandle> {
-		self.window.current_monitor()
-	}
+	pub fn current_monitor(&self) -> Option<MonitorHandle> { self.window.current_monitor() }
 
 	/// Returns the list of all the monitors available on the system.
 	///
@@ -891,9 +853,7 @@ impl Window {
 	/// **iOS:** Can only be called on the main thread.
 	/// **Wayland:** Always returns `None`.
 	#[inline]
-	pub fn primary_monitor(&self) -> Option<MonitorHandle> {
-		self.window.primary_monitor()
-	}
+	pub fn primary_monitor(&self) -> Option<MonitorHandle> { self.window.primary_monitor() }
 }
 
 unsafe impl raw_window_handle::HasRawWindowHandle for Window {

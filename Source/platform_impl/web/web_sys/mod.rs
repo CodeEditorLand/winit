@@ -5,23 +5,21 @@ mod media_query_handle;
 mod scaling;
 mod timeout;
 
+use wasm_bindgen::closure::Closure;
+use web_sys::{window, BeforeUnloadEvent, Element, HtmlCanvasElement};
+
 pub use self::{
 	canvas::Canvas,
 	scaling::ScaleChangeDetector,
 	timeout::{AnimationFrameRequest, Timeout},
 };
-
 use crate::{
 	dpi::{LogicalSize, Size},
 	platform::web::WindowExtWebSys,
 	window::Window,
 };
-use wasm_bindgen::closure::Closure;
-use web_sys::{window, BeforeUnloadEvent, Element, HtmlCanvasElement};
 
-pub fn throw(msg: &str) {
-	wasm_bindgen::throw_str(msg);
-}
+pub fn throw(msg:&str) { wasm_bindgen::throw_str(msg); }
 
 pub fn exit_fullscreen() {
 	let window = web_sys::window().expect("Failed to obtain window");
@@ -31,24 +29,22 @@ pub fn exit_fullscreen() {
 }
 
 pub struct UnloadEventHandle {
-	_listener: event_handle::EventListenerHandle<dyn FnMut(BeforeUnloadEvent)>,
+	_listener:event_handle::EventListenerHandle<dyn FnMut(BeforeUnloadEvent)>,
 }
 
-pub fn on_unload(mut handler: impl FnMut() + 'static) -> UnloadEventHandle {
+pub fn on_unload(mut handler:impl FnMut() + 'static) -> UnloadEventHandle {
 	let window = web_sys::window().expect("Failed to obtain window");
 
 	let closure = Closure::wrap(
-		Box::new(move |_: BeforeUnloadEvent| handler()) as Box<dyn FnMut(BeforeUnloadEvent)>
+		Box::new(move |_:BeforeUnloadEvent| handler()) as Box<dyn FnMut(BeforeUnloadEvent)>
 	);
 
 	let listener = event_handle::EventListenerHandle::new(&window, "beforeunload", closure);
-	UnloadEventHandle { _listener: listener }
+	UnloadEventHandle { _listener:listener }
 }
 
 impl WindowExtWebSys for Window {
-	fn canvas(&self) -> HtmlCanvasElement {
-		self.window.canvas().raw().clone()
-	}
+	fn canvas(&self) -> HtmlCanvasElement { self.window.canvas().raw().clone() }
 
 	fn is_dark_mode(&self) -> bool {
 		let window = web_sys::window().expect("Failed to obtain window");
@@ -83,7 +79,7 @@ pub fn scale_factor() -> f64 {
 	window.device_pixel_ratio()
 }
 
-pub fn set_canvas_size(raw: &HtmlCanvasElement, size: Size) {
+pub fn set_canvas_size(raw:&HtmlCanvasElement, size:Size) {
 	let scale_factor = scale_factor();
 
 	let physical_size = size.to_physical::<u32>(scale_factor);
@@ -96,20 +92,22 @@ pub fn set_canvas_size(raw: &HtmlCanvasElement, size: Size) {
 	set_canvas_style_property(raw, "height", &format!("{}px", logical_size.height));
 }
 
-pub fn set_canvas_style_property(raw: &HtmlCanvasElement, property: &str, value: &str) {
+pub fn set_canvas_style_property(raw:&HtmlCanvasElement, property:&str, value:&str) {
 	let style = raw.style();
-	style.set_property(property, value).expect(&format!("Failed to set {}", property));
+	style
+		.set_property(property, value)
+		.expect(&format!("Failed to set {}", property));
 }
 
-pub fn is_fullscreen(canvas: &HtmlCanvasElement) -> bool {
+pub fn is_fullscreen(canvas:&HtmlCanvasElement) -> bool {
 	let window = window().expect("Failed to obtain window");
 	let document = window.document().expect("Failed to obtain document");
 
 	match document.fullscreen_element() {
 		Some(elem) => {
-			let raw: Element = canvas.clone().into();
+			let raw:Element = canvas.clone().into();
 			raw == elem
-		}
+		},
 		None => false,
 	}
 }

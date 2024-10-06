@@ -21,28 +21,17 @@ fn main() {
 		*control_flow = ControlFlow::Wait;
 
 		match event {
-			Event::WindowEvent {
-				event: WindowEvent::CursorMoved { position, .. },
-				..
-			} => {
+			Event::WindowEvent { event: WindowEvent::CursorMoved { position, .. }, .. } => {
 				cursor_position = position;
 			},
 			Event::WindowEvent {
-				event:
-					WindowEvent::MouseInput {
-						state: ElementState::Released, ..
-					},
+				event: WindowEvent::MouseInput { state: ElementState::Released, .. },
 				..
 			} => {
-				println!(
-					"Setting ime position to {}, {}",
-					cursor_position.x, cursor_position.y
-				);
+				println!("Setting ime position to {}, {}", cursor_position.x, cursor_position.y);
 				window.set_ime_position(cursor_position);
 			},
-			Event::WindowEvent {
-				event: WindowEvent::CloseRequested, ..
-			} => {
+			Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
 				*control_flow = ControlFlow::Exit;
 				return;
 			},

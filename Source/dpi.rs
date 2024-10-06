@@ -190,10 +190,7 @@ impl<P:Pixel> LogicalPosition<P> {
 	}
 
 	#[inline]
-	pub fn to_physical<X:Pixel>(
-		&self,
-		scale_factor:f64,
-	) -> PhysicalPosition<X> {
+	pub fn to_physical<X:Pixel>(&self, scale_factor:f64) -> PhysicalPosition<X> {
 		assert!(validate_scale_factor(scale_factor));
 		let x = self.x.into() * scale_factor;
 		let y = self.y.into() * scale_factor;
@@ -207,9 +204,7 @@ impl<P:Pixel> LogicalPosition<P> {
 }
 
 impl<P:Pixel, X:Pixel> From<(X, X)> for LogicalPosition<P> {
-	fn from((x, y):(X, X)) -> LogicalPosition<P> {
-		LogicalPosition::new(x.cast(), y.cast())
-	}
+	fn from((x, y):(X, X)) -> LogicalPosition<P> { LogicalPosition::new(x.cast(), y.cast()) }
 }
 
 impl<P:Pixel, X:Pixel> Into<(X, X)> for LogicalPosition<P> {
@@ -217,9 +212,7 @@ impl<P:Pixel, X:Pixel> Into<(X, X)> for LogicalPosition<P> {
 }
 
 impl<P:Pixel, X:Pixel> From<[X; 2]> for LogicalPosition<P> {
-	fn from([x, y]:[X; 2]) -> LogicalPosition<P> {
-		LogicalPosition::new(x.cast(), y.cast())
-	}
+	fn from([x, y]:[X; 2]) -> LogicalPosition<P> { LogicalPosition::new(x.cast(), y.cast()) }
 }
 
 impl<P:Pixel, X:Pixel> Into<[X; 2]> for LogicalPosition<P> {
@@ -241,10 +234,7 @@ impl<P> PhysicalPosition<P> {
 
 impl<P:Pixel> PhysicalPosition<P> {
 	#[inline]
-	pub fn from_logical<T:Into<LogicalPosition<X>>, X:Pixel>(
-		logical:T,
-		scale_factor:f64,
-	) -> Self {
+	pub fn from_logical<T:Into<LogicalPosition<X>>, X:Pixel>(logical:T, scale_factor:f64) -> Self {
 		logical.into().to_physical(scale_factor)
 	}
 
@@ -263,9 +253,7 @@ impl<P:Pixel> PhysicalPosition<P> {
 }
 
 impl<P:Pixel, X:Pixel> From<(X, X)> for PhysicalPosition<P> {
-	fn from((x, y):(X, X)) -> PhysicalPosition<P> {
-		PhysicalPosition::new(x.cast(), y.cast())
-	}
+	fn from((x, y):(X, X)) -> PhysicalPosition<P> { PhysicalPosition::new(x.cast(), y.cast()) }
 }
 
 impl<P:Pixel, X:Pixel> Into<(X, X)> for PhysicalPosition<P> {
@@ -273,9 +261,7 @@ impl<P:Pixel, X:Pixel> Into<(X, X)> for PhysicalPosition<P> {
 }
 
 impl<P:Pixel, X:Pixel> From<[X; 2]> for PhysicalPosition<P> {
-	fn from([x, y]:[X; 2]) -> PhysicalPosition<P> {
-		PhysicalPosition::new(x.cast(), y.cast())
-	}
+	fn from([x, y]:[X; 2]) -> PhysicalPosition<P> { PhysicalPosition::new(x.cast(), y.cast()) }
 }
 
 impl<P:Pixel, X:Pixel> Into<[X; 2]> for PhysicalPosition<P> {
@@ -292,17 +278,12 @@ pub struct LogicalSize<P> {
 
 impl<P> LogicalSize<P> {
 	#[inline]
-	pub const fn new(width:P, height:P) -> Self {
-		LogicalSize { width, height }
-	}
+	pub const fn new(width:P, height:P) -> Self { LogicalSize { width, height } }
 }
 
 impl<P:Pixel> LogicalSize<P> {
 	#[inline]
-	pub fn from_physical<T:Into<PhysicalSize<X>>, X:Pixel>(
-		physical:T,
-		scale_factor:f64,
-	) -> Self {
+	pub fn from_physical<T:Into<PhysicalSize<X>>, X:Pixel>(physical:T, scale_factor:f64) -> Self {
 		physical.into().to_logical(scale_factor)
 	}
 
@@ -321,21 +302,15 @@ impl<P:Pixel> LogicalSize<P> {
 }
 
 impl<P:Pixel, X:Pixel> From<(X, X)> for LogicalSize<P> {
-	fn from((x, y):(X, X)) -> LogicalSize<P> {
-		LogicalSize::new(x.cast(), y.cast())
-	}
+	fn from((x, y):(X, X)) -> LogicalSize<P> { LogicalSize::new(x.cast(), y.cast()) }
 }
 
 impl<P:Pixel, X:Pixel> Into<(X, X)> for LogicalSize<P> {
-	fn into(self: LogicalSize<P>) -> (X, X) {
-		(self.width.cast(), self.height.cast())
-	}
+	fn into(self: LogicalSize<P>) -> (X, X) { (self.width.cast(), self.height.cast()) }
 }
 
 impl<P:Pixel, X:Pixel> From<[X; 2]> for LogicalSize<P> {
-	fn from([x, y]:[X; 2]) -> LogicalSize<P> {
-		LogicalSize::new(x.cast(), y.cast())
-	}
+	fn from([x, y]:[X; 2]) -> LogicalSize<P> { LogicalSize::new(x.cast(), y.cast()) }
 }
 
 impl<P:Pixel, X:Pixel> Into<[X; 2]> for LogicalSize<P> {
@@ -352,17 +327,12 @@ pub struct PhysicalSize<P> {
 
 impl<P> PhysicalSize<P> {
 	#[inline]
-	pub const fn new(width:P, height:P) -> Self {
-		PhysicalSize { width, height }
-	}
+	pub const fn new(width:P, height:P) -> Self { PhysicalSize { width, height } }
 }
 
 impl<P:Pixel> PhysicalSize<P> {
 	#[inline]
-	pub fn from_logical<T:Into<LogicalSize<X>>, X:Pixel>(
-		logical:T,
-		scale_factor:f64,
-	) -> Self {
+	pub fn from_logical<T:Into<LogicalSize<X>>, X:Pixel>(logical:T, scale_factor:f64) -> Self {
 		logical.into().to_physical(scale_factor)
 	}
 
@@ -381,9 +351,7 @@ impl<P:Pixel> PhysicalSize<P> {
 }
 
 impl<P:Pixel, X:Pixel> From<(X, X)> for PhysicalSize<P> {
-	fn from((x, y):(X, X)) -> PhysicalSize<P> {
-		PhysicalSize::new(x.cast(), y.cast())
-	}
+	fn from((x, y):(X, X)) -> PhysicalSize<P> { PhysicalSize::new(x.cast(), y.cast()) }
 }
 
 impl<P:Pixel, X:Pixel> Into<(X, X)> for PhysicalSize<P> {
@@ -391,9 +359,7 @@ impl<P:Pixel, X:Pixel> Into<(X, X)> for PhysicalSize<P> {
 }
 
 impl<P:Pixel, X:Pixel> From<[X; 2]> for PhysicalSize<P> {
-	fn from([x, y]:[X; 2]) -> PhysicalSize<P> {
-		PhysicalSize::new(x.cast(), y.cast())
-	}
+	fn from([x, y]:[X; 2]) -> PhysicalSize<P> { PhysicalSize::new(x.cast(), y.cast()) }
 }
 
 impl<P:Pixel, X:Pixel> Into<[X; 2]> for PhysicalSize<P> {
@@ -454,10 +420,7 @@ impl Position {
 		}
 	}
 
-	pub fn to_physical<P:Pixel>(
-		&self,
-		scale_factor:f64,
-	) -> PhysicalPosition<P> {
+	pub fn to_physical<P:Pixel>(&self, scale_factor:f64) -> PhysicalPosition<P> {
 		match *self {
 			Position::Physical(position) => position.cast(),
 			Position::Logical(position) => position.to_physical(scale_factor),
@@ -467,14 +430,10 @@ impl Position {
 
 impl<P:Pixel> From<PhysicalPosition<P>> for Position {
 	#[inline]
-	fn from(position:PhysicalPosition<P>) -> Position {
-		Position::Physical(position.cast())
-	}
+	fn from(position:PhysicalPosition<P>) -> Position { Position::Physical(position.cast()) }
 }
 
 impl<P:Pixel> From<LogicalPosition<P>> for Position {
 	#[inline]
-	fn from(position:LogicalPosition<P>) -> Position {
-		Position::Logical(position.cast())
-	}
+	fn from(position:LogicalPosition<P>) -> Position { Position::Logical(position.cast()) }
 }

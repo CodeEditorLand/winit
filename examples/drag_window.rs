@@ -26,15 +26,11 @@ fn main() {
 	event_loop.run(move |event, _, control_flow| {
 		match event {
 			Event::NewEvents(StartCause::Init) => {
-				eprintln!(
-					"Switch which window is to be dragged by pressing \"x\"."
-				)
+				eprintln!("Switch which window is to be dragged by pressing \"x\".")
 			},
 			Event::WindowEvent { event, window_id } => {
 				match event {
-					WindowEvent::CloseRequested => {
-						*control_flow = ControlFlow::Exit
-					},
+					WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 					WindowEvent::MouseInput {
 						state: ElementState::Pressed,
 						button: MouseButton::Left,
@@ -64,9 +60,7 @@ fn main() {
 						..
 					} => {
 						switched = !switched;
-						name_windows(
-							entered_id, switched, &window_1, &window_2,
-						);
+						name_windows(entered_id, switched, &window_1, &window_2);
 						println!("Switched!")
 					},
 					_ => (),
@@ -77,19 +71,13 @@ fn main() {
 	});
 }
 
-fn name_windows(
-	window_id:WindowId,
-	switched:bool,
-	window_1:&Window,
-	window_2:&Window,
-) {
-	let (drag_target, other) = if (window_id == window_1.id() && switched)
-		|| (window_id == window_2.id() && !switched)
-	{
-		(&window_2, &window_1)
-	} else {
-		(&window_1, &window_2)
-	};
+fn name_windows(window_id:WindowId, switched:bool, window_1:&Window, window_2:&Window) {
+	let (drag_target, other) =
+		if (window_id == window_1.id() && switched) || (window_id == window_2.id() && !switched) {
+			(&window_2, &window_1)
+		} else {
+			(&window_1, &window_2)
+		};
 	drag_target.set_title("drag target");
 	other.set_title("winit window");
 }

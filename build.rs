@@ -6,8 +6,6 @@ fn main() {
 		&& std::env::var("WINIT_LINK_COLORSYNC")
 			.map_or(false, |v| v == "1" || v.eq_ignore_ascii_case("true"))
 	{
-		println!(
-			"cargo:rustc-cfg=use_colorsync_cgdisplaycreateuuidfromdisplayid"
-		);
+		println!("cargo:rustc-cfg=use_colorsync_cgdisplaycreateuuidfromdisplayid");
 	}
 }

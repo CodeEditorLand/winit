@@ -16,23 +16,14 @@ use winapi::{
 	},
 	um::{
 		objidl::IDataObject,
-		oleidl::{
-			IDropTarget,
-			IDropTargetVtbl,
-			DROPEFFECT_COPY,
-			DROPEFFECT_NONE,
-		},
+		oleidl::{IDropTarget, IDropTargetVtbl, DROPEFFECT_COPY, DROPEFFECT_NONE},
 		shellapi,
 		unknwnbase,
 		winnt::HRESULT,
 	},
 };
 
-use crate::{
-	event::Event,
-	platform_impl::platform::WindowId,
-	window::WindowId as SuperWindowId,
-};
+use crate::{event::Event, platform_impl::platform::WindowId, window::WindowId as SuperWindowId};
 
 #[repr(C)]
 pub struct FileDropHandlerData {
@@ -52,14 +43,9 @@ pub struct FileDropHandler {
 
 #[allow(non_snake_case)]
 impl FileDropHandler {
-	pub fn new(
-		window:HWND,
-		send_event:Box<dyn Fn(Event<'static, ()>)>,
-	) -> FileDropHandler {
+	pub fn new(window:HWND, send_event:Box<dyn Fn(Event<'static, ()>)>) -> FileDropHandler {
 		let data = Box::new(FileDropHandlerData {
-			interface:IDropTarget {
-				lpVtbl:&DROP_TARGET_VTBL as *const IDropTargetVtbl,
-			},
+			interface:IDropTarget { lpVtbl:&DROP_TARGET_VTBL as *const IDropTargetVtbl },
 			refcount:AtomicUsize::new(1),
 			window,
 			send_event,
@@ -80,18 +66,13 @@ impl FileDropHandler {
 		unimplemented!();
 	}
 
-	pub unsafe extern "system" fn AddRef(
-		this:*mut unknwnbase::IUnknown,
-	) -> ULONG {
+	pub unsafe extern "system" fn AddRef(this:*mut unknwnbase::IUnknown) -> ULONG {
 		let drop_handler_data = Self::from_interface(this);
-		let count =
-			drop_handler_data.refcount.fetch_add(1, Ordering::Release) + 1;
+		let count = drop_handler_data.refcount.fetch_add(1, Ordering::Release) + 1;
 		count as ULONG
 	}
 
-	pub unsafe extern "system" fn Release(
-		this:*mut unknwnbase::IUnknown,
-	) -> ULONG {
+	pub unsafe extern "system" fn Release(this:*mut unknwnbase::IUnknown) -> ULONG {
 		let drop_handler = Self::from_interface(this);
 		let count = drop_handler.refcount.fetch_sub(1, Ordering::Release) - 1;
 		if count == 0 {
@@ -117,11 +98,8 @@ impl FileDropHandler {
 			});
 		});
 		drop_handler.hovered_is_valid = hdrop.is_some();
-		drop_handler.cursor_effect = if drop_handler.hovered_is_valid {
-			DROPEFFECT_COPY
-		} else {
-			DROPEFFECT_NONE
-		};
+		drop_handler.cursor_effect =
+			if drop_handler.hovered_is_valid { DROPEFFECT_COPY } else { DROPEFFECT_NONE };
 		*pdwEffect = drop_handler.cursor_effect;
 
 		S_OK
@@ -174,9 +152,7 @@ impl FileDropHandler {
 		S_OK
 	}
 
-	unsafe fn from_interface<'a, InterfaceT>(
-		this:*mut InterfaceT,
-	) -> &'a mut FileDropHandlerData {
+	unsafe fn from_interface<'a, InterfaceT>(this:*mut InterfaceT) -> &'a mut FileDropHandlerData {
 		&mut *(this as *mut _)
 	}
 
@@ -207,55 +183,39 @@ impl FileDropHandler {
 		};
 
 		let mut medium = std::mem::zeroed();
-		let get_data_result =
-			(*data_obj).GetData(&mut drop_format, &mut medium);
+		let get_data_result = (*data_obj).GetData(&mut drop_format, &mut medium);
 		if SUCCEEDED(get_data_result) {
 			let hglobal = (*medium.u).hGlobal();
 			let hdrop = (*hglobal) as shellapi::HDROP;
 
 			// The second parameter (0xFFFFFFFF) instructs the function to
 			// return the item count
-			let item_count =
-				DragQueryFileW(hdrop, 0xFFFFFFFF, ptr::null_mut(), 0);
+			let item_count = DragQueryFileW(hdrop, 0xFFFFFFFF, ptr::null_mut(), 0);
 
 			for i in 0..item_count {
 				// Get the length of the path string NOT including the
 				// terminating null character. Previously, this was using a
 				// fixed size array of MAX_PATH length, but the Windows API
 				// allows longer paths under certain circumstances.
-				let character_count =
-					DragQueryFileW(hdrop, i, ptr::null_mut(), 0) as usize;
+				let character_count = DragQueryFileW(hdrop, i, ptr::null_mut(), 0) as usize;
 				let str_len = character_count + 1;
 
 				// Fill path_buf with the null-terminated file name
 				let mut path_buf = Vec::with_capacity(str_len);
-				DragQueryFileW(
-					hdrop,
-					i,
-					path_buf.as_mut_ptr(),
-					str_len as UINT,
-				);
+				DragQueryFileW(hdrop, i, path_buf.as_mut_ptr(), str_len as UINT);
 				path_buf.set_len(str_len);
 
-				callback(
-					OsString::from_wide(&path_buf[0..character_count]).into(),
-				);
+				callback(OsString::from_wide(&path_buf[0..character_count]).into());
 			}
 
 			return Some(hdrop);
 		} else if get_data_result == DV_E_FORMATETC {
 			// If the dropped item is not a file this error will occur.
 			// In this case it is OK to return without taking further action.
-			debug!(
-				"Error occured while processing dropped/hovered item: item is \
-				 not a file."
-			);
+			debug!("Error occured while processing dropped/hovered item: item is not a file.");
 			return None;
 		} else {
-			debug!(
-				"Unexpected error occured while processing dropped/hovered \
-				 item."
-			);
+			debug!("Unexpected error occured while processing dropped/hovered item.");
 			return None;
 		}
 	}

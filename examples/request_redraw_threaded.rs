@@ -31,9 +31,7 @@ fn main() {
 		match event {
 			Event::WindowEvent { event, .. } => {
 				match event {
-					WindowEvent::CloseRequested => {
-						*control_flow = ControlFlow::Exit
-					},
+					WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 					_ => (),
 				}
 			},

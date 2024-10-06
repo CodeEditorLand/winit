@@ -1,17 +1,17 @@
 use std::{cell::Cell, rc::Rc, time::Duration};
+
 use wasm_bindgen::{closure::Closure, JsCast};
 
 #[derive(Debug)]
 pub struct Timeout {
-	handle: i32,
-	_closure: Closure<dyn FnMut()>,
+	handle:i32,
+	_closure:Closure<dyn FnMut()>,
 }
 
 impl Timeout {
-	pub fn new<F>(f: F, duration: Duration) -> Timeout
+	pub fn new<F>(f:F, duration:Duration) -> Timeout
 	where
-		F: 'static + FnMut(),
-	{
+		F: 'static + FnMut(), {
 		let window = web_sys::window().expect("Failed to obtain window");
 
 		let closure = Closure::wrap(Box::new(f) as Box<dyn FnMut()>);
@@ -23,7 +23,7 @@ impl Timeout {
 			)
 			.expect("Failed to set timeout");
 
-		Timeout { handle, _closure: closure }
+		Timeout { handle, _closure:closure }
 	}
 }
 
@@ -37,17 +37,16 @@ impl Drop for Timeout {
 
 #[derive(Debug)]
 pub struct AnimationFrameRequest {
-	handle: i32,
+	handle:i32,
 	// track callback state, because `cancelAnimationFrame` is slow
-	fired: Rc<Cell<bool>>,
-	_closure: Closure<dyn FnMut()>,
+	fired:Rc<Cell<bool>>,
+	_closure:Closure<dyn FnMut()>,
 }
 
 impl AnimationFrameRequest {
-	pub fn new<F>(mut f: F) -> AnimationFrameRequest
+	pub fn new<F>(mut f:F) -> AnimationFrameRequest
 	where
-		F: 'static + FnMut(),
-	{
+		F: 'static + FnMut(), {
 		let window = web_sys::window().expect("Failed to obtain window");
 
 		let fired = Rc::new(Cell::new(false));
@@ -61,7 +60,7 @@ impl AnimationFrameRequest {
 			.request_animation_frame(&closure.as_ref().unchecked_ref())
 			.expect("Failed to request animation frame");
 
-		AnimationFrameRequest { handle, fired, _closure: closure }
+		AnimationFrameRequest { handle, fired, _closure:closure }
 	}
 }
 
@@ -69,7 +68,9 @@ impl Drop for AnimationFrameRequest {
 	fn drop(&mut self) {
 		if !(*self.fired).get() {
 			let window = web_sys::window().expect("Failed to obtain window");
-			window.cancel_animation_frame(self.handle).expect("Failed to cancel animation frame");
+			window
+				.cancel_animation_frame(self.handle)
+				.expect("Failed to cancel animation frame");
 		}
 	}
 }

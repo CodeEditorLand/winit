@@ -1,17 +1,17 @@
 use std::{cell::Cell, rc::Rc, time::Duration};
+
 use stdweb::web::{window, IWindowOrWorker, RequestAnimationFrameHandle, TimeoutHandle};
 
 #[derive(Debug)]
 pub struct Timeout {
-	handle: Option<TimeoutHandle>,
+	handle:Option<TimeoutHandle>,
 }
 
 impl Timeout {
-	pub fn new<F>(f: F, duration: Duration) -> Timeout
+	pub fn new<F>(f:F, duration:Duration) -> Timeout
 	where
-		F: 'static + FnMut(),
-	{
-		Timeout { handle: Some(window().set_clearable_timeout(f, duration.as_millis() as u32)) }
+		F: 'static + FnMut(), {
+		Timeout { handle:Some(window().set_clearable_timeout(f, duration.as_millis() as u32)) }
 	}
 }
 
@@ -24,16 +24,15 @@ impl Drop for Timeout {
 
 #[derive(Debug)]
 pub struct AnimationFrameRequest {
-	handle: Option<RequestAnimationFrameHandle>,
+	handle:Option<RequestAnimationFrameHandle>,
 	// track callback state, because `cancelAnimationFrame` is slow
-	fired: Rc<Cell<bool>>,
+	fired:Rc<Cell<bool>>,
 }
 
 impl AnimationFrameRequest {
-	pub fn new<F>(mut f: F) -> AnimationFrameRequest
+	pub fn new<F>(mut f:F) -> AnimationFrameRequest
 	where
-		F: 'static + FnMut(),
-	{
+		F: 'static + FnMut(), {
 		let fired = Rc::new(Cell::new(false));
 		let c_fired = fired.clone();
 		let handle = window().request_animation_frame(move |_| {
@@ -41,7 +40,7 @@ impl AnimationFrameRequest {
 			f();
 		});
 
-		AnimationFrameRequest { handle: Some(handle), fired }
+		AnimationFrameRequest { handle:Some(handle), fired }
 	}
 }
 

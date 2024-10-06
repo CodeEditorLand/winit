@@ -12,9 +12,7 @@ fn main() {
 	SimpleLogger::new().init().unwrap();
 	let event_loop = EventLoop::new();
 
-	print!(
-		"Please choose the fullscreen mode: (1) exclusive, (2) borderless: "
-	);
+	print!("Please choose the fullscreen mode: (1) exclusive, (2) borderless: ");
 	stdout().flush().unwrap();
 
 	let mut num = String::new();
@@ -22,11 +20,7 @@ fn main() {
 	let num = num.trim().parse().ok().expect("Please enter a number");
 
 	let fullscreen = Some(match num {
-		1 => {
-			Fullscreen::Exclusive(prompt_for_video_mode(&prompt_for_monitor(
-				&event_loop,
-			)))
-		},
+		1 => Fullscreen::Exclusive(prompt_for_video_mode(&prompt_for_monitor(&event_loop))),
 		2 => Fullscreen::Borderless(Some(prompt_for_monitor(&event_loop))),
 		_ => panic!("Please enter a valid number"),
 	});
@@ -45,22 +39,13 @@ fn main() {
 		match event {
 			Event::WindowEvent { event, .. } => {
 				match event {
-					WindowEvent::CloseRequested => {
-						*control_flow = ControlFlow::Exit
-					},
+					WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
 					WindowEvent::KeyboardInput {
-						input:
-							KeyboardInput {
-								virtual_keycode: Some(virtual_code),
-								state,
-								..
-							},
+						input: KeyboardInput { virtual_keycode: Some(virtual_code), state, .. },
 						..
 					} => {
 						match (virtual_code, state) {
-							(VirtualKeyCode::Escape, _) => {
-								*control_flow = ControlFlow::Exit
-							},
+							(VirtualKeyCode::Escape, _) => *control_flow = ControlFlow::Exit,
 							(VirtualKeyCode::F, ElementState::Pressed) => {
 								if window.fullscreen().is_some() {
 									window.set_fullscreen(None);
@@ -69,10 +54,7 @@ fn main() {
 								}
 							},
 							(VirtualKeyCode::S, ElementState::Pressed) => {
-								println!(
-									"window.fullscreen {:?}",
-									window.fullscreen()
-								);
+								println!("window.fullscreen {:?}", window.fullscreen());
 							},
 							(VirtualKeyCode::M, ElementState::Pressed) => {
 								let is_maximized = window.is_maximized();
@@ -105,10 +87,7 @@ fn prompt_for_monitor(event_loop:&EventLoop<()>) -> MonitorHandle {
 	let mut num = String::new();
 	stdin().read_line(&mut num).unwrap();
 	let num = num.trim().parse().ok().expect("Please enter a number");
-	let monitor = event_loop
-		.available_monitors()
-		.nth(num)
-		.expect("Please enter a valid ID");
+	let monitor = event_loop.available_monitors().nth(num).expect("Please enter a valid ID");
 
 	println!("Using {:?}", monitor.name());
 
@@ -126,8 +105,7 @@ fn prompt_for_video_mode(monitor:&MonitorHandle) -> VideoMode {
 	let mut num = String::new();
 	stdin().read_line(&mut num).unwrap();
 	let num = num.trim().parse().ok().expect("Please enter a number");
-	let video_mode =
-		monitor.video_modes().nth(num).expect("Please enter a valid ID");
+	let video_mode = monitor.video_modes().nth(num).expect("Please enter a valid ID");
 
 	println!("Using {}", video_mode);
 

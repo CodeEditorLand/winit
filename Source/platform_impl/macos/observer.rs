@@ -28,11 +28,7 @@ extern {
 		callout:CFRunLoopObserverCallBack,
 		context:*mut CFRunLoopObserverContext,
 	) -> CFRunLoopObserverRef;
-	pub fn CFRunLoopAddObserver(
-		rl:CFRunLoopRef,
-		observer:CFRunLoopObserverRef,
-		mode:CFRunLoopMode,
-	);
+	pub fn CFRunLoopAddObserver(rl:CFRunLoopRef, observer:CFRunLoopObserverRef, mode:CFRunLoopMode);
 
 	pub fn CFRunLoopTimerCreate(
 		allocator:CFAllocatorRef,
@@ -43,15 +39,8 @@ extern {
 		callout:CFRunLoopTimerCallBack,
 		context:*mut CFRunLoopTimerContext,
 	) -> CFRunLoopTimerRef;
-	pub fn CFRunLoopAddTimer(
-		rl:CFRunLoopRef,
-		timer:CFRunLoopTimerRef,
-		mode:CFRunLoopMode,
-	);
-	pub fn CFRunLoopTimerSetNextFireDate(
-		timer:CFRunLoopTimerRef,
-		fireDate:CFAbsoluteTime,
-	);
+	pub fn CFRunLoopAddTimer(rl:CFRunLoopRef, timer:CFRunLoopTimerRef, mode:CFRunLoopMode);
+	pub fn CFRunLoopTimerSetNextFireDate(timer:CFRunLoopTimerRef, fireDate:CFAbsoluteTime);
 	pub fn CFRunLoopTimerInvalidate(time:CFRunLoopTimerRef);
 
 	pub fn CFRunLoopSourceCreate(
@@ -59,11 +48,7 @@ extern {
 		order:CFIndex,
 		context:*mut CFRunLoopSourceContext,
 	) -> CFRunLoopSourceRef;
-	pub fn CFRunLoopAddSource(
-		rl:CFRunLoopRef,
-		source:CFRunLoopSourceRef,
-		mode:CFRunLoopMode,
-	);
+	pub fn CFRunLoopAddSource(rl:CFRunLoopRef, source:CFRunLoopSourceRef, mode:CFRunLoopMode);
 	#[allow(dead_code)]
 	pub fn CFRunLoopSourceInvalidate(source:CFRunLoopSourceRef);
 	pub fn CFRunLoopSourceSignal(source:CFRunLoopSourceRef);
@@ -103,13 +88,9 @@ pub const kCFRunLoopAfterWaiting:CFRunLoopActivity = 1 << 6;
 #[allow(non_upper_case_globals)]
 pub const kCFRunLoopExit:CFRunLoopActivity = 1 << 7;
 
-pub type CFRunLoopObserverCallBack = extern fn(
-	observer:CFRunLoopObserverRef,
-	activity:CFRunLoopActivity,
-	info:*mut c_void,
-);
-pub type CFRunLoopTimerCallBack =
-	extern fn(timer:CFRunLoopTimerRef, info:*mut c_void);
+pub type CFRunLoopObserverCallBack =
+	extern fn(observer:CFRunLoopObserverRef, activity:CFRunLoopActivity, info:*mut c_void);
+pub type CFRunLoopTimerCallBack = extern fn(timer:CFRunLoopTimerRef, info:*mut c_void);
 
 pub enum CFRunLoopTimerContext {}
 
@@ -173,8 +154,8 @@ extern fn control_flow_begin_handler(
 					AppState::wakeup(panic_info);
 					// trace!("Completed `CFRunLoopAfterWaiting`");
 				},
-				kCFRunLoopEntry => unimplemented!(), /* not expected to ever
-				                                       * happen */
+				kCFRunLoopEntry => unimplemented!(), // not expected to ever
+				// happen
 				_ => unreachable!(),
 			}
 		});
@@ -197,7 +178,7 @@ extern fn control_flow_end_handler(
 					AppState::cleared(panic_info);
 					// trace!("Completed `CFRunLoopBeforeWaiting`");
 				},
-				kCFRunLoopExit => (), /* unimplemented!(), // not expected to ever happen */
+				kCFRunLoopExit => (), // unimplemented!(), // not expected to ever happen
 				_ => unreachable!(),
 			}
 		});
@@ -268,11 +249,7 @@ impl Drop for EventLoopWaker {
 
 impl Default for EventLoopWaker {
 	fn default() -> EventLoopWaker {
-		extern fn wakeup_main_loop(
-			_timer:CFRunLoopTimerRef,
-			_info:*mut c_void,
-		) {
-		}
+		extern fn wakeup_main_loop(_timer:CFRunLoopTimerRef, _info:*mut c_void) {}
 		unsafe {
 			// Create a timer with a 0.1µs interval (1ns does not work) to mimic
 			// polling. It is initially setup with a first fire time really
@@ -294,13 +271,9 @@ impl Default for EventLoopWaker {
 }
 
 impl EventLoopWaker {
-	pub fn stop(&mut self) {
-		unsafe { CFRunLoopTimerSetNextFireDate(self.timer, std::f64::MAX) }
-	}
+	pub fn stop(&mut self) { unsafe { CFRunLoopTimerSetNextFireDate(self.timer, std::f64::MAX) } }
 
-	pub fn start(&mut self) {
-		unsafe { CFRunLoopTimerSetNextFireDate(self.timer, std::f64::MIN) }
-	}
+	pub fn start(&mut self) { unsafe { CFRunLoopTimerSetNextFireDate(self.timer, std::f64::MIN) } }
 
 	pub fn start_at(&mut self, instant:Instant) {
 		let now = Instant::now();
@@ -310,8 +283,8 @@ impl EventLoopWaker {
 			unsafe {
 				let current = CFAbsoluteTimeGetCurrent();
 				let duration = instant - now;
-				let fsecs = duration.subsec_nanos() as f64 / 1_000_000_000.0
-					+ duration.as_secs() as f64;
+				let fsecs =
+					duration.subsec_nanos() as f64 / 1_000_000_000.0 + duration.as_secs() as f64;
 				CFRunLoopTimerSetNextFireDate(self.timer, current + fsecs)
 			}
 		}

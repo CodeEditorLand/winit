@@ -54,20 +54,12 @@ impl<'a, Never> Event<'a, Never> {
 
 pub trait EventHandler: Debug {
 	// Not sure probably it should accept Event<'static, Never>
-	fn handle_nonuser_event(
-		&mut self,
-		event:Event<'_, Never>,
-		control_flow:&mut ControlFlow,
-	);
+	fn handle_nonuser_event(&mut self, event:Event<'_, Never>, control_flow:&mut ControlFlow);
 	fn handle_user_events(&mut self, control_flow:&mut ControlFlow);
 }
 
 struct EventLoopHandler<T:'static> {
-	callback: Weak<
-		RefCell<
-			dyn FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow),
-		>,
-	>,
+	callback:Weak<RefCell<dyn FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow)>>,
 	will_exit:bool,
 	window_target:Rc<RootWindowTarget<T>>,
 }
@@ -77,18 +69,15 @@ impl<T> EventLoopHandler<T> {
 	where
 		F: FnOnce(
 			&mut EventLoopHandler<T>,
-			RefMut<
-				'_,
-				dyn FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow),
-			>,
+			RefMut<'_, dyn FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow)>,
 		), {
 		if let Some(callback) = self.callback.upgrade() {
 			let callback = callback.borrow_mut();
 			(f)(self, callback);
 		} else {
 			panic!(
-				"Tried to dispatch an event, but the event loop that owned \
-				 the event handler callback seems to be destroyed"
+				"Tried to dispatch an event, but the event loop that owned the event handler \
+				 callback seems to be destroyed"
 			);
 		}
 	}
@@ -104,11 +93,7 @@ impl<T> Debug for EventLoopHandler<T> {
 }
 
 impl<T> EventHandler for EventLoopHandler<T> {
-	fn handle_nonuser_event(
-		&mut self,
-		event:Event<'_, Never>,
-		control_flow:&mut ControlFlow,
-	) {
+	fn handle_nonuser_event(&mut self, event:Event<'_, Never>, control_flow:&mut ControlFlow) {
 		self.with_callback(|this, mut callback| {
 			(callback)(event.userify(), &this.window_target, control_flow);
 			this.will_exit |= *control_flow == ControlFlow::Exit;
@@ -122,11 +107,7 @@ impl<T> EventHandler for EventLoopHandler<T> {
 		self.with_callback(|this, mut callback| {
 			let mut will_exit = this.will_exit;
 			for event in this.window_target.p.receiver.try_iter() {
-				(callback)(
-					Event::UserEvent(event),
-					&this.window_target,
-					control_flow,
-				);
+				(callback)(Event::UserEvent(event), &this.window_target, control_flow);
 				will_exit |= *control_flow == ControlFlow::Exit;
 				if will_exit {
 					*control_flow = ControlFlow::Exit;
@@ -159,21 +140,15 @@ impl Handler {
 		self.pending_events.lock().unwrap()
 	}
 
-	fn redraw<'a>(&'a self) -> MutexGuard<'a, Vec<WindowId>> {
-		self.pending_redraw.lock().unwrap()
-	}
+	fn redraw<'a>(&'a self) -> MutexGuard<'a, Vec<WindowId>> { self.pending_redraw.lock().unwrap() }
 
-	fn waker(&self) -> MutexGuard<'_, EventLoopWaker> {
-		self.waker.lock().unwrap()
-	}
+	fn waker(&self) -> MutexGuard<'_, EventLoopWaker> { self.waker.lock().unwrap() }
 
 	fn is_ready(&self) -> bool { self.ready.load(Ordering::Acquire) }
 
 	fn set_ready(&self) { self.ready.store(true, Ordering::Release); }
 
-	fn should_exit(&self) -> bool {
-		*self.control_flow.lock().unwrap() == ControlFlow::Exit
-	}
+	fn should_exit(&self) -> bool { *self.control_flow.lock().unwrap() == ControlFlow::Exit }
 
 	fn get_control_flow_and_update_prev(&self) -> ControlFlow {
 		let control_flow = self.control_flow.lock().unwrap();
@@ -187,13 +162,9 @@ impl Handler {
 		(old, new)
 	}
 
-	fn get_start_time(&self) -> Option<Instant> {
-		*self.start_time.lock().unwrap()
-	}
+	fn get_start_time(&self) -> Option<Instant> { *self.start_time.lock().unwrap() }
 
-	fn update_start_time(&self) {
-		*self.start_time.lock().unwrap() = Some(Instant::now());
-	}
+	fn update_start_time(&self) { *self.start_time.lock().unwrap() = Some(Instant::now()); }
 
 	fn take_events(&self) -> VecDeque<EventWrapper> {
 		mem::replace(&mut *self.events(), Default::default())
@@ -203,9 +174,7 @@ impl Handler {
 		mem::replace(&mut *self.redraw(), Default::default())
 	}
 
-	fn get_in_callback(&self) -> bool {
-		self.in_callback.load(Ordering::Acquire)
-	}
+	fn get_in_callback(&self) -> bool { self.in_callback.load(Ordering::Acquire) }
 
 	fn set_in_callback(&self, in_callback:bool) {
 		self.in_callback.store(in_callback, Ordering::Release);
@@ -215,22 +184,16 @@ impl Handler {
 		if let Some(ref mut callback) = *self.callback.lock().unwrap() {
 			match wrapper {
 				EventWrapper::StaticEvent(event) => {
-					callback.handle_nonuser_event(
-						event,
-						&mut *self.control_flow.lock().unwrap(),
-					)
+					callback.handle_nonuser_event(event, &mut *self.control_flow.lock().unwrap())
 				},
-				EventWrapper::EventProxy(proxy) => {
-					self.handle_proxy(proxy, callback)
-				},
+				EventWrapper::EventProxy(proxy) => self.handle_proxy(proxy, callback),
 			}
 		}
 	}
 
 	fn handle_user_events(&self) {
 		if let Some(ref mut callback) = *self.callback.lock().unwrap() {
-			callback
-				.handle_user_events(&mut *self.control_flow.lock().unwrap());
+			callback.handle_user_events(&mut *self.control_flow.lock().unwrap());
 		}
 	}
 
@@ -245,16 +208,10 @@ impl Handler {
 		let new_inner_size = &mut size;
 		let event = Event::WindowEvent {
 			window_id:WindowId(get_window_id(*ns_window)),
-			event:WindowEvent::ScaleFactorChanged {
-				scale_factor,
-				new_inner_size,
-			},
+			event:WindowEvent::ScaleFactorChanged { scale_factor, new_inner_size },
 		};
 
-		callback.handle_nonuser_event(
-			event,
-			&mut *self.control_flow.lock().unwrap(),
-		);
+		callback.handle_nonuser_event(event, &mut *self.control_flow.lock().unwrap());
 
 		let physical_size = *new_inner_size;
 		let logical_size = physical_size.to_logical(scale_factor);
@@ -262,17 +219,9 @@ impl Handler {
 		unsafe { NSWindow::setContentSize_(*ns_window, size) };
 	}
 
-	fn handle_proxy(
-		&self,
-		proxy:EventProxy,
-		callback:&mut Box<dyn EventHandler + 'static>,
-	) {
+	fn handle_proxy(&self, proxy:EventProxy, callback:&mut Box<dyn EventHandler + 'static>) {
 		match proxy {
-			EventProxy::DpiChangedProxy {
-				ns_window,
-				suggested_size,
-				scale_factor,
-			} => {
+			EventProxy::DpiChangedProxy { ns_window, suggested_size, scale_factor } => {
 				self.handle_scale_factor_changed_event(
 					callback,
 					ns_window,
@@ -290,25 +239,16 @@ pub enum AppState {}
 
 impl AppState {
 	pub fn set_callback<T>(
-		callback:Weak<
-			RefCell<
-				dyn FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow),
-			>,
-		>,
+		callback:Weak<RefCell<dyn FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow)>>,
 		window_target:Rc<RootWindowTarget<T>>,
 	) {
-		*HANDLER.callback.lock().unwrap() = Some(Box::new(EventLoopHandler {
-			callback,
-			will_exit:false,
-			window_target,
-		}));
+		*HANDLER.callback.lock().unwrap() =
+			Some(Box::new(EventLoopHandler { callback, will_exit:false, window_target }));
 	}
 
 	pub fn exit() {
 		HANDLER.set_in_callback(true);
-		HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(
-			Event::LoopDestroyed,
-		));
+		HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::LoopDestroyed));
 		HANDLER.set_in_callback(false);
 		HANDLER.callback.lock().unwrap().take();
 	}
@@ -324,8 +264,7 @@ impl AppState {
 		};
 		HANDLER.set_ready();
 		HANDLER.waker().start();
-		let create_default_menu =
-			unsafe { get_aux_state_mut(app_delegate).create_default_menu };
+		let create_default_menu = unsafe { get_aux_state_mut(app_delegate).create_default_menu };
 		if create_default_menu {
 			// The menubar initialization should be before the `NewEvents`
 			// event, to allow overriding of the default menu even if it's
@@ -333,43 +272,33 @@ impl AppState {
 			menu::initialize();
 		}
 		HANDLER.set_in_callback(true);
-		HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(
-			Event::NewEvents(StartCause::Init),
-		));
+		HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::NewEvents(StartCause::Init)));
 		HANDLER.set_in_callback(false);
 	}
 
 	pub fn wakeup(panic_info:Weak<PanicInfo>) {
-		let panic_info = panic_info.upgrade().expect(
-			"The panic info must exist here. This failure indicates a \
-			 developer error.",
-		);
+		let panic_info = panic_info
+			.upgrade()
+			.expect("The panic info must exist here. This failure indicates a developer error.");
 		if panic_info.is_panicking() || !HANDLER.is_ready() {
 			return;
 		}
 		let start = HANDLER.get_start_time().unwrap();
 		let cause = match HANDLER.get_control_flow_and_update_prev() {
 			ControlFlow::Poll => StartCause::Poll,
-			ControlFlow::Wait => {
-				StartCause::WaitCancelled { start, requested_resume:None }
-			},
+			ControlFlow::Wait => StartCause::WaitCancelled { start, requested_resume:None },
 			ControlFlow::WaitUntil(requested_resume) => {
 				if Instant::now() >= requested_resume {
 					StartCause::ResumeTimeReached { start, requested_resume }
 				} else {
-					StartCause::WaitCancelled {
-						start,
-						requested_resume:Some(requested_resume),
-					}
+					StartCause::WaitCancelled { start, requested_resume:Some(requested_resume) }
 				}
 			},
 			ControlFlow::Exit => StartCause::Poll, /* panic!("unexpected
 			                                        * `ControlFlow::Exit`"), */
 		};
 		HANDLER.set_in_callback(true);
-		HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(
-			Event::NewEvents(cause),
-		));
+		HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::NewEvents(cause)));
 		HANDLER.set_in_callback(false);
 	}
 
@@ -386,9 +315,7 @@ impl AppState {
 	}
 
 	pub fn handle_redraw(window_id:WindowId) {
-		HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(
-			Event::RedrawRequested(window_id),
-		));
+		HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::RedrawRequested(window_id)));
 	}
 
 	pub fn queue_event(wrapper:EventWrapper) {
@@ -406,10 +333,9 @@ impl AppState {
 	}
 
 	pub fn cleared(panic_info:Weak<PanicInfo>) {
-		let panic_info = panic_info.upgrade().expect(
-			"The panic info must exist here. This failure indicates a \
-			 developer error.",
-		);
+		let panic_info = panic_info
+			.upgrade()
+			.expect("The panic info must exist here. This failure indicates a developer error.");
 		if panic_info.is_panicking() || !HANDLER.is_ready() {
 			return;
 		}
@@ -419,17 +345,13 @@ impl AppState {
 			for event in HANDLER.take_events() {
 				HANDLER.handle_nonuser_event(event);
 			}
-			HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(
-				Event::MainEventsCleared,
-			));
+			HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::MainEventsCleared));
 			for window_id in HANDLER.should_redraw() {
-				HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(
-					Event::RedrawRequested(window_id),
-				));
+				HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::RedrawRequested(
+					window_id,
+				)));
 			}
-			HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(
-				Event::RedrawEventsCleared,
-			));
+			HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::RedrawEventsCleared));
 			HANDLER.set_in_callback(false);
 		}
 		if HANDLER.should_exit() {
@@ -446,8 +368,7 @@ impl AppState {
 					false
 				};
 
-				let dialog_is_closing =
-					HANDLER.dialog_is_closing.load(Ordering::SeqCst);
+				let dialog_is_closing = HANDLER.dialog_is_closing.load(Ordering::SeqCst);
 				let pool = NSAutoreleasePool::new(nil);
 				if !INTERRUPT_EVENT_LOOP_EXIT.load(Ordering::SeqCst)
 					&& !dialog_open && !dialog_is_closing
@@ -463,9 +384,7 @@ impl AppState {
 					let window:id = msg_send![windows, objectAtIndex:0];
 					let window_has_focus = msg_send![window, isKeyWindow];
 					if !dialog_open && window_has_focus && dialog_is_closing {
-						HANDLER
-							.dialog_is_closing
-							.store(false, Ordering::SeqCst);
+						HANDLER.dialog_is_closing.store(false, Ordering::SeqCst);
 					}
 					if dialog_open {
 						HANDLER.dialog_is_closing.store(true, Ordering::SeqCst);
@@ -478,9 +397,7 @@ impl AppState {
 			(ControlFlow::Exit, _) | (_, ControlFlow::Exit) => (),
 			(old, new) if old == new => (),
 			(_, ControlFlow::Wait) => HANDLER.waker().stop(),
-			(_, ControlFlow::WaitUntil(instant)) => {
-				HANDLER.waker().start_at(instant)
-			},
+			(_, ControlFlow::WaitUntil(instant)) => HANDLER.waker().start_at(instant),
 			(_, ControlFlow::Poll) => HANDLER.waker().start(),
 		}
 	}
@@ -528,12 +445,8 @@ fn apply_activation_policy(app_delegate:&Object) {
 		let act_pol = get_aux_state_mut(app_delegate).activation_policy;
 		ns_app.setActivationPolicy_(match act_pol {
 			ActivationPolicy::Regular => NSApplicationActivationPolicyRegular,
-			ActivationPolicy::Accessory => {
-				NSApplicationActivationPolicyAccessory
-			},
-			ActivationPolicy::Prohibited => {
-				NSApplicationActivationPolicyProhibited
-			},
+			ActivationPolicy::Accessory => NSApplicationActivationPolicyAccessory,
+			ActivationPolicy::Prohibited => NSApplicationActivationPolicyProhibited,
 		});
 	}
 }

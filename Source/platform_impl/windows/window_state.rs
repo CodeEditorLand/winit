@@ -131,11 +131,8 @@ impl WindowState {
 
 	pub fn window_flags(&self) -> WindowFlags { self.window_flags }
 
-	pub fn set_window_flags<F>(
-		mut this:MutexGuard<'_, Self>,
-		window:HWND,
-		f:F,
-	) where
+	pub fn set_window_flags<F>(mut this:MutexGuard<'_, Self>, window:HWND, f:F)
+	where
 		F: FnOnce(&mut WindowFlags), {
 		let old_flags = this.window_flags;
 		f(&mut this.window_flags);
@@ -155,11 +152,7 @@ impl WindowState {
 impl MouseProperties {
 	pub fn cursor_flags(&self) -> CursorFlags { self.cursor_flags }
 
-	pub fn set_cursor_flags<F>(
-		&mut self,
-		window:HWND,
-		f:F,
-	) -> Result<(), io::Error>
+	pub fn set_cursor_flags<F>(&mut self, window:HWND, f:F) -> Result<(), io::Error>
 	where
 		F: FnOnce(&mut CursorFlags), {
 		let old_flags = self.cursor_flags;
@@ -231,8 +224,7 @@ impl WindowFlags {
 		style_ex |= WS_EX_ACCEPTFILES;
 
 		if self.intersects(
-			WindowFlags::MARKER_EXCLUSIVE_FULLSCREEN
-				| WindowFlags::MARKER_BORDERLESS_FULLSCREEN,
+			WindowFlags::MARKER_EXCLUSIVE_FULLSCREEN | WindowFlags::MARKER_BORDERLESS_FULLSCREEN,
 		) {
 			style &= !WS_OVERLAPPEDWINDOW;
 		}
@@ -282,9 +274,7 @@ impl WindowFlags {
 			}
 		}
 
-		if diff.contains(WindowFlags::MAXIMIZED)
-			|| new.contains(WindowFlags::MAXIMIZED)
-		{
+		if diff.contains(WindowFlags::MAXIMIZED) || new.contains(WindowFlags::MAXIMIZED) {
 			unsafe {
 				winuser::ShowWindow(
 					window,
@@ -314,26 +304,13 @@ impl WindowFlags {
 			let (style, style_ex) = new.to_window_styles();
 
 			unsafe {
-				winuser::SendMessageW(
-					window,
-					*event_loop::SET_RETAIN_STATE_ON_SIZE_MSG_ID,
-					1,
-					0,
-				);
+				winuser::SendMessageW(window, *event_loop::SET_RETAIN_STATE_ON_SIZE_MSG_ID, 1, 0);
 
 				// This condition is necessary to avoid having an unrestorable
 				// window
 				if !new.contains(WindowFlags::MINIMIZED) {
-					winuser::SetWindowLongW(
-						window,
-						winuser::GWL_STYLE,
-						style as _,
-					);
-					winuser::SetWindowLongW(
-						window,
-						winuser::GWL_EXSTYLE,
-						style_ex as _,
-					);
+					winuser::SetWindowLongW(window, winuser::GWL_STYLE, style as _);
+					winuser::SetWindowLongW(window, winuser::GWL_EXSTYLE, style_ex as _);
 				}
 
 				let mut flags = winuser::SWP_NOZORDER
@@ -351,21 +328,8 @@ impl WindowFlags {
 				}
 
 				// Refresh the window frame
-				winuser::SetWindowPos(
-					window,
-					ptr::null_mut(),
-					0,
-					0,
-					0,
-					0,
-					flags,
-				);
-				winuser::SendMessageW(
-					window,
-					*event_loop::SET_RETAIN_STATE_ON_SIZE_MSG_ID,
-					0,
-					0,
-				);
+				winuser::SetWindowPos(window, ptr::null_mut(), 0, 0, 0, 0, flags);
+				winuser::SendMessageW(window, *event_loop::SET_RETAIN_STATE_ON_SIZE_MSG_ID, 0, 0);
 			}
 		}
 	}
@@ -381,8 +345,7 @@ impl CursorFlags {
 				false => None,
 			};
 
-			let rect_to_tuple =
-				|rect:RECT| (rect.left, rect.top, rect.right, rect.bottom);
+			let rect_to_tuple = |rect:RECT| (rect.left, rect.top, rect.right, rect.bottom);
 			let active_cursor_clip = rect_to_tuple(util::get_cursor_clip()?);
 			let desktop_rect = rect_to_tuple(util::get_desktop_rect());
 

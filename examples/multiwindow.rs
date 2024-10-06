@@ -24,10 +24,7 @@ fn main() {
 			Event::WindowEvent { event, window_id } => {
 				match event {
 					WindowEvent::CloseRequested => {
-						println!(
-							"Window {:?} has received the signal to close",
-							window_id
-						);
+						println!("Window {:?} has received the signal to close", window_id);
 
 						// This drops the window, causing it to close.
 						windows.remove(&window_id);
@@ -37,8 +34,7 @@ fn main() {
 						}
 					},
 					WindowEvent::KeyboardInput {
-						input:
-							KeyboardInput { state: ElementState::Pressed, .. },
+						input: KeyboardInput { state: ElementState::Pressed, .. },
 						..
 					} => {
 						let window = Window::new(&event_loop).unwrap();

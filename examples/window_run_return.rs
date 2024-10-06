@@ -38,10 +38,7 @@ fn main() {
 			}
 
 			match event {
-				Event::WindowEvent {
-					event: WindowEvent::CloseRequested,
-					..
-				} => {
+				Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
 					quit = true;
 				},
 				Event::MainEventsCleared => {

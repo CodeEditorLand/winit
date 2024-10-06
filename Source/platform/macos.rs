@@ -60,9 +60,7 @@ impl WindowExtMacOS for Window {
 	fn has_shadow(&self) -> bool { self.window.has_shadow() }
 
 	#[inline]
-	fn set_has_shadow(&self, has_shadow:bool) {
-		self.window.set_has_shadow(has_shadow)
-	}
+	fn set_has_shadow(&self, has_shadow:bool) { self.window.set_has_shadow(has_shadow) }
 }
 
 /// Corresponds to `NSApplicationActivationPolicy`.
@@ -93,35 +91,20 @@ impl Default for ActivationPolicy {
 pub trait WindowBuilderExtMacOS {
 	/// Enables click-and-drag behavior for the entire window, not just the
 	/// titlebar.
-	fn with_movable_by_window_background(
-		self,
-		movable_by_window_background:bool,
-	) -> WindowBuilder;
+	fn with_movable_by_window_background(self, movable_by_window_background:bool) -> WindowBuilder;
 	/// Makes the titlebar transparent and allows the content to appear behind
 	/// it.
-	fn with_titlebar_transparent(
-		self,
-		titlebar_transparent:bool,
-	) -> WindowBuilder;
+	fn with_titlebar_transparent(self, titlebar_transparent:bool) -> WindowBuilder;
 	/// Hides the window title.
 	fn with_title_hidden(self, title_hidden:bool) -> WindowBuilder;
 	/// Hides the window titlebar.
 	fn with_titlebar_hidden(self, titlebar_hidden:bool) -> WindowBuilder;
 	/// Hides the window titlebar buttons.
-	fn with_titlebar_buttons_hidden(
-		self,
-		titlebar_buttons_hidden:bool,
-	) -> WindowBuilder;
+	fn with_titlebar_buttons_hidden(self, titlebar_buttons_hidden:bool) -> WindowBuilder;
 	/// Makes the window content appear behind the titlebar.
-	fn with_fullsize_content_view(
-		self,
-		fullsize_content_view:bool,
-	) -> WindowBuilder;
+	fn with_fullsize_content_view(self, fullsize_content_view:bool) -> WindowBuilder;
 	/// Build window with `resizeIncrements` property. Values must not be 0.
-	fn with_resize_increments(
-		self,
-		increments:LogicalSize<f64>,
-	) -> WindowBuilder;
+	fn with_resize_increments(self, increments:LogicalSize<f64>) -> WindowBuilder;
 	fn with_disallow_hidpi(self, disallow_hidpi:bool) -> WindowBuilder;
 	fn with_has_shadow(self, has_shadow:bool) -> WindowBuilder;
 }
@@ -132,16 +115,12 @@ impl WindowBuilderExtMacOS for WindowBuilder {
 		mut self,
 		movable_by_window_background:bool,
 	) -> WindowBuilder {
-		self.platform_specific.movable_by_window_background =
-			movable_by_window_background;
+		self.platform_specific.movable_by_window_background = movable_by_window_background;
 		self
 	}
 
 	#[inline]
-	fn with_titlebar_transparent(
-		mut self,
-		titlebar_transparent:bool,
-	) -> WindowBuilder {
+	fn with_titlebar_transparent(mut self, titlebar_transparent:bool) -> WindowBuilder {
 		self.platform_specific.titlebar_transparent = titlebar_transparent;
 		self
 	}
@@ -153,12 +132,8 @@ impl WindowBuilderExtMacOS for WindowBuilder {
 	}
 
 	#[inline]
-	fn with_titlebar_buttons_hidden(
-		mut self,
-		titlebar_buttons_hidden:bool,
-	) -> WindowBuilder {
-		self.platform_specific.titlebar_buttons_hidden =
-			titlebar_buttons_hidden;
+	fn with_titlebar_buttons_hidden(mut self, titlebar_buttons_hidden:bool) -> WindowBuilder {
+		self.platform_specific.titlebar_buttons_hidden = titlebar_buttons_hidden;
 		self
 	}
 
@@ -169,19 +144,13 @@ impl WindowBuilderExtMacOS for WindowBuilder {
 	}
 
 	#[inline]
-	fn with_fullsize_content_view(
-		mut self,
-		fullsize_content_view:bool,
-	) -> WindowBuilder {
+	fn with_fullsize_content_view(mut self, fullsize_content_view:bool) -> WindowBuilder {
 		self.platform_specific.fullsize_content_view = fullsize_content_view;
 		self
 	}
 
 	#[inline]
-	fn with_resize_increments(
-		mut self,
-		increments:LogicalSize<f64>,
-	) -> WindowBuilder {
+	fn with_resize_increments(mut self, increments:LogicalSize<f64>) -> WindowBuilder {
 		self.platform_specific.resize_increments = Some(increments.into());
 		self
 	}
@@ -221,16 +190,14 @@ impl<T> EventLoopExtMacOS for EventLoop<T> {
 	#[inline]
 	fn set_activation_policy(&mut self, activation_policy:ActivationPolicy) {
 		unsafe {
-			get_aux_state_mut(&**self.event_loop.delegate).activation_policy =
-				activation_policy;
+			get_aux_state_mut(&**self.event_loop.delegate).activation_policy = activation_policy;
 		}
 	}
 
 	#[inline]
 	fn enable_default_menu_creation(&mut self, enable:bool) {
 		unsafe {
-			get_aux_state_mut(&**self.event_loop.delegate)
-				.create_default_menu = enable;
+			get_aux_state_mut(&**self.event_loop.delegate).create_default_menu = enable;
 		}
 	}
 }
@@ -247,9 +214,7 @@ impl MonitorHandleExtMacOS for MonitorHandle {
 	#[inline]
 	fn native_id(&self) -> u32 { self.inner.native_identifier() }
 
-	fn ns_screen(&self) -> Option<*mut c_void> {
-		self.inner.ns_screen().map(|s| s as *mut c_void)
-	}
+	fn ns_screen(&self) -> Option<*mut c_void> { self.inner.ns_screen().map(|s| s as *mut c_void) }
 }
 
 /// Additional methods on `EventLoopWindowTarget` that are specific to macOS.

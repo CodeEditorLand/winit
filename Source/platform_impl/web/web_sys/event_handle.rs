@@ -1,17 +1,16 @@
 use wasm_bindgen::{prelude::Closure, JsCast};
 use web_sys::{AddEventListenerOptions, EventTarget};
 
-pub(super) struct EventListenerHandle<T: ?Sized> {
-	target: EventTarget,
-	event_type: &'static str,
-	listener: Closure<T>,
+pub(super) struct EventListenerHandle<T:?Sized> {
+	target:EventTarget,
+	event_type:&'static str,
+	listener:Closure<T>,
 }
 
-impl<T: ?Sized> EventListenerHandle<T> {
-	pub fn new<U>(target: &U, event_type: &'static str, listener: Closure<T>) -> Self
+impl<T:?Sized> EventListenerHandle<T> {
+	pub fn new<U>(target:&U, event_type:&'static str, listener:Closure<T>) -> Self
 	where
-		U: Clone + Into<EventTarget>,
-	{
+		U: Clone + Into<EventTarget>, {
 		let target = target.clone().into();
 		target
 			.add_event_listener_with_callback(event_type, listener.as_ref().unchecked_ref())
@@ -20,14 +19,13 @@ impl<T: ?Sized> EventListenerHandle<T> {
 	}
 
 	pub fn with_options<U>(
-		target: &U,
-		event_type: &'static str,
-		listener: Closure<T>,
-		options: &AddEventListenerOptions,
+		target:&U,
+		event_type:&'static str,
+		listener:Closure<T>,
+		options:&AddEventListenerOptions,
 	) -> Self
 	where
-		U: Clone + Into<EventTarget>,
-	{
+		U: Clone + Into<EventTarget>, {
 		let target = target.clone().into();
 		target
 			.add_event_listener_with_callback_and_add_event_listener_options(
@@ -40,7 +38,7 @@ impl<T: ?Sized> EventListenerHandle<T> {
 	}
 }
 
-impl<T: ?Sized> Drop for EventListenerHandle<T> {
+impl<T:?Sized> Drop for EventListenerHandle<T> {
 	fn drop(&mut self) {
 		self.target
 			.remove_event_listener_with_callback(

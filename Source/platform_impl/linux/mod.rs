@@ -12,23 +12,13 @@ mod window;
 
 pub use event_loop::{EventLoop, EventLoopProxy, EventLoopWindowTarget};
 pub use monitor::{MonitorHandle, VideoMode};
-pub use window::{
-	PlatformIcon,
-	PlatformSpecificWindowBuilderAttributes,
-	Window,
-	WindowId,
-};
+pub use window::{PlatformIcon, PlatformSpecificWindowBuilderAttributes, Window, WindowId};
 
 #[derive(Debug, Clone)]
 pub struct OsError;
 
 impl std::fmt::Display for OsError {
-	fn fmt(
-		&self,
-		_f:&mut std::fmt::Formatter<'_>,
-	) -> Result<(), std::fmt::Error> {
-		Ok(())
-	}
+	fn fmt(&self, _f:&mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> { Ok(()) }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

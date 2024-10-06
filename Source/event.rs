@@ -152,12 +152,8 @@ impl<'a, T> Event<'a, T> {
 		use self::Event::*;
 		match self {
 			UserEvent(_) => Err(self),
-			WindowEvent { window_id, event } => {
-				Ok(WindowEvent { window_id, event })
-			},
-			DeviceEvent { device_id, event } => {
-				Ok(DeviceEvent { device_id, event })
-			},
+			WindowEvent { window_id, event } => Ok(WindowEvent { window_id, event }),
+			DeviceEvent { device_id, event } => Ok(DeviceEvent { device_id, event }),
 			NewEvents(cause) => Ok(NewEvents(cause)),
 			MainEventsCleared => Ok(MainEventsCleared),
 			RedrawRequested(wid) => Ok(RedrawRequested(wid)),
@@ -177,9 +173,7 @@ impl<'a, T> Event<'a, T> {
 				event.to_static().map(|event| WindowEvent { window_id, event })
 			},
 			UserEvent(event) => Some(UserEvent(event)),
-			DeviceEvent { device_id, event } => {
-				Some(DeviceEvent { device_id, event })
-			},
+			DeviceEvent { device_id, event } => Some(DeviceEvent { device_id, event }),
 			NewEvents(cause) => Some(NewEvents(cause)),
 			MainEventsCleared => Some(MainEventsCleared),
 			RedrawRequested(wid) => Some(RedrawRequested(wid)),
@@ -265,11 +259,10 @@ pub enum WindowEvent<'a> {
 		/// If `true`, the event was generated synthetically by winit
 		/// in one of the following circumstances:
 		///
-		/// * Synthetic key press events are generated for all keys pressed
-		///   when a window gains focus. Likewise, synthetic key release events
-		///   are generated for all keys pressed when a window goes out of
-		///   focus. ***Currently, this is only functional on X11 and
-		///   Windows***
+		/// * Synthetic key press events are generated for all keys pressed when
+		///   a window gains focus. Likewise, synthetic key release events are
+		///   generated for all keys pressed when a window goes out of focus.
+		///   ***Currently, this is only functional on X11 and Windows***
 		///
 		/// Otherwise, this value is always `false`.
 		is_synthetic:bool,
@@ -352,10 +345,7 @@ pub enum WindowEvent<'a> {
 	///
 	/// For more information about DPI in general, see the [`dpi`](crate::dpi)
 	/// module.
-	ScaleFactorChanged {
-		scale_factor:f64,
-		new_inner_size:&'a mut PhysicalSize<u32>,
-	},
+	ScaleFactorChanged { scale_factor:f64, new_inner_size:&'a mut PhysicalSize<u32> },
 
 	/// The system window theme has changed.
 	///
@@ -380,25 +370,15 @@ impl Clone for WindowEvent<'static> {
 			ReceivedCharacter(c) => ReceivedCharacter(*c),
 			Focused(f) => Focused(*f),
 			KeyboardInput { device_id, input, is_synthetic } => {
-				KeyboardInput {
-					device_id:*device_id,
-					input:*input,
-					is_synthetic:*is_synthetic,
-				}
+				KeyboardInput { device_id:*device_id, input:*input, is_synthetic:*is_synthetic }
 			},
 
 			ModifiersChanged(modifiers) => ModifiersChanged(modifiers.clone()),
 			#[allow(deprecated)]
 			CursorMoved { device_id, position, modifiers } => {
-				CursorMoved {
-					device_id:*device_id,
-					position:*position,
-					modifiers:*modifiers,
-				}
+				CursorMoved { device_id:*device_id, position:*position, modifiers:*modifiers }
 			},
-			CursorEntered { device_id } => {
-				CursorEntered { device_id:*device_id }
-			},
+			CursorEntered { device_id } => CursorEntered { device_id:*device_id },
 			CursorLeft { device_id } => CursorLeft { device_id:*device_id },
 			#[allow(deprecated)]
 			MouseWheel { device_id, delta, phase, modifiers } => {
@@ -419,11 +399,7 @@ impl Clone for WindowEvent<'static> {
 				}
 			},
 			TouchpadPressure { device_id, pressure, stage } => {
-				TouchpadPressure {
-					device_id:*device_id,
-					pressure:*pressure,
-					stage:*stage,
-				}
+				TouchpadPressure { device_id:*device_id, pressure:*pressure, stage:*stage }
 			},
 			AxisMotion { device_id, axis, value } => {
 				AxisMotion { device_id:*device_id, axis:*axis, value:*value }
@@ -431,9 +407,7 @@ impl Clone for WindowEvent<'static> {
 			Touch(touch) => Touch(*touch),
 			ThemeChanged(theme) => ThemeChanged(theme.clone()),
 			ScaleFactorChanged { .. } => {
-				unreachable!(
-					"Static event can't be about scale factor changing"
-				)
+				unreachable!("Static event can't be about scale factor changing")
 			},
 		};
 	}
@@ -473,9 +447,7 @@ impl<'a> WindowEvent<'a> {
 			TouchpadPressure { device_id, pressure, stage } => {
 				Some(TouchpadPressure { device_id, pressure, stage })
 			},
-			AxisMotion { device_id, axis, value } => {
-				Some(AxisMotion { device_id, axis, value })
-			},
+			AxisMotion { device_id, axis, value } => Some(AxisMotion { device_id, axis, value }),
 			Touch(touch) => Some(Touch(touch)),
 			ThemeChanged(theme) => Some(ThemeChanged(theme)),
 			ScaleFactorChanged { .. } => None,

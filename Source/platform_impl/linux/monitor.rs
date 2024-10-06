@@ -20,9 +20,7 @@ impl MonitorHandle {
 	pub fn scale_factor(&self) -> f64 { todo!() }
 
 	#[inline]
-	pub fn video_modes(&self) -> Box<dyn Iterator<Item = RootVideoMode>> {
-		todo!()
-	}
+	pub fn video_modes(&self) -> Box<dyn Iterator<Item = RootVideoMode>> { todo!() }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

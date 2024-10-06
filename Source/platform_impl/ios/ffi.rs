@@ -56,9 +56,7 @@ pub struct CGRect {
 }
 
 impl CGRect {
-	pub fn new(origin:CGPoint, size:CGSize) -> CGRect {
-		CGRect { origin, size }
-	}
+	pub fn new(origin:CGPoint, size:CGSize) -> CGRect { CGRect { origin, size } }
 }
 
 unsafe impl Encode for CGRect {
@@ -162,30 +160,22 @@ unsafe impl Encode for UIInterfaceOrientationMask {
 }
 
 impl UIInterfaceOrientationMask {
-	pub const All:UIInterfaceOrientationMask = UIInterfaceOrientationMask(
-		Self::AllButUpsideDown.0 | Self::PortraitUpsideDown.0,
-	);
+	pub const All:UIInterfaceOrientationMask =
+		UIInterfaceOrientationMask(Self::AllButUpsideDown.0 | Self::PortraitUpsideDown.0);
 	pub const AllButUpsideDown:UIInterfaceOrientationMask =
 		UIInterfaceOrientationMask(Self::Landscape.0 | Self::Portrait.0);
-	pub const Landscape:UIInterfaceOrientationMask = UIInterfaceOrientationMask(
-		Self::LandscapeLeft.0 | Self::LandscapeRight.0,
-	);
-	pub const LandscapeLeft:UIInterfaceOrientationMask =
-		UIInterfaceOrientationMask(1 << 4);
-	pub const LandscapeRight:UIInterfaceOrientationMask =
-		UIInterfaceOrientationMask(1 << 3);
-	pub const Portrait:UIInterfaceOrientationMask =
-		UIInterfaceOrientationMask(1 << 1);
-	pub const PortraitUpsideDown:UIInterfaceOrientationMask =
-		UIInterfaceOrientationMask(1 << 2);
+	pub const Landscape:UIInterfaceOrientationMask =
+		UIInterfaceOrientationMask(Self::LandscapeLeft.0 | Self::LandscapeRight.0);
+	pub const LandscapeLeft:UIInterfaceOrientationMask = UIInterfaceOrientationMask(1 << 4);
+	pub const LandscapeRight:UIInterfaceOrientationMask = UIInterfaceOrientationMask(1 << 3);
+	pub const Portrait:UIInterfaceOrientationMask = UIInterfaceOrientationMask(1 << 1);
+	pub const PortraitUpsideDown:UIInterfaceOrientationMask = UIInterfaceOrientationMask(1 << 2);
 }
 
 impl BitOr for UIInterfaceOrientationMask {
 	type Output = Self;
 
-	fn bitor(self, rhs:Self) -> Self {
-		UIInterfaceOrientationMask(self.0 | rhs.0)
-	}
+	fn bitor(self, rhs:Self) -> Self { UIInterfaceOrientationMask(self.0 | rhs.0) }
 }
 
 impl UIInterfaceOrientationMask {
@@ -197,15 +187,9 @@ impl UIInterfaceOrientationMask {
 			(ValidOrientations::LandscapeAndPortrait, Idiom::Phone) => {
 				UIInterfaceOrientationMask::AllButUpsideDown
 			},
-			(ValidOrientations::LandscapeAndPortrait, _) => {
-				UIInterfaceOrientationMask::All
-			},
-			(ValidOrientations::Landscape, _) => {
-				UIInterfaceOrientationMask::Landscape
-			},
-			(ValidOrientations::Portrait, Idiom::Phone) => {
-				UIInterfaceOrientationMask::Portrait
-			},
+			(ValidOrientations::LandscapeAndPortrait, _) => UIInterfaceOrientationMask::All,
+			(ValidOrientations::Landscape, _) => UIInterfaceOrientationMask::Landscape,
+			(ValidOrientations::Portrait, Idiom::Phone) => UIInterfaceOrientationMask::Portrait,
 			(ValidOrientations::Portrait, _) => {
 				UIInterfaceOrientationMask::Portrait
 					| UIInterfaceOrientationMask::PortraitUpsideDown
@@ -224,11 +208,7 @@ unsafe impl Encode for UIRectEdge {
 
 impl From<ScreenEdge> for UIRectEdge {
 	fn from(screen_edge:ScreenEdge) -> UIRectEdge {
-		assert_eq!(
-			screen_edge.bits() & !ScreenEdge::ALL.bits(),
-			0,
-			"invalid `ScreenEdge`"
-		);
+		assert_eq!(screen_edge.bits() & !ScreenEdge::ALL.bits(), 0, "invalid `ScreenEdge`");
 		UIRectEdge(screen_edge.bits().into())
 	}
 }
@@ -250,12 +230,9 @@ unsafe impl Encode for UIScreenOverscanCompensation {
 
 #[allow(dead_code)]
 impl UIScreenOverscanCompensation {
-	pub const InsetBounds:UIScreenOverscanCompensation =
-		UIScreenOverscanCompensation(1);
-	pub const None:UIScreenOverscanCompensation =
-		UIScreenOverscanCompensation(2);
-	pub const Scale:UIScreenOverscanCompensation =
-		UIScreenOverscanCompensation(0);
+	pub const InsetBounds:UIScreenOverscanCompensation = UIScreenOverscanCompensation(1);
+	pub const None:UIScreenOverscanCompensation = UIScreenOverscanCompensation(2);
+	pub const Scale:UIScreenOverscanCompensation = UIScreenOverscanCompensation(0);
 }
 
 #[link(name = "UIKit", kind = "framework")]
@@ -282,11 +259,7 @@ extern {
 		callout:CFRunLoopObserverCallBack,
 		context:*mut CFRunLoopObserverContext,
 	) -> CFRunLoopObserverRef;
-	pub fn CFRunLoopAddObserver(
-		rl:CFRunLoopRef,
-		observer:CFRunLoopObserverRef,
-		mode:CFRunLoopMode,
-	);
+	pub fn CFRunLoopAddObserver(rl:CFRunLoopRef, observer:CFRunLoopObserverRef, mode:CFRunLoopMode);
 
 	pub fn CFRunLoopTimerCreate(
 		allocator:CFAllocatorRef,
@@ -297,15 +270,8 @@ extern {
 		callout:CFRunLoopTimerCallBack,
 		context:*mut CFRunLoopTimerContext,
 	) -> CFRunLoopTimerRef;
-	pub fn CFRunLoopAddTimer(
-		rl:CFRunLoopRef,
-		timer:CFRunLoopTimerRef,
-		mode:CFRunLoopMode,
-	);
-	pub fn CFRunLoopTimerSetNextFireDate(
-		timer:CFRunLoopTimerRef,
-		fireDate:CFAbsoluteTime,
-	);
+	pub fn CFRunLoopAddTimer(rl:CFRunLoopRef, timer:CFRunLoopTimerRef, mode:CFRunLoopMode);
+	pub fn CFRunLoopTimerSetNextFireDate(timer:CFRunLoopTimerRef, fireDate:CFAbsoluteTime);
 	pub fn CFRunLoopTimerInvalidate(time:CFRunLoopTimerRef);
 
 	pub fn CFRunLoopSourceCreate(
@@ -313,11 +279,7 @@ extern {
 		order:CFIndex,
 		context:*mut CFRunLoopSourceContext,
 	) -> CFRunLoopSourceRef;
-	pub fn CFRunLoopAddSource(
-		rl:CFRunLoopRef,
-		source:CFRunLoopSourceRef,
-		mode:CFRunLoopMode,
-	);
+	pub fn CFRunLoopAddSource(rl:CFRunLoopRef, source:CFRunLoopSourceRef, mode:CFRunLoopMode);
 	pub fn CFRunLoopSourceInvalidate(source:CFRunLoopSourceRef);
 	pub fn CFRunLoopSourceSignal(source:CFRunLoopSourceRef);
 
@@ -353,13 +315,9 @@ pub const kCFRunLoopBeforeWaiting:CFRunLoopActivity = 1 << 5;
 pub const kCFRunLoopAfterWaiting:CFRunLoopActivity = 1 << 6;
 pub const kCFRunLoopExit:CFRunLoopActivity = 1 << 7;
 
-pub type CFRunLoopObserverCallBack = extern fn(
-	observer:CFRunLoopObserverRef,
-	activity:CFRunLoopActivity,
-	info:*mut c_void,
-);
-pub type CFRunLoopTimerCallBack =
-	extern fn(timer:CFRunLoopTimerRef, info:*mut c_void);
+pub type CFRunLoopObserverCallBack =
+	extern fn(observer:CFRunLoopObserverRef, activity:CFRunLoopActivity, info:*mut c_void);
+pub type CFRunLoopTimerCallBack = extern fn(timer:CFRunLoopTimerRef, info:*mut c_void);
 
 pub enum CFRunLoopObserverContext {}
 pub enum CFRunLoopTimerContext {}

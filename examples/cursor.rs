@@ -21,8 +21,7 @@ fn main() {
 			Event::WindowEvent {
 				event:
 					WindowEvent::KeyboardInput {
-						input:
-							KeyboardInput { state: ElementState::Pressed, .. },
+						input: KeyboardInput { state: ElementState::Pressed, .. },
 						..
 					},
 				..
@@ -35,9 +34,7 @@ fn main() {
 					cursor_idx = 0;
 				}
 			},
-			Event::WindowEvent {
-				event: WindowEvent::CloseRequested, ..
-			} => {
+			Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {
 				*control_flow = ControlFlow::Exit;
 				return;
 			},

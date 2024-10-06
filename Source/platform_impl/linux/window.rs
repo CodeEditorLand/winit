@@ -64,17 +64,10 @@ impl PlatformIcon {
 	///
 	/// The length of `rgba` must be divisible by 4, and `width * height` must
 	/// equal `rgba.len() / 4`. Otherwise, this will return a `BadIcon` error.
-	pub fn from_rgba(
-		rgba:Vec<u8>,
-		width:u32,
-		height:u32,
-	) -> Result<Self, BadIcon> {
+	pub fn from_rgba(rgba:Vec<u8>, width:u32, height:u32) -> Result<Self, BadIcon> {
 		let image = image::load_from_memory(&rgba)
 			.map_err(|_| {
-				BadIcon::OsError(io::Error::new(
-					io::ErrorKind::InvalidData,
-					"Invalid icon data!",
-				))
+				BadIcon::OsError(io::Error::new(io::ErrorKind::InvalidData, "Invalid icon data!"))
 			})?
 			.into_rgba8();
 		let row_stride = image.sample_layout().height_stride;
@@ -163,8 +156,7 @@ impl Window {
 
 		// Set Position
 		if let Some(position) = attributes.position {
-			let (x, y):(i32, i32) =
-				position.to_physical::<i32>(win_scale_factor as f64).into();
+			let (x, y):(i32, i32) = position.to_physical::<i32>(win_scale_factor as f64).into();
 			window.move_(x, y);
 		}
 
@@ -198,9 +190,7 @@ impl Window {
 		window.set_decorated(attributes.decorations);
 
 		if !attributes.decorations && attributes.resizable {
-			window.add_events(
-				EventMask::POINTER_MOTION_MASK | EventMask::BUTTON_MOTION_MASK,
-			);
+			window.add_events(EventMask::POINTER_MOTION_MASK | EventMask::BUTTON_MOTION_MASK);
 
 			window.connect_motion_notify_event(|window, event| {
 				if let Some(gdk_window) = window.get_window() {
@@ -244,17 +234,14 @@ impl Window {
 			window.hide();
 		}
 
-		let window_requests_tx =
-			event_loop_window_target.window_requests_tx.clone();
+		let window_requests_tx = event_loop_window_target.window_requests_tx.clone();
 
 		let w_pos = window.get_position();
-		let position:Rc<(AtomicI32, AtomicI32)> =
-			Rc::new((w_pos.0.into(), w_pos.1.into()));
+		let position:Rc<(AtomicI32, AtomicI32)> = Rc::new((w_pos.0.into(), w_pos.1.into()));
 		let position_clone = position.clone();
 
 		let w_size = window.get_size();
-		let size:Rc<(AtomicI32, AtomicI32)> =
-			Rc::new((w_size.0.into(), w_size.1.into()));
+		let size:Rc<(AtomicI32, AtomicI32)> = Rc::new((w_size.0.into(), w_size.1.into()));
 		let size_clone = size.clone();
 
 		window.connect_configure_event(move |_window, event| {
@@ -275,10 +262,7 @@ impl Window {
 
 		window.connect_window_state_event(move |_window, event| {
 			let state = event.get_new_window_state();
-			max_clone.store(
-				state.contains(WindowState::MAXIMIZED),
-				Ordering::Release,
-			);
+			max_clone.store(state.contains(WindowState::MAXIMIZED), Ordering::Release);
 
 			Inhibit(false)
 		});
@@ -286,13 +270,10 @@ impl Window {
 		let scale_factor:Rc<AtomicI32> = Rc::new(win_scale_factor.into());
 		let scale_factor_clone = scale_factor.clone();
 		window.connect_property_scale_factor_notify(move |window| {
-			scale_factor_clone
-				.store(window.get_scale_factor(), Ordering::Release);
+			scale_factor_clone.store(window.get_scale_factor(), Ordering::Release);
 		});
 
-		if let Err(e) =
-			window_requests_tx.send((window_id, WindowRequest::WireUpEvents))
-		{
+		if let Err(e) = window_requests_tx.send((window_id, WindowRequest::WireUpEvents)) {
 			log::warn!("Fail to send wire up events request: {}", e);
 		}
 
@@ -311,46 +292,29 @@ impl Window {
 
 	pub fn id(&self) -> WindowId { self.window_id }
 
-	pub fn scale_factor(&self) -> f64 {
-		self.scale_factor.load(Ordering::Acquire) as f64
-	}
+	pub fn scale_factor(&self) -> f64 { self.scale_factor.load(Ordering::Acquire) as f64 }
 
 	pub fn request_redraw(&self) {
-		if let Err(e) = self
-			.window_requests_tx
-			.send((self.window_id, WindowRequest::Redraw))
-		{
+		if let Err(e) = self.window_requests_tx.send((self.window_id, WindowRequest::Redraw)) {
 			log::warn!("Fail to send redraw request: {}", e);
 		}
 	}
 
-	pub fn inner_position(
-		&self,
-	) -> Result<PhysicalPosition<i32>, NotSupportedError> {
+	pub fn inner_position(&self) -> Result<PhysicalPosition<i32>, NotSupportedError> {
 		let (x, y) = &*self.position;
-		Ok(PhysicalPosition::new(
-			x.load(Ordering::Acquire),
-			y.load(Ordering::Acquire),
-		))
+		Ok(PhysicalPosition::new(x.load(Ordering::Acquire), y.load(Ordering::Acquire)))
 	}
 
-	pub fn outer_position(
-		&self,
-	) -> Result<PhysicalPosition<i32>, NotSupportedError> {
+	pub fn outer_position(&self) -> Result<PhysicalPosition<i32>, NotSupportedError> {
 		let (x, y) = &*self.position;
-		Ok(PhysicalPosition::new(
-			x.load(Ordering::Acquire),
-			y.load(Ordering::Acquire),
-		))
+		Ok(PhysicalPosition::new(x.load(Ordering::Acquire), y.load(Ordering::Acquire)))
 	}
 
 	pub fn set_outer_position<P:Into<Position>>(&self, position:P) {
-		let (x, y):(i32, i32) =
-			position.into().to_physical::<i32>(self.scale_factor()).into();
+		let (x, y):(i32, i32) = position.into().to_physical::<i32>(self.scale_factor()).into();
 
-		if let Err(e) = self
-			.window_requests_tx
-			.send((self.window_id, WindowRequest::Position((x, y))))
+		if let Err(e) =
+			self.window_requests_tx.send((self.window_id, WindowRequest::Position((x, y))))
 		{
 			log::warn!("Fail to send position request: {}", e);
 		}
@@ -366,8 +330,7 @@ impl Window {
 	}
 
 	pub fn set_inner_size<S:Into<Size>>(&self, size:S) {
-		let (width, height) =
-			size.into().to_logical::<i32>(self.scale_factor()).into();
+		let (width, height) = size.into().to_logical::<i32>(self.scale_factor()).into();
 
 		if let Err(e) = self
 			.window_requests_tx
@@ -388,13 +351,12 @@ impl Window {
 
 	pub fn set_min_inner_size<S:Into<Size>>(&self, min_size:Option<S>) {
 		if let Some(size) = min_size {
-			let (min_width, min_height) =
-				size.into().to_logical::<i32>(self.scale_factor()).into();
+			let (min_width, min_height) = size.into().to_logical::<i32>(self.scale_factor()).into();
 
-			if let Err(e) = self.window_requests_tx.send((
-				self.window_id,
-				WindowRequest::MinSize((min_width, min_height)),
-			)) {
+			if let Err(e) = self
+				.window_requests_tx
+				.send((self.window_id, WindowRequest::MinSize((min_width, min_height))))
+			{
 				log::warn!("Fail to send min size request: {}", e);
 			}
 		}
@@ -402,13 +364,12 @@ impl Window {
 
 	pub fn set_max_inner_size<S:Into<Size>>(&self, max_size:Option<S>) {
 		if let Some(size) = max_size {
-			let (max_width, max_height) =
-				size.into().to_logical::<i32>(self.scale_factor()).into();
+			let (max_width, max_height) = size.into().to_logical::<i32>(self.scale_factor()).into();
 
-			if let Err(e) = self.window_requests_tx.send((
-				self.window_id,
-				WindowRequest::MaxSize((max_width, max_height)),
-			)) {
+			if let Err(e) = self
+				.window_requests_tx
+				.send((self.window_id, WindowRequest::MaxSize((max_width, max_height))))
+			{
 				log::warn!("Fail to send max size request: {}", e);
 			}
 		}
@@ -424,9 +385,8 @@ impl Window {
 	}
 
 	pub fn set_visible(&self, visible:bool) {
-		if let Err(e) = self
-			.window_requests_tx
-			.send((self.window_id, WindowRequest::Visible(visible)))
+		if let Err(e) =
+			self.window_requests_tx.send((self.window_id, WindowRequest::Visible(visible)))
 		{
 			log::warn!("Fail to send visible request: {}", e);
 		}
@@ -459,15 +419,10 @@ impl Window {
 		}
 	}
 
-	pub fn is_maximized(&self) -> bool {
-		self.maximized.load(Ordering::Acquire)
-	}
+	pub fn is_maximized(&self) -> bool { self.maximized.load(Ordering::Acquire) }
 
 	pub fn drag_window(&self) -> Result<(), ExternalError> {
-		if let Err(e) = self
-			.window_requests_tx
-			.send((self.window_id, WindowRequest::DragWindow))
-		{
+		if let Err(e) = self.window_requests_tx.send((self.window_id, WindowRequest::DragWindow)) {
 			log::warn!("Fail to send drag window request: {}", e);
 		}
 		Ok(())
@@ -483,9 +438,7 @@ impl Window {
 		}
 	}
 
-	pub fn fullscreen(&self) -> Option<Fullscreen> {
-		self.fullscreen.borrow().clone()
-	}
+	pub fn fullscreen(&self) -> Option<Fullscreen> { self.fullscreen.borrow().clone() }
 
 	pub fn set_decorations(&self, decorations:bool) {
 		if let Err(e) = self
@@ -516,10 +469,7 @@ impl Window {
 
 	pub fn set_ime_position<P:Into<Position>>(&self, _position:P) { todo!() }
 
-	pub fn request_user_attention(
-		&self,
-		request_type:Option<UserAttentionType>,
-	) {
+	pub fn request_user_attention(&self, request_type:Option<UserAttentionType>) {
 		if let Err(e) = self
 			.window_requests_tx
 			.send((self.window_id, WindowRequest::UserAttention(request_type)))
@@ -537,16 +487,11 @@ impl Window {
 		}
 	}
 
-	pub fn set_cursor_position<P:Into<Position>>(
-		&self,
-		_position:P,
-	) -> Result<(), ExternalError> {
+	pub fn set_cursor_position<P:Into<Position>>(&self, _position:P) -> Result<(), ExternalError> {
 		todo!()
 	}
 
-	pub fn set_cursor_grab(&self, _grab:bool) -> Result<(), ExternalError> {
-		todo!()
-	}
+	pub fn set_cursor_grab(&self, _grab:bool) -> Result<(), ExternalError> { todo!() }
 
 	pub fn set_cursor_visible(&self, visible:bool) {
 		let cursor = if visible { Some(CursorIcon::Default) } else { None };
@@ -565,15 +510,10 @@ impl Window {
 
 	pub fn primary_monitor(&self) -> Option<RootMonitorHandle> { todo!() }
 
-	pub fn raw_window_handle(&self) -> raw_window_handle::RawWindowHandle {
-		todo!()
-	}
+	pub fn raw_window_handle(&self) -> raw_window_handle::RawWindowHandle { todo!() }
 
 	pub fn skip_taskbar(&self) {
-		if let Err(e) = self
-			.window_requests_tx
-			.send((self.window_id, WindowRequest::SkipTaskbar))
-		{
+		if let Err(e) = self.window_requests_tx.send((self.window_id, WindowRequest::SkipTaskbar)) {
 			log::warn!("Fail to send skip taskbar request: {}", e);
 		}
 	}

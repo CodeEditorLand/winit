@@ -74,10 +74,8 @@ impl WindowDelegateState {
 	}
 
 	pub fn emit_event(&mut self, event:WindowEvent<'static>) {
-		let event = Event::WindowEvent {
-			window_id:WindowId(get_window_id(*self.ns_window)),
-			event,
-		};
+		let event =
+			Event::WindowEvent { window_id:WindowId(get_window_id(*self.ns_window)), event };
 		AppState::queue_event(EventWrapper::StaticEvent(event));
 	}
 
@@ -99,8 +97,7 @@ impl WindowDelegateState {
 	pub fn emit_resize_event(&mut self) {
 		let rect = unsafe { NSView::frame(*self.ns_view) };
 		let scale_factor = self.get_scale_factor();
-		let logical_size =
-			LogicalSize::new(rect.size.width as f64, rect.size.height as f64);
+		let logical_size = LogicalSize::new(rect.size.width as f64, rect.size.height as f64);
 		let size = logical_size.to_physical(scale_factor);
 		self.emit_event(WindowEvent::Resized(size));
 	}
@@ -113,8 +110,7 @@ impl WindowDelegateState {
 		if moved {
 			self.previous_position = Some((x, y));
 			let scale_factor = self.get_scale_factor();
-			let physical_pos =
-				LogicalPosition::<f64>::from((x, y)).to_physical(scale_factor);
+			let physical_pos = LogicalPosition::<f64>::from((x, y)).to_physical(scale_factor);
 			self.emit_event(WindowEvent::Moved(physical_pos));
 		}
 	}
@@ -129,10 +125,7 @@ impl WindowDelegateState {
 	}
 }
 
-pub fn new_delegate(
-	window:&Arc<UnownedWindow>,
-	initial_fullscreen:bool,
-) -> IdRef {
+pub fn new_delegate(window:&Arc<UnownedWindow>, initial_fullscreen:bool) -> IdRef {
 	let state = WindowDelegateState::new(window, initial_fullscreen);
 	unsafe {
 		// This is free'd in `dealloc`
@@ -149,8 +142,7 @@ unsafe impl Sync for WindowDelegateClass {}
 lazy_static! {
 	static ref WINDOW_DELEGATE_CLASS: WindowDelegateClass = unsafe {
 		let superclass = class!(NSResponder);
-		let mut decl =
-			ClassDecl::new("WinitWindowDelegate", superclass).unwrap();
+		let mut decl = ClassDecl::new("WinitWindowDelegate", superclass).unwrap();
 
 		decl.add_method(sel!(dealloc), dealloc as extern fn(&Object, Sel));
 		decl.add_method(
@@ -162,18 +154,9 @@ lazy_static! {
 			sel!(windowShouldClose:),
 			window_should_close as extern fn(&Object, Sel, id) -> BOOL,
 		);
-		decl.add_method(
-			sel!(windowWillClose:),
-			window_will_close as extern fn(&Object, Sel, id),
-		);
-		decl.add_method(
-			sel!(windowDidResize:),
-			window_did_resize as extern fn(&Object, Sel, id),
-		);
-		decl.add_method(
-			sel!(windowDidMove:),
-			window_did_move as extern fn(&Object, Sel, id),
-		);
+		decl.add_method(sel!(windowWillClose:), window_will_close as extern fn(&Object, Sel, id));
+		decl.add_method(sel!(windowDidResize:), window_did_resize as extern fn(&Object, Sel, id));
+		decl.add_method(sel!(windowDidMove:), window_did_move as extern fn(&Object, Sel, id));
 		decl.add_method(
 			sel!(windowDidChangeBackingProperties:),
 			window_did_change_backing_properties as extern fn(&Object, Sel, id),
@@ -203,10 +186,7 @@ lazy_static! {
 			sel!(concludeDragOperation:),
 			conclude_drag_operation as extern fn(&Object, Sel, id),
 		);
-		decl.add_method(
-			sel!(draggingExited:),
-			dragging_exited as extern fn(&Object, Sel, id),
-		);
+		decl.add_method(sel!(draggingExited:), dragging_exited as extern fn(&Object, Sel, id));
 
 		decl.add_method(
 			sel!(window:willUseFullScreenPresentationOptions:),
@@ -241,10 +221,7 @@ lazy_static! {
 
 // This function is definitely unsafe, but labeling that would increase
 // boilerplate and wouldn't really clarify anything...
-fn with_state<F:FnOnce(&mut WindowDelegateState) -> T, T>(
-	this:&Object,
-	callback:F,
-) {
+fn with_state<F:FnOnce(&mut WindowDelegateState) -> T, T>(this:&Object, callback:F) {
 	let state_ptr = unsafe {
 		let state_ptr:*mut c_void = *this.get_ivar("winitState");
 		&mut *(state_ptr as *mut WindowDelegateState)
@@ -343,8 +320,7 @@ extern fn window_did_resign_key(this:&Object, _:Sel, _:id) {
 		// Object referenced by state.ns_view (an IdRef, which is dereferenced
 		// to an id)
 		let view_state:&mut ViewState = unsafe {
-			let ns_view:&Object =
-				(*state.ns_view).as_ref().expect("failed to deref");
+			let ns_view:&Object = (*state.ns_view).as_ref().expect("failed to deref");
 			let state_ptr:*mut c_void = *ns_view.get_ivar("winitState");
 			&mut *(state_ptr as *mut ViewState)
 		};
@@ -352,9 +328,7 @@ extern fn window_did_resign_key(this:&Object, _:Sel, _:id) {
 		// Both update the state and emit a ModifiersChanged event.
 		if !view_state.modifiers.is_empty() {
 			view_state.modifiers = ModifiersState::empty();
-			state.emit_event(WindowEvent::ModifiersChanged(
-				view_state.modifiers,
-			));
+			state.emit_event(WindowEvent::ModifiersChanged(view_state.modifiers));
 		}
 
 		state.emit_event(WindowEvent::Focused(false));
@@ -371,9 +345,7 @@ extern fn dragging_entered(this:&Object, _:Sel, sender:id) -> BOOL {
 	use cocoa::{appkit::NSPasteboard, foundation::NSFastEnumeration};
 
 	let pb:id = unsafe { msg_send![sender, draggingPasteboard] };
-	let filenames = unsafe {
-		NSPasteboard::propertyListForType(pb, appkit::NSFilenamesPboardType)
-	};
+	let filenames = unsafe { NSPasteboard::propertyListForType(pb, appkit::NSFilenamesPboardType) };
 
 	for file in unsafe { filenames.iter() } {
 		use std::ffi::CStr;
@@ -410,9 +382,7 @@ extern fn perform_drag_operation(this:&Object, _:Sel, sender:id) -> BOOL {
 	use cocoa::{appkit::NSPasteboard, foundation::NSFastEnumeration};
 
 	let pb:id = unsafe { msg_send![sender, draggingPasteboard] };
-	let filenames = unsafe {
-		NSPasteboard::propertyListForType(pb, appkit::NSFilenamesPboardType)
-	};
+	let filenames = unsafe { NSPasteboard::propertyListForType(pb, appkit::NSFilenamesPboardType) };
 
 	for file in unsafe { filenames.iter() } {
 		use std::ffi::CStr;
@@ -442,9 +412,7 @@ extern fn conclude_drag_operation(_:&Object, _:Sel, _:id) {
 /// Invoked when the dragging operation is cancelled
 extern fn dragging_exited(this:&Object, _:Sel, _:id) {
 	trace!("Triggered `draggingExited:`");
-	with_state(this, |state| {
-		state.emit_event(WindowEvent::HoveredFileCancelled)
-	});
+	with_state(this, |state| state.emit_event(WindowEvent::HoveredFileCancelled));
 	trace!("Completed `draggingExited:`");
 }
 
@@ -472,8 +440,7 @@ extern fn window_will_enter_fullscreen(this:&Object, _:Sel, _:id) {
 				// on the green fullscreen button. Update state!
 				None => {
 					let current_monitor = Some(window.current_monitor_inner());
-					shared_state.fullscreen =
-						Some(Fullscreen::Borderless(current_monitor))
+					shared_state.fullscreen = Some(Fullscreen::Borderless(current_monitor))
 				},
 			}
 			shared_state.in_fullscreen_transition = true;
@@ -584,16 +551,11 @@ extern fn window_did_fail_to_enter_fullscreen(this:&Object, _:Sel, _:id) {
 	trace!("Triggered `windowDidFailToEnterFullscreen:`");
 	with_state(this, |state| {
 		state.with_window(|window| {
-			trace!(
-				"Locked shared state in `window_did_fail_to_enter_fullscreen`"
-			);
+			trace!("Locked shared state in `window_did_fail_to_enter_fullscreen`");
 			let mut shared_state = window.shared_state.lock().unwrap();
 			shared_state.in_fullscreen_transition = false;
 			shared_state.target_fullscreen = None;
-			trace!(
-				"Unlocked shared state in \
-				 `window_did_fail_to_enter_fullscreen`"
-			);
+			trace!("Unlocked shared state in `window_did_fail_to_enter_fullscreen`");
 		});
 		if state.initial_fullscreen {
 			let _:() = unsafe {

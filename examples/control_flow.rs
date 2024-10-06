@@ -28,10 +28,7 @@ fn main() {
 
 	let event_loop = EventLoop::new();
 	let window = WindowBuilder::new()
-		.with_title(
-			"Press 1, 2, 3 to change control flow mode. Press R to toggle \
-			 redraw requests.",
-		)
+		.with_title("Press 1, 2, 3 to change control flow mode. Press R to toggle redraw requests.")
 		.build(&event_loop)
 		.unwrap();
 
@@ -79,10 +76,7 @@ fn main() {
 							},
 							VirtualKeyCode::R => {
 								request_redraw = !request_redraw;
-								println!(
-									"\nrequest_redraw: {}\n",
-									request_redraw
-								);
+								println!("\nrequest_redraw: {}\n", request_redraw);
 							},
 							VirtualKeyCode::Escape => {
 								close_requested = true;
@@ -109,9 +103,7 @@ fn main() {
 						if wait_cancelled {
 							*control_flow
 						} else {
-							ControlFlow::WaitUntil(
-								time::Instant::now() + WAIT_TIME,
-							)
+							ControlFlow::WaitUntil(time::Instant::now() + WAIT_TIME)
 						}
 					},
 					Mode::Poll => {

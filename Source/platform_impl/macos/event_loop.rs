@@ -21,11 +21,7 @@ use scopeguard::defer;
 
 use crate::{
 	event::Event,
-	event_loop::{
-		ControlFlow,
-		EventLoopClosed,
-		EventLoopWindowTarget as RootWindowTarget,
-	},
+	event_loop::{ControlFlow, EventLoopClosed, EventLoopWindowTarget as RootWindowTarget},
 	monitor::MonitorHandle as RootMonitorHandle,
 	platform_impl::platform::{
 		app::APP_CLASS,
@@ -62,9 +58,7 @@ impl PanicInfo {
 		}
 	}
 
-	pub fn take(&self) -> Option<Box<dyn Any + Send + 'static>> {
-		self.inner.take()
-	}
+	pub fn take(&self) -> Option<Box<dyn Any + Send + 'static>> { self.inner.take() }
 }
 
 pub struct EventLoopWindowTarget<T:'static> {
@@ -81,9 +75,7 @@ impl<T> Default for EventLoopWindowTarget<T> {
 
 impl<T:'static> EventLoopWindowTarget<T> {
 	#[inline]
-	pub fn available_monitors(&self) -> VecDeque<MonitorHandle> {
-		monitor::available_monitors()
-	}
+	pub fn available_monitors(&self) -> VecDeque<MonitorHandle> { monitor::available_monitors() }
 
 	#[inline]
 	pub fn primary_monitor(&self) -> Option<RootMonitorHandle> {
@@ -104,22 +96,14 @@ pub struct EventLoop<T:'static> {
 	/// Every other reference should be a Weak reference which is only upgraded
 	/// into a strong reference in order to call the callback but then the
 	/// strong reference should be dropped as soon as possible.
-	_callback: Option<
-		Rc<
-			RefCell<
-				dyn FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow),
-			>,
-		>,
-	>,
+	_callback:Option<Rc<RefCell<dyn FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow)>>>,
 }
 
 impl<T> EventLoop<T> {
 	pub fn new() -> Self {
 		let delegate = unsafe {
 			if !msg_send![class!(NSThread), isMainThread] {
-				panic!(
-					"On macOS, `EventLoop` must be created on the main thread!"
-				);
+				panic!("On macOS, `EventLoop` must be created on the main thread!");
 			}
 
 			// This must be done before `NSApp()` (equivalent to sending
@@ -138,10 +122,7 @@ impl<T> EventLoop<T> {
 		setup_control_flow_observers(Rc::downgrade(&panic_info));
 		EventLoop {
 			delegate,
-			window_target:Rc::new(RootWindowTarget {
-				p:Default::default(),
-				_marker:PhantomData,
-			}),
+			window_target:Rc::new(RootWindowTarget { p:Default::default(), _marker:PhantomData }),
 			panic_info,
 			_callback:None,
 		}
@@ -151,8 +132,7 @@ impl<T> EventLoop<T> {
 
 	pub fn run<F>(mut self, callback:F) -> !
 	where
-		F: 'static
-			+ FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow), {
+		F: 'static + FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow), {
 		self.run_return(callback);
 		process::exit(0);
 	}
@@ -167,24 +147,8 @@ impl<T> EventLoop<T> {
 		// this is something that they should care about.
 		let callback = unsafe {
 			mem::transmute::<
-				Rc<
-					RefCell<
-						dyn FnMut(
-							Event<'_, T>,
-							&RootWindowTarget<T>,
-							&mut ControlFlow,
-						),
-					>,
-				>,
-				Rc<
-					RefCell<
-						dyn FnMut(
-							Event<'_, T>,
-							&RootWindowTarget<T>,
-							&mut ControlFlow,
-						),
-					>,
-				>,
+				Rc<RefCell<dyn FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow)>>,
+				Rc<RefCell<dyn FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow)>>,
 			>(Rc::new(RefCell::new(callback)))
 		};
 
@@ -211,9 +175,7 @@ impl<T> EventLoop<T> {
 		}
 	}
 
-	pub fn create_proxy(&self) -> Proxy<T> {
-		Proxy::new(self.window_target.p.sender.clone())
-	}
+	pub fn create_proxy(&self) -> Proxy<T> { Proxy::new(self.window_target.p.sender.clone()) }
 }
 
 #[inline]
@@ -296,11 +258,8 @@ impl<T> Proxy<T> {
 			let rl = CFRunLoopGetMain();
 			let mut context:CFRunLoopSourceContext = mem::zeroed();
 			context.perform = Some(event_loop_proxy_handler);
-			let source = CFRunLoopSourceCreate(
-				ptr::null_mut(),
-				CFIndex::max_value() - 1,
-				&mut context,
-			);
+			let source =
+				CFRunLoopSourceCreate(ptr::null_mut(), CFIndex::max_value() - 1, &mut context);
 			CFRunLoopAddSource(rl, source, kCFRunLoopCommonModes);
 			CFRunLoopWakeUp(rl);
 
@@ -309,9 +268,7 @@ impl<T> Proxy<T> {
 	}
 
 	pub fn send_event(&self, event:T) -> Result<(), EventLoopClosed<T>> {
-		self.sender
-			.send(event)
-			.map_err(|mpsc::SendError(x)| EventLoopClosed(x))?;
+		self.sender.send(event).map_err(|mpsc::SendError(x)| EventLoopClosed(x))?;
 		unsafe {
 			// let the main thread know there's a new event
 			CFRunLoopSourceSignal(self.source);

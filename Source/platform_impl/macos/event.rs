@@ -7,14 +7,7 @@ use cocoa::{
 
 use crate::{
 	dpi::LogicalSize,
-	event::{
-		ElementState,
-		Event,
-		KeyboardInput,
-		ModifiersState,
-		VirtualKeyCode,
-		WindowEvent,
-	},
+	event::{ElementState, Event, KeyboardInput, ModifiersState, VirtualKeyCode, WindowEvent},
 	platform_impl::platform::{
 		util::{IdRef, Never},
 		DEVICE_ID,
@@ -29,11 +22,7 @@ pub enum EventWrapper {
 
 #[derive(Debug, PartialEq)]
 pub enum EventProxy {
-	DpiChangedProxy {
-		ns_window:IdRef,
-		suggested_size:LogicalSize<f64>,
-		scale_factor:f64,
-	},
+	DpiChangedProxy { ns_window:IdRef, suggested_size:LogicalSize<f64>, scale_factor:f64 },
 }
 
 pub fn char_to_keycode(c:char) -> Option<VirtualKeyCode> {
@@ -251,22 +240,10 @@ pub fn check_function_keys(string:&str) -> Option<VirtualKeyCode> {
 pub fn event_mods(event:id) -> ModifiersState {
 	let flags = unsafe { NSEvent::modifierFlags(event) };
 	let mut m = ModifiersState::empty();
-	m.set(
-		ModifiersState::SHIFT,
-		flags.contains(NSEventModifierFlags::NSShiftKeyMask),
-	);
-	m.set(
-		ModifiersState::CTRL,
-		flags.contains(NSEventModifierFlags::NSControlKeyMask),
-	);
-	m.set(
-		ModifiersState::ALT,
-		flags.contains(NSEventModifierFlags::NSAlternateKeyMask),
-	);
-	m.set(
-		ModifiersState::LOGO,
-		flags.contains(NSEventModifierFlags::NSCommandKeyMask),
-	);
+	m.set(ModifiersState::SHIFT, flags.contains(NSEventModifierFlags::NSShiftKeyMask));
+	m.set(ModifiersState::CTRL, flags.contains(NSEventModifierFlags::NSControlKeyMask));
+	m.set(ModifiersState::ALT, flags.contains(NSEventModifierFlags::NSAlternateKeyMask));
+	m.set(ModifiersState::LOGO, flags.contains(NSEventModifierFlags::NSCommandKeyMask));
 	m
 }
 
@@ -285,14 +262,9 @@ pub unsafe fn modifier_event(
 	was_key_pressed:bool,
 ) -> Option<WindowEvent<'static>> {
 	if !was_key_pressed && NSEvent::modifierFlags(ns_event).contains(keymask)
-		|| was_key_pressed
-			&& !NSEvent::modifierFlags(ns_event).contains(keymask)
+		|| was_key_pressed && !NSEvent::modifierFlags(ns_event).contains(keymask)
 	{
-		let state = if was_key_pressed {
-			ElementState::Released
-		} else {
-			ElementState::Pressed
-		};
+		let state = if was_key_pressed { ElementState::Released } else { ElementState::Pressed };
 
 		let scancode = get_scancode(ns_event);
 		let virtual_keycode = scancode_to_keycode(scancode);

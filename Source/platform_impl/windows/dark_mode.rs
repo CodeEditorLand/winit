@@ -87,9 +87,7 @@ pub fn try_theme(hwnd:HWND, preferred_theme:Option<Theme>) -> Theme {
 			Theme::Light => LIGHT_THEME_NAME.as_ptr(),
 		};
 
-		let status = unsafe {
-			uxtheme::SetWindowTheme(hwnd, theme_name as _, std::ptr::null())
-		};
+		let status = unsafe { uxtheme::SetWindowTheme(hwnd, theme_name as _, std::ptr::null()) };
 
 		if status == S_OK && set_dark_mode_for_window(hwnd, is_dark_mode) {
 			return theme;
@@ -103,10 +101,8 @@ fn set_dark_mode_for_window(hwnd:HWND, is_dark_mode:bool) -> bool {
 	// Uses Windows undocumented API SetWindowCompositionAttribute,
 	// as seen in win32-darkmode example linked at top of file.
 
-	type SetWindowCompositionAttribute = unsafe extern "system" fn(
-		HWND,
-		*mut WINDOWCOMPOSITIONATTRIBDATA,
-	) -> BOOL;
+	type SetWindowCompositionAttribute =
+		unsafe extern "system" fn(HWND, *mut WINDOWCOMPOSITIONATTRIBDATA) -> BOOL;
 
 	#[allow(non_snake_case)]
 	type WINDOWCOMPOSITIONATTRIB = u32;
@@ -125,9 +121,7 @@ fn set_dark_mode_for_window(hwnd:HWND, is_dark_mode:bool) -> bool {
 			get_function!("user32.dll", SetWindowCompositionAttribute);
 	}
 
-	if let Some(set_window_composition_attribute) =
-		*SET_WINDOW_COMPOSITION_ATTRIBUTE
-	{
+	if let Some(set_window_composition_attribute) = *SET_WINDOW_COMPOSITION_ATTRIBUTE {
 		unsafe {
 			// SetWindowCompositionAttribute needs a bigbool (i32), not bool.
 			let mut is_dark_mode_bigbool = is_dark_mode as BOOL;
@@ -138,8 +132,7 @@ fn set_dark_mode_for_window(hwnd:HWND, is_dark_mode:bool) -> bool {
 				cbData:std::mem::size_of_val(&is_dark_mode_bigbool) as _,
 			};
 
-			let status =
-				set_window_composition_attribute(hwnd, &mut data as *mut _);
+			let status = set_window_composition_attribute(hwnd, &mut data as *mut _);
 
 			status != FALSE
 		}
@@ -148,9 +141,7 @@ fn set_dark_mode_for_window(hwnd:HWND, is_dark_mode:bool) -> bool {
 	}
 }
 
-fn should_use_dark_mode() -> bool {
-	should_apps_use_dark_mode() && !is_high_contrast()
-}
+fn should_use_dark_mode() -> bool { should_apps_use_dark_mode() && !is_high_contrast() }
 
 fn should_apps_use_dark_mode() -> bool {
 	type ShouldAppsUseDarkMode = unsafe extern "system" fn() -> bool;
@@ -159,8 +150,7 @@ fn should_apps_use_dark_mode() -> bool {
 			unsafe {
 				const UXTHEME_SHOULDAPPSUSEDARKMODE_ORDINAL:WORD = 132;
 
-				let module =
-					libloaderapi::LoadLibraryA("uxtheme.dll\0".as_ptr() as _);
+				let module = libloaderapi::LoadLibraryA("uxtheme.dll\0".as_ptr() as _);
 
 				if module.is_null() {
 					return None;
@@ -168,24 +158,16 @@ fn should_apps_use_dark_mode() -> bool {
 
 				let handle = libloaderapi::GetProcAddress(
 					module,
-					winuser::MAKEINTRESOURCEA(
-						UXTHEME_SHOULDAPPSUSEDARKMODE_ORDINAL,
-					),
+					winuser::MAKEINTRESOURCEA(UXTHEME_SHOULDAPPSUSEDARKMODE_ORDINAL),
 				);
 
-				if handle.is_null() {
-					None
-				} else {
-					Some(std::mem::transmute(handle))
-				}
+				if handle.is_null() { None } else { Some(std::mem::transmute(handle)) }
 			}
 		};
 	}
 
 	SHOULD_APPS_USE_DARK_MODE
-		.map(|should_apps_use_dark_mode| unsafe {
-			(should_apps_use_dark_mode)()
-		})
+		.map(|should_apps_use_dark_mode| unsafe { (should_apps_use_dark_mode)() })
 		.unwrap_or(false)
 }
 
@@ -203,11 +185,7 @@ struct HIGHCONTRASTA {
 const HCF_HIGHCONTRASTON:DWORD = 1;
 
 fn is_high_contrast() -> bool {
-	let mut hc = HIGHCONTRASTA {
-		cbSize:0,
-		dwFlags:0,
-		lpszDefaultScheme:std::ptr::null_mut(),
-	};
+	let mut hc = HIGHCONTRASTA { cbSize:0, dwFlags:0, lpszDefaultScheme:std::ptr::null_mut() };
 
 	let ok = unsafe {
 		winuser::SystemParametersInfoA(

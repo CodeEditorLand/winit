@@ -83,10 +83,7 @@ pub trait WindowExtIOS {
 	/// [`-[UIViewController setNeedsUpdateOfScreenEdgesDeferringSystemGestures]`](https://developer.apple.com/documentation/uikit/uiviewcontroller/2887507-setneedsupdateofscreenedgesdefer?language=objc).
 	///
 	/// This only has an effect on iOS 11.0+.
-	fn set_preferred_screen_edges_deferring_system_gestures(
-		&self,
-		edges:ScreenEdge,
-	);
+	fn set_preferred_screen_edges_deferring_system_gestures(&self, edges:ScreenEdge);
 
 	/// Sets whether the [`Window`] prefers the status bar hidden.
 	///
@@ -104,17 +101,13 @@ impl WindowExtIOS for Window {
 	fn ui_window(&self) -> *mut c_void { self.window.ui_window() as _ }
 
 	#[inline]
-	fn ui_view_controller(&self) -> *mut c_void {
-		self.window.ui_view_controller() as _
-	}
+	fn ui_view_controller(&self) -> *mut c_void { self.window.ui_view_controller() as _ }
 
 	#[inline]
 	fn ui_view(&self) -> *mut c_void { self.window.ui_view() as _ }
 
 	#[inline]
-	fn set_scale_factor(&self, scale_factor:f64) {
-		self.window.set_scale_factor(scale_factor)
-	}
+	fn set_scale_factor(&self, scale_factor:f64) { self.window.set_scale_factor(scale_factor) }
 
 	#[inline]
 	fn set_valid_orientations(&self, valid_orientations:ValidOrientations) {
@@ -127,10 +120,7 @@ impl WindowExtIOS for Window {
 	}
 
 	#[inline]
-	fn set_preferred_screen_edges_deferring_system_gestures(
-		&self,
-		edges:ScreenEdge,
-	) {
+	fn set_preferred_screen_edges_deferring_system_gestures(&self, edges:ScreenEdge) {
 		self.window.set_preferred_screen_edges_deferring_system_gestures(edges)
 	}
 
@@ -148,10 +138,7 @@ pub trait WindowBuilderExtIOS {
 	/// An instance of the class will be initialized by calling [`-[UIView initWithFrame:]`](https://developer.apple.com/documentation/uikit/uiview/1622488-initwithframe?language=objc).
 	///
 	/// [`UIView`]: https://developer.apple.com/documentation/uikit/uiview?language=objc
-	fn with_root_view_class(
-		self,
-		root_view_class:*const c_void,
-	) -> WindowBuilder;
+	fn with_root_view_class(self, root_view_class:*const c_void) -> WindowBuilder;
 
 	/// Sets the [`contentScaleFactor`] of the underlying [`UIWindow`] to
 	/// `scale_factor`.
@@ -169,10 +156,7 @@ pub trait WindowBuilderExtIOS {
 	///
 	/// This sets the initial value returned by
 	/// [`-[UIViewController supportedInterfaceOrientations]`](https://developer.apple.com/documentation/uikit/uiviewcontroller/1621435-supportedinterfaceorientations?language=objc).
-	fn with_valid_orientations(
-		self,
-		valid_orientations:ValidOrientations,
-	) -> WindowBuilder;
+	fn with_valid_orientations(self, valid_orientations:ValidOrientations) -> WindowBuilder;
 
 	/// Sets whether the [`Window`] prefers the home indicator hidden.
 	///
@@ -207,12 +191,8 @@ pub trait WindowBuilderExtIOS {
 
 impl WindowBuilderExtIOS for WindowBuilder {
 	#[inline]
-	fn with_root_view_class(
-		mut self,
-		root_view_class:*const c_void,
-	) -> WindowBuilder {
-		self.platform_specific.root_view_class =
-			unsafe { &*(root_view_class as *const _) };
+	fn with_root_view_class(mut self, root_view_class:*const c_void) -> WindowBuilder {
+		self.platform_specific.root_view_class = unsafe { &*(root_view_class as *const _) };
 		self
 	}
 
@@ -223,19 +203,13 @@ impl WindowBuilderExtIOS for WindowBuilder {
 	}
 
 	#[inline]
-	fn with_valid_orientations(
-		mut self,
-		valid_orientations:ValidOrientations,
-	) -> WindowBuilder {
+	fn with_valid_orientations(mut self, valid_orientations:ValidOrientations) -> WindowBuilder {
 		self.platform_specific.valid_orientations = valid_orientations;
 		self
 	}
 
 	#[inline]
-	fn with_prefers_home_indicator_hidden(
-		mut self,
-		hidden:bool,
-	) -> WindowBuilder {
+	fn with_prefers_home_indicator_hidden(mut self, hidden:bool) -> WindowBuilder {
 		self.platform_specific.prefers_home_indicator_hidden = hidden;
 		self
 	}
@@ -245,8 +219,7 @@ impl WindowBuilderExtIOS for WindowBuilder {
 		mut self,
 		edges:ScreenEdge,
 	) -> WindowBuilder {
-		self.platform_specific
-			.preferred_screen_edges_deferring_system_gestures = edges;
+		self.platform_specific.preferred_screen_edges_deferring_system_gestures = edges;
 		self
 	}
 
@@ -275,9 +248,7 @@ impl MonitorHandleExtIOS for MonitorHandle {
 	fn ui_screen(&self) -> *mut c_void { self.inner.ui_screen() as _ }
 
 	#[inline]
-	fn preferred_video_mode(&self) -> VideoMode {
-		self.inner.preferred_video_mode()
-	}
+	fn preferred_video_mode(&self) -> VideoMode { self.inner.preferred_video_mode() }
 }
 
 /// Valid orientations for a particular [`Window`].
@@ -294,9 +265,7 @@ pub enum ValidOrientations {
 
 impl Default for ValidOrientations {
 	#[inline]
-	fn default() -> ValidOrientations {
-		ValidOrientations::LandscapeAndPortrait
-	}
+	fn default() -> ValidOrientations { ValidOrientations::LandscapeAndPortrait }
 }
 
 /// The device [idiom].

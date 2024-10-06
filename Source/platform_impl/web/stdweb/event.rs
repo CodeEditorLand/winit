@@ -1,8 +1,3 @@
-use crate::{
-	dpi::LogicalPosition,
-	event::{ModifiersState, MouseButton, MouseScrollDelta, ScanCode, VirtualKeyCode},
-};
-
 use stdweb::{
 	js,
 	unstable::TryInto,
@@ -10,7 +5,12 @@ use stdweb::{
 	JsSerialize,
 };
 
-pub fn mouse_button(event: &impl IMouseEvent) -> MouseButton {
+use crate::{
+	dpi::LogicalPosition,
+	event::{ModifiersState, MouseButton, MouseScrollDelta, ScanCode, VirtualKeyCode},
+};
+
+pub fn mouse_button(event:&impl IMouseEvent) -> MouseButton {
 	match event.button() {
 		stdweb::web::event::MouseButton::Left => MouseButton::Left,
 		stdweb::web::event::MouseButton::Right => MouseButton::Right,
@@ -20,7 +20,7 @@ pub fn mouse_button(event: &impl IMouseEvent) -> MouseButton {
 	}
 }
 
-pub fn mouse_modifiers(event: &impl IMouseEvent) -> ModifiersState {
+pub fn mouse_modifiers(event:&impl IMouseEvent) -> ModifiersState {
 	let mut m = ModifiersState::empty();
 	m.set(ModifiersState::SHIFT, event.shift_key());
 	m.set(ModifiersState::CTRL, event.ctrl_key());
@@ -29,15 +29,15 @@ pub fn mouse_modifiers(event: &impl IMouseEvent) -> ModifiersState {
 	m
 }
 
-pub fn mouse_position(event: &impl IMouseEvent) -> LogicalPosition<f64> {
-	LogicalPosition { x: event.offset_x() as f64, y: event.offset_y() as f64 }
+pub fn mouse_position(event:&impl IMouseEvent) -> LogicalPosition<f64> {
+	LogicalPosition { x:event.offset_x() as f64, y:event.offset_y() as f64 }
 }
 
-pub fn mouse_delta(event: &impl IMouseEvent) -> LogicalPosition<f64> {
-	LogicalPosition { x: event.movement_x() as f64, y: event.movement_y() as f64 }
+pub fn mouse_delta(event:&impl IMouseEvent) -> LogicalPosition<f64> {
+	LogicalPosition { x:event.movement_x() as f64, y:event.movement_y() as f64 }
 }
 
-pub fn mouse_scroll_delta(event: &MouseWheelEvent) -> Option<MouseScrollDelta> {
+pub fn mouse_scroll_delta(event:&MouseWheelEvent) -> Option<MouseScrollDelta> {
 	let x = event.delta_x();
 	let y = -event.delta_y();
 
@@ -46,18 +46,18 @@ pub fn mouse_scroll_delta(event: &MouseWheelEvent) -> Option<MouseScrollDelta> {
 		MouseWheelDeltaMode::Pixel => {
 			let delta = LogicalPosition::new(x, y).to_physical(super::scale_factor());
 			Some(MouseScrollDelta::PixelDelta(delta))
-		}
+		},
 		MouseWheelDeltaMode::Page => None,
 	}
 }
 
-pub fn scan_code<T: JsSerialize>(event: &T) -> ScanCode {
+pub fn scan_code<T:JsSerialize>(event:&T) -> ScanCode {
 	let key_code = js! ( return @{event}.keyCode; );
 
 	key_code.try_into().expect("The which value should be a number")
 }
 
-pub fn virtual_key_code(event: &impl IKeyboardEvent) -> Option<VirtualKeyCode> {
+pub fn virtual_key_code(event:&impl IKeyboardEvent) -> Option<VirtualKeyCode> {
 	Some(match &event.code()[..] {
 		"Digit1" => VirtualKeyCode::Key1,
 		"Digit2" => VirtualKeyCode::Key2,
@@ -220,7 +220,7 @@ pub fn virtual_key_code(event: &impl IKeyboardEvent) -> Option<VirtualKeyCode> {
 	})
 }
 
-pub fn keyboard_modifiers(event: &impl IKeyboardEvent) -> ModifiersState {
+pub fn keyboard_modifiers(event:&impl IKeyboardEvent) -> ModifiersState {
 	let mut m = ModifiersState::empty();
 	m.set(ModifiersState::SHIFT, event.shift_key());
 	m.set(ModifiersState::CTRL, event.ctrl_key());
@@ -229,7 +229,7 @@ pub fn keyboard_modifiers(event: &impl IKeyboardEvent) -> ModifiersState {
 	m
 }
 
-pub fn codepoint(event: &impl IKeyboardEvent) -> char {
+pub fn codepoint(event:&impl IKeyboardEvent) -> char {
 	// `event.key()` always returns a non-empty `String`. Therefore, this should
 	// never panic.
 	// https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key
