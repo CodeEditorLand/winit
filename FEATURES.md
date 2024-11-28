@@ -272,18 +272,18 @@ platforms.
 | Feature | Windows | MacOS | Linux x11 | Linux Wayland | Android | iOS | WASM |
 | ------- | ------- | ----- | --------- | ------------- | ------- | --- | ---- |
 
-[#165]: https://github.com/rust-windowing/winit/issues/165
-[#219]: https://github.com/rust-windowing/winit/issues/219
-[#242]: https://github.com/rust-windowing/winit/issues/242
-[#306]: https://github.com/rust-windowing/winit/issues/306
-[#315]: https://github.com/rust-windowing/winit/issues/315
-[#319]: https://github.com/rust-windowing/winit/issues/319
-[#33]: https://github.com/rust-windowing/winit/issues/33
-[#459]: https://github.com/rust-windowing/winit/issues/459
-[#5]: https://github.com/rust-windowing/winit/issues/5
-[#63]: https://github.com/rust-windowing/winit/issues/63
-[#720]: https://github.com/rust-windowing/winit/issues/720
-[#721]: https://github.com/rust-windowing/winit/issues/721
-[#750]: https://github.com/rust-windowing/winit/issues/750
-[#804]: https://github.com/rust-windowing/winit/issues/804
-[#812]: https://github.com/rust-windowing/winit/issues/812
+[#165]: HTTPS://github.com/rust-windowing/winit/issues/165
+[#219]: HTTPS://github.com/rust-windowing/winit/issues/219
+[#242]: HTTPS://github.com/rust-windowing/winit/issues/242
+[#306]: HTTPS://github.com/rust-windowing/winit/issues/306
+[#315]: HTTPS://github.com/rust-windowing/winit/issues/315
+[#319]: HTTPS://github.com/rust-windowing/winit/issues/319
+[#33]: HTTPS://github.com/rust-windowing/winit/issues/33
+[#459]: HTTPS://github.com/rust-windowing/winit/issues/459
+[#5]: HTTPS://github.com/rust-windowing/winit/issues/5
+[#63]: HTTPS://github.com/rust-windowing/winit/issues/63
+[#720]: HTTPS://github.com/rust-windowing/winit/issues/720
+[#721]: HTTPS://github.com/rust-windowing/winit/issues/721
+[#750]: HTTPS://github.com/rust-windowing/winit/issues/750
+[#804]: HTTPS://github.com/rust-windowing/winit/issues/804
+[#812]: HTTPS://github.com/rust-windowing/winit/issues/812

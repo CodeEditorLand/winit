@@ -10,5 +10,5 @@ future endeavors:
 -   [@francesca64]: For taking over the responsibility of maintaining almost
     every Winit backend, and standardizing HiDPI support across all of them
 
-[@tomaka]: https://github.com/tomaka
-[@francesca64]: https://github.com/francesca64
+[@tomaka]: HTTPS://github.com/tomaka
+[@francesca64]: HTTPS://github.com/francesca64
