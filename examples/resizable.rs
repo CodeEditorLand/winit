@@ -8,6 +8,7 @@ use winit::{
 
 fn main() {
 	SimpleLogger::new().init().unwrap();
+
 	let event_loop = EventLoop::new();
 
 	let mut resizable = false;
@@ -36,7 +37,9 @@ fn main() {
 						..
 					} => {
 						resizable = !resizable;
+
 						println!("Resizable: {}", resizable);
+
 						window.set_resizable(resizable);
 					},
 					_ => (),

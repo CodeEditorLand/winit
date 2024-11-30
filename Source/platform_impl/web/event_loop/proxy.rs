@@ -10,6 +10,7 @@ impl<T:'static> Proxy<T> {
 
 	pub fn send_event(&self, event:T) -> Result<(), EventLoopClosed<T>> {
 		self.runner.send_event(Event::UserEvent(event));
+
 		Ok(())
 	}
 }

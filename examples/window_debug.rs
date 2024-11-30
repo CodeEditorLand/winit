@@ -10,6 +10,7 @@ use winit::{
 
 fn main() {
 	SimpleLogger::new().init().unwrap();
+
 	let event_loop = EventLoop::new();
 
 	let window = WindowBuilder::new()
@@ -19,15 +20,23 @@ fn main() {
 		.unwrap();
 
 	eprintln!("debugging keys:");
+
 	eprintln!("  (E) Enter exclusive fullscreen");
+
 	eprintln!("  (F) Toggle borderless fullscreen");
+
 	eprintln!("  (P) Toggle borderless fullscreen on system's preffered monitor");
+
 	eprintln!("  (M) Toggle minimized");
+
 	eprintln!("  (Q) Quit event loop");
+
 	eprintln!("  (V) Toggle visibility");
+
 	eprintln!("  (X) Toggle maximized");
 
 	let mut minimized = false;
+
 	let mut visible = true;
 
 	event_loop.run(move |event, _, control_flow| {
@@ -47,12 +56,14 @@ fn main() {
 					VirtualKeyCode::M => {
 						if minimized {
 							minimized = !minimized;
+
 							window.set_minimized(minimized);
 						}
 					},
 					VirtualKeyCode::V => {
 						if !visible {
 							visible = !visible;
+
 							window.set_visible(visible);
 						}
 					},
@@ -71,6 +82,7 @@ fn main() {
 								fn area(size:PhysicalSize<u32>) -> u32 { size.width * size.height }
 
 								let monitor = window.current_monitor().unwrap();
+
 								if let Some(mode) = monitor
 									.video_modes()
 									.max_by(|a, b| area(a.size()).cmp(&area(b.size())))
@@ -85,6 +97,7 @@ fn main() {
 									window.set_fullscreen(None);
 								} else {
 									let monitor = window.current_monitor();
+
 									window.set_fullscreen(Some(Fullscreen::Borderless(monitor)));
 								}
 							},
@@ -97,6 +110,7 @@ fn main() {
 							},
 							VirtualKeyCode::M => {
 								minimized = !minimized;
+
 								window.set_minimized(minimized);
 							},
 							VirtualKeyCode::Q => {
@@ -104,10 +118,12 @@ fn main() {
 							},
 							VirtualKeyCode::V => {
 								visible = !visible;
+
 								window.set_visible(visible);
 							},
 							VirtualKeyCode::X => {
 								let is_maximized = window.is_maximized();
+
 								window.set_maximized(!is_maximized);
 							},
 							_ => (),
@@ -117,6 +133,7 @@ fn main() {
 				}
 			},
 			Event::WindowEvent { event: WindowEvent::CloseRequested, window_id }
+
 				if window_id == window.id() =>
 			{
 				*control_flow = ControlFlow::Exit

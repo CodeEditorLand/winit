@@ -90,13 +90,17 @@ pub struct EventLoop<T:'static> {
 impl<T:'static> EventLoop<T> {
 	pub fn new() -> EventLoop<T> {
 		static mut SINGLETON_INIT:bool = false;
+
 		unsafe {
 			assert_main_thread!("`EventLoop` can only be created on the main thread on iOS");
+
 			assert!(
 				!SINGLETON_INIT,
 				"Only one `EventLoop` is supported on iOS. `EventLoopProxy` might be helpful"
 			);
+
 			SINGLETON_INIT = true;
+
 			view::create_delegate_class();
 		}
 
@@ -118,6 +122,7 @@ impl<T:'static> EventLoop<T> {
 		F: 'static + FnMut(Event<'_, T>, &RootEventLoopWindowTarget<T>, &mut ControlFlow), {
 		unsafe {
 			let application:*mut c_void = msg_send![class!(UIApplication), sharedApplication];
+
 			assert_eq!(
 				application,
 				ptr::null_mut(),
@@ -125,6 +130,7 @@ impl<T:'static> EventLoop<T> {
                  `EventLoop` cannot be `run` after a call to `UIApplicationMain` on iOS\nNote: \
 				 `EventLoop::run` calls `UIApplicationMain` on iOS"
 			);
+
 			app_state::will_launch(Box::new(EventLoopHandler {
 				f:event_handler,
 				event_loop:self.window_target,
@@ -136,6 +142,7 @@ impl<T:'static> EventLoop<T> {
 				nil,
 				NSStringRust::alloc(nil).init_str("AppDelegate"),
 			);
+
 			unreachable!()
 		}
 	}
@@ -170,6 +177,7 @@ impl<T> Drop for EventLoopProxy<T> {
 	fn drop(&mut self) {
 		unsafe {
 			CFRunLoopSourceInvalidate(self.source);
+
 			CFRelease(self.source as _);
 		}
 	}
@@ -186,10 +194,14 @@ impl<T> EventLoopProxy<T> {
 			let rl = CFRunLoopGetMain();
 			// we want all the members of context to be zero/null, except one
 			let mut context:CFRunLoopSourceContext = mem::zeroed();
+
 			context.perform = Some(event_loop_proxy_handler);
+
 			let source =
 				CFRunLoopSourceCreate(ptr::null_mut(), CFIndex::max_value() - 1, &mut context);
+
 			CFRunLoopAddSource(rl, source, kCFRunLoopCommonModes);
+
 			CFRunLoopWakeUp(rl);
 
 			EventLoopProxy { sender, source }
@@ -200,12 +212,16 @@ impl<T> EventLoopProxy<T> {
 		self.sender
 			.send(event)
 			.map_err(|::std::sync::mpsc::SendError(x)| EventLoopClosed(x))?;
+
 		unsafe {
 			// let the main thread know there's a new event
 			CFRunLoopSourceSignal(self.source);
+
 			let rl = CFRunLoopGetMain();
+
 			CFRunLoopWakeUp(rl);
 		}
+
 		Ok(())
 	}
 }
@@ -289,6 +305,7 @@ fn setup_control_flow_observers() {
 			control_flow_begin_handler,
 			ptr::null_mut(),
 		);
+
 		CFRunLoopAddObserver(main_loop, begin_observer, kCFRunLoopDefaultMode);
 
 		let main_end_observer = CFRunLoopObserverCreate(
@@ -299,6 +316,7 @@ fn setup_control_flow_observers() {
 			control_flow_main_end_handler,
 			ptr::null_mut(),
 		);
+
 		CFRunLoopAddObserver(main_loop, main_end_observer, kCFRunLoopDefaultMode);
 
 		let end_observer = CFRunLoopObserverCreate(
@@ -309,6 +327,7 @@ fn setup_control_flow_observers() {
 			control_flow_end_handler,
 			ptr::null_mut(),
 		);
+
 		CFRunLoopAddObserver(main_loop, end_observer, kCFRunLoopDefaultMode);
 	}
 }
@@ -318,6 +337,7 @@ pub enum Never {}
 
 pub trait EventHandler: Debug {
 	fn handle_nonuser_event(&mut self, event:Event<'_, Never>, control_flow:&mut ControlFlow);
+
 	fn handle_user_events(&mut self, control_flow:&mut ControlFlow);
 }
 
@@ -353,6 +373,8 @@ where
 // must be called on main thread
 pub unsafe fn get_idiom() -> Idiom {
 	let device:id = msg_send![class!(UIDevice), currentDevice];
+
 	let raw_idiom:UIUserInterfaceIdiom = msg_send![device, userInterfaceIdiom];
+
 	raw_idiom.into()
 }

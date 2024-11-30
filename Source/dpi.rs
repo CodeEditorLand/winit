@@ -123,6 +123,7 @@
 
 pub trait Pixel: Copy + Into<f64> {
 	fn from_f64(f:f64) -> Self;
+
 	fn cast<P:Pixel>(self) -> P { P::from_f64(self.into()) }
 }
 
@@ -192,8 +193,11 @@ impl<P:Pixel> LogicalPosition<P> {
 	#[inline]
 	pub fn to_physical<X:Pixel>(&self, scale_factor:f64) -> PhysicalPosition<X> {
 		assert!(validate_scale_factor(scale_factor));
+
 		let x = self.x.into() * scale_factor;
+
 		let y = self.y.into() * scale_factor;
+
 		PhysicalPosition::new(x, y).cast()
 	}
 
@@ -241,8 +245,11 @@ impl<P:Pixel> PhysicalPosition<P> {
 	#[inline]
 	pub fn to_logical<X:Pixel>(&self, scale_factor:f64) -> LogicalPosition<X> {
 		assert!(validate_scale_factor(scale_factor));
+
 		let x = self.x.into() / scale_factor;
+
 		let y = self.y.into() / scale_factor;
+
 		LogicalPosition::new(x, y).cast()
 	}
 
@@ -290,8 +297,11 @@ impl<P:Pixel> LogicalSize<P> {
 	#[inline]
 	pub fn to_physical<X:Pixel>(&self, scale_factor:f64) -> PhysicalSize<X> {
 		assert!(validate_scale_factor(scale_factor));
+
 		let width = self.width.into() * scale_factor;
+
 		let height = self.height.into() * scale_factor;
+
 		PhysicalSize::new(width, height).cast()
 	}
 
@@ -339,8 +349,11 @@ impl<P:Pixel> PhysicalSize<P> {
 	#[inline]
 	pub fn to_logical<X:Pixel>(&self, scale_factor:f64) -> LogicalSize<X> {
 		assert!(validate_scale_factor(scale_factor));
+
 		let width = self.width.into() / scale_factor;
+
 		let height = self.height.into() / scale_factor;
+
 		LogicalSize::new(width, height).cast()
 	}
 

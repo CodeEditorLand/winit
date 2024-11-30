@@ -139,6 +139,7 @@ impl Canvas {
 		F: 'static + FnMut(ScanCode, Option<VirtualKeyCode>, ModifiersState), {
 		self.on_keyboard_release = Some(self.add_user_event(move |event:KeyUpEvent| {
 			event.prevent_default();
+
 			handler(
 				event::scan_code(&event),
 				event::virtual_key_code(&event),
@@ -156,12 +157,16 @@ impl Canvas {
 			// Ctrl+R, PgUp/Down to scroll, etc. We should not do it for key sequences
 			// that result in meaningful character input though.
 			let event_key = &event.key();
+
 			let is_key_string = event_key.len() == 1 || !event_key.is_ascii();
+
 			let is_shortcut_modifiers = (event.ctrl_key() || event.alt_key())
 				&& !event.get_modifier_state(ModifierKey::AltGr);
+
 			if !is_key_string || is_shortcut_modifiers {
 				event.prevent_default();
 			}
+
 			handler(
 				event::scan_code(&event),
 				event::virtual_key_code(&event),
@@ -182,6 +187,7 @@ impl Canvas {
 			// Supress further handling to stop keys like the space key from scrolling the
 			// page.
 			event.prevent_default();
+
 			handler(event::codepoint(&event));
 		}));
 	}
@@ -218,6 +224,7 @@ impl Canvas {
 	where
 		F: 'static + FnMut(i32, PhysicalPosition<f64>, MouseButton, ModifiersState), {
 		let canvas = self.raw.clone();
+
 		self.on_mouse_press = Some(self.add_user_event(move |event:PointerDownEvent| {
 			handler(
 				event.pointer_id(),
@@ -225,6 +232,7 @@ impl Canvas {
 				event::mouse_button(&event),
 				event::mouse_modifiers(&event),
 			);
+
 			canvas
 				.set_pointer_capture(event.pointer_id())
 				.expect("Failed to set pointer capture");
@@ -250,6 +258,7 @@ impl Canvas {
 		F: 'static + FnMut(i32, MouseScrollDelta, ModifiersState), {
 		self.on_mouse_wheel = Some(self.add_event(move |event:MouseWheelEvent| {
 			event.prevent_default();
+
 			if let Some(delta) = event::mouse_scroll_delta(&event) {
 				handler(0, delta, event::mouse_modifiers(&event));
 			}
@@ -283,6 +292,7 @@ impl Canvas {
 		F: 'static + FnMut(E), {
 		self.raw.add_event_listener(move |event:E| {
 			event.stop_propagation();
+
 			event.cancel_bubble();
 
 			handler(event);
@@ -298,6 +308,7 @@ impl Canvas {
 		E: ConcreteEvent,
 		F: 'static + FnMut(E), {
 		let wants_fullscreen = self.wants_fullscreen.clone();
+
 		let canvas = self.raw.clone();
 
 		self.add_event(move |event:E| {

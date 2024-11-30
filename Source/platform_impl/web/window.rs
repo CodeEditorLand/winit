@@ -36,6 +36,7 @@ impl Window {
 		let id = target.generate_id();
 
 		let canvas = backend::Canvas::create(platform_attr)?;
+
 		let mut canvas = Rc::new(RefCell::new(canvas));
 
 		let register_redraw_request = Box::new(move || runner.request_redraw(RootWI(id)));
@@ -43,6 +44,7 @@ impl Window {
 		target.register(&mut canvas, id);
 
 		let runner = target.runner.clone();
+
 		let resize_notify_fn = Box::new(move |new_size| {
 			runner.send_event(event::Event::WindowEvent {
 				window_id:RootWI(id),
@@ -51,6 +53,7 @@ impl Window {
 		});
 
 		let runner = target.runner.clone();
+
 		let destroy_fn = Box::new(move || runner.notify_destroy_window(RootWI(id)));
 
 		let window = Window {
@@ -67,9 +70,13 @@ impl Window {
 			attr.inner_size
 				.unwrap_or(Size::Logical(LogicalSize { width:1024.0, height:768.0 })),
 		);
+
 		window.set_title(&attr.title);
+
 		window.set_maximized(attr.maximized);
+
 		window.set_visible(attr.visible);
+
 		window.set_window_icon(attr.window_icon);
 
 		Ok(window)
@@ -99,8 +106,11 @@ impl Window {
 		let position = position.to_logical::<f64>(self.scale_factor());
 
 		let canvas = self.canvas.borrow();
+
 		canvas.set_attribute("position", "fixed");
+
 		canvas.set_attribute("left", &position.x.to_string());
+
 		canvas.set_attribute("top", &position.y.to_string());
 	}
 
@@ -117,8 +127,11 @@ impl Window {
 	#[inline]
 	pub fn set_inner_size(&self, size:Size) {
 		let old_size = self.inner_size();
+
 		backend::set_canvas_size(self.canvas.borrow().raw(), size);
+
 		let new_size = self.inner_size();
+
 		if old_size != new_size {
 			(self.resize_notify_fn)(new_size);
 		}
@@ -184,6 +197,7 @@ impl Window {
 			CursorIcon::RowResize => "row-resize",
 		};
 		*self.previous_pointer.borrow_mut() = text;
+
 		backend::set_canvas_style_property(self.canvas.borrow().raw(), "cursor", text);
 	}
 

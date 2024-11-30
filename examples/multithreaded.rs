@@ -3,6 +3,7 @@ fn main() {
 	use std::{collections::HashMap, sync::mpsc, thread, time::Duration};
 
 	use simple_logger::SimpleLogger;
+
 	use winit::{
 		dpi::{PhysicalPosition, PhysicalSize, Position, Size},
 		event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
@@ -11,19 +12,26 @@ fn main() {
 	};
 
 	const WINDOW_COUNT:usize = 3;
+
 	const WINDOW_SIZE:PhysicalSize<u32> = PhysicalSize::new(600, 400);
 
 	SimpleLogger::new().init().unwrap();
+
 	let event_loop = EventLoop::new();
+
 	let mut window_senders = HashMap::with_capacity(WINDOW_COUNT);
+
 	for _ in 0..WINDOW_COUNT {
 		let window = WindowBuilder::new().with_inner_size(WINDOW_SIZE).build(&event_loop).unwrap();
 
 		let mut video_modes:Vec<_> = window.current_monitor().unwrap().video_modes().collect();
+
 		let mut video_mode_id = 0usize;
 
 		let (tx, rx) = mpsc::channel();
+
 		window_senders.insert(window.id(), tx);
+
 		thread::spawn(move || {
 			while let Ok(event) = rx.recv() {
 				match event {
@@ -32,8 +40,11 @@ fn main() {
 						// was moved to an another monitor, so that the window
 						// appears on this monitor instead when we go fullscreen
 						let previous_video_mode = video_modes.iter().cloned().nth(video_mode_id);
+
 						video_modes = window.current_monitor().unwrap().video_modes().collect();
+
 						video_mode_id = video_mode_id.min(video_modes.len());
+
 						let video_mode = video_modes.iter().nth(video_mode_id);
 
 						// Different monitors may support different video modes,
@@ -58,8 +69,11 @@ fn main() {
 						..
 					} => {
 						window.set_title(&format!("{:?}", key));
+
 						let state = !modifiers.shift();
+
 						use VirtualKeyCode::*;
+
 						match key {
 							A => window.set_always_on_top(state),
 							C => {
@@ -76,6 +90,7 @@ fn main() {
 									Right => (video_modes.len() - 1).min(video_mode_id + 1),
 									_ => unreachable!(),
 								};
+
 								println!(
 									"Picking video mode: {}",
 									video_modes.iter().nth(video_mode_id).unwrap()
@@ -96,10 +111,15 @@ fn main() {
 							H => window.set_cursor_visible(!state),
 							I => {
 								println!("Info:");
+
 								println!("-> outer_position : {:?}", window.outer_position());
+
 								println!("-> inner_position : {:?}", window.inner_position());
+
 								println!("-> outer_size     : {:?}", window.outer_size());
+
 								println!("-> inner_size     : {:?}", window.inner_size());
+
 								println!("-> fullscreen     : {:?}", window.fullscreen());
 							},
 							L => {
@@ -112,9 +132,13 @@ fn main() {
 							P => {
 								window.set_outer_position({
 									let mut position = window.outer_position().unwrap();
+
 									let sign = if state { 1 } else { -1 };
+
 									position.x += 10 * sign;
+
 									position.y += 10 * sign;
+
 									position
 								})
 							},
@@ -145,7 +169,9 @@ fn main() {
 							},
 							Z => {
 								window.set_visible(false);
+
 								thread::sleep(Duration::from_secs(1));
+
 								window.set_visible(true);
 							},
 							_ => (),
@@ -156,11 +182,13 @@ fn main() {
 			}
 		});
 	}
+
 	event_loop.run(move |event, _event_loop, control_flow| {
 		*control_flow = match !window_senders.is_empty() {
 			true => ControlFlow::Wait,
 			false => ControlFlow::Exit,
 		};
+
 		match event {
 			Event::WindowEvent { event, window_id } => {
 				match event {

@@ -39,6 +39,7 @@ unsafe impl objc::Encode for NSRange {
 			NSUInteger::encode().as_str(),
 			NSUInteger::encode().as_str(),
 		);
+
 		unsafe { objc::Encoding::from_str(&encoding) }
 	}
 }
@@ -48,6 +49,7 @@ pub trait NSMutableAttributedString: Sized {
 
 	unsafe fn init(self) -> id; // *mut NSMutableAttributedString
 	unsafe fn initWithString(self, string:id) -> id;
+
 	unsafe fn initWithAttributedString(self, string:id) -> id;
 
 	unsafe fn string(self) -> id; // *mut NSString
@@ -165,8 +167,11 @@ extern {
 #[link(name = "CoreGraphics", kind = "framework")]
 extern {
 	pub fn CGRestorePermanentDisplayConfiguration();
+
 	pub fn CGDisplayCapture(display:CGDirectDisplayID) -> CGError;
+
 	pub fn CGDisplayRelease(display:CGDirectDisplayID) -> CGError;
+
 	pub fn CGConfigureDisplayFadeEffect(
 		config:CGDisplayConfigRef,
 		fadeOutSeconds:CGDisplayFadeInterval,
@@ -175,10 +180,12 @@ extern {
 		fadeGreen:f32,
 		fadeBlue:f32,
 	) -> CGError;
+
 	pub fn CGAcquireDisplayFadeReservation(
 		seconds:CGDisplayReservationInterval,
 		token:*mut CGDisplayFadeReservationToken,
 	) -> CGError;
+
 	pub fn CGDisplayFade(
 		token:CGDisplayFadeReservationToken,
 		duration:CGDisplayFadeInterval,
@@ -189,21 +196,31 @@ extern {
 		blueBlend:f32,
 		synchronous:Boolean,
 	) -> CGError;
+
 	pub fn CGReleaseDisplayFadeReservation(token:CGDisplayFadeReservationToken) -> CGError;
+
 	pub fn CGShieldingWindowLevel() -> CGWindowLevel;
+
 	pub fn CGDisplaySetDisplayMode(
 		display:CGDirectDisplayID,
 		mode:CGDisplayModeRef,
 		options:CFDictionaryRef,
 	) -> CGError;
+
 	pub fn CGDisplayCopyAllDisplayModes(
 		display:CGDirectDisplayID,
 		options:CFDictionaryRef,
 	) -> CFArrayRef;
+
 	pub fn CGDisplayModeGetPixelWidth(mode:CGDisplayModeRef) -> usize;
+
 	pub fn CGDisplayModeGetPixelHeight(mode:CGDisplayModeRef) -> usize;
+
 	pub fn CGDisplayModeGetRefreshRate(mode:CGDisplayModeRef) -> f64;
+
 	pub fn CGDisplayModeCopyPixelEncoding(mode:CGDisplayModeRef) -> CFStringRef;
+
 	pub fn CGDisplayModeRetain(mode:CGDisplayModeRef);
+
 	pub fn CGDisplayModeRelease(mode:CGDisplayModeRef);
 }

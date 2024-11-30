@@ -7,6 +7,7 @@ use winit::{
 
 fn main() {
 	SimpleLogger::new().init().unwrap();
+
 	let event_loop = EventLoop::new();
 
 	let window = WindowBuilder::new()
@@ -33,6 +34,7 @@ fn main() {
 						..
 					} => {
 						use winit::event::VirtualKeyCode::*;
+
 						match key {
 							Escape => *control_flow = ControlFlow::Exit,
 							G => window.set_cursor_grab(!modifiers.shift()).unwrap(),

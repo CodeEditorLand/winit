@@ -82,17 +82,22 @@ impl Cursor {
 		match self {
 			Cursor::Native(cursor_name) => {
 				let sel = Sel::register(cursor_name);
+
 				msg_send![class!(NSCursor), performSelector: sel]
 			},
 			Cursor::Undocumented(cursor_name) => {
 				let class = class!(NSCursor);
+
 				let sel = Sel::register(cursor_name);
+
 				let sel = if msg_send![class, respondsToSelector: sel] {
 					sel
 				} else {
 					warn!("Cursor `{}` appears to be invalid", cursor_name);
+
 					sel!(arrowCursor)
 				};
+
 				msg_send![class, performSelector: sel]
 			},
 			Cursor::WebKit(cursor_name) => load_webkit_cursor(cursor_name),
@@ -106,23 +111,37 @@ pub unsafe fn load_webkit_cursor(cursor_name:&str) -> id {
 	static CURSOR_ROOT:&'static str = "/System/Library/Frameworks/ApplicationServices.framework/\
 	                                   Versions/A/Frameworks/HIServices.framework/Versions/A/\
 	                                   Resources/cursors";
+
 	let cursor_root = NSString::alloc(nil).init_str(CURSOR_ROOT);
+
 	let cursor_name = NSString::alloc(nil).init_str(cursor_name);
+
 	let cursor_pdf = NSString::alloc(nil).init_str("cursor.pdf");
+
 	let cursor_plist = NSString::alloc(nil).init_str("info.plist");
+
 	let key_x = NSString::alloc(nil).init_str("hotx");
+
 	let key_y = NSString::alloc(nil).init_str("hoty");
 
 	let cursor_path:id = msg_send![cursor_root, stringByAppendingPathComponent: cursor_name];
+
 	let pdf_path:id = msg_send![cursor_path, stringByAppendingPathComponent: cursor_pdf];
+
 	let info_path:id = msg_send![cursor_path, stringByAppendingPathComponent: cursor_plist];
 
 	let image = NSImage::alloc(nil).initByReferencingFile_(pdf_path);
+
 	let info = NSDictionary::dictionaryWithContentsOfFile_(nil, info_path);
+
 	let x = info.valueForKey_(key_x);
+
 	let y = info.valueForKey_(key_y);
+
 	let point = NSPoint::new(msg_send![x, doubleValue], msg_send![y, doubleValue]);
+
 	let cursor:id = msg_send![class!(NSCursor), alloc];
+
 	msg_send![cursor,
 		initWithImage:image
 		hotSpot:point
@@ -155,7 +174,9 @@ pub unsafe fn invisible_cursor() -> id {
 			];
 
 			let ns_image:id = msg_send![class!(NSImage), alloc];
+
 			let _:id = msg_send![ns_image, initWithData: cursor_data];
+
 			let cursor:id = msg_send![class!(NSCursor), alloc];
 			*cursor_obj.borrow_mut() =
 				msg_send![cursor, initWithImage:ns_image hotSpot: NSPoint::new(0.0, 0.0)];

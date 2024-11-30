@@ -10,13 +10,17 @@ use winit::{
 
 fn main() {
 	SimpleLogger::new().init().unwrap();
+
 	let event_loop = EventLoop::new();
 
 	print!("Please choose the fullscreen mode: (1) exclusive, (2) borderless: ");
+
 	stdout().flush().unwrap();
 
 	let mut num = String::new();
+
 	stdin().read_line(&mut num).unwrap();
+
 	let num = num.trim().parse().ok().expect("Please enter a number");
 
 	let fullscreen = Some(match num {
@@ -58,10 +62,12 @@ fn main() {
 							},
 							(VirtualKeyCode::M, ElementState::Pressed) => {
 								let is_maximized = window.is_maximized();
+
 								window.set_maximized(!is_maximized);
 							},
 							(VirtualKeyCode::D, ElementState::Pressed) => {
 								decorations = !decorations;
+
 								window.set_decorations(decorations);
 							},
 							_ => (),
@@ -82,11 +88,15 @@ fn prompt_for_monitor(event_loop:&EventLoop<()>) -> MonitorHandle {
 	}
 
 	print!("Please write the number of the monitor to use: ");
+
 	stdout().flush().unwrap();
 
 	let mut num = String::new();
+
 	stdin().read_line(&mut num).unwrap();
+
 	let num = num.trim().parse().ok().expect("Please enter a number");
+
 	let monitor = event_loop.available_monitors().nth(num).expect("Please enter a valid ID");
 
 	println!("Using {:?}", monitor.name());
@@ -100,11 +110,15 @@ fn prompt_for_video_mode(monitor:&MonitorHandle) -> VideoMode {
 	}
 
 	print!("Please write the number of the video mode to use: ");
+
 	stdout().flush().unwrap();
 
 	let mut num = String::new();
+
 	stdin().read_line(&mut num).unwrap();
+
 	let num = num.trim().parse().ok().expect("Please enter a number");
+
 	let video_mode = monitor.video_modes().nth(num).expect("Please enter a valid ID");
 
 	println!("Using {}", video_mode);

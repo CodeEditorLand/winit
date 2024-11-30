@@ -61,6 +61,7 @@ impl PointerHandler {
 	where
 		F: 'static + FnMut(i32, PhysicalPosition<f64>, MouseButton, ModifiersState), {
 		let canvas = canvas_common.raw.clone();
+
 		self.on_pointer_press =
 			Some(canvas_common.add_user_event("pointerdown", move |event:PointerEvent| {
 				handler(
@@ -69,6 +70,7 @@ impl PointerHandler {
 					event::mouse_button(&event),
 					event::mouse_modifiers(&event),
 				);
+
 				canvas
 					.set_pointer_capture(event.pointer_id())
 					.expect("Failed to set pointer capture");
@@ -91,9 +93,13 @@ impl PointerHandler {
 
 	pub fn remove_listeners(&mut self) {
 		self.on_cursor_leave = None;
+
 		self.on_cursor_enter = None;
+
 		self.on_cursor_move = None;
+
 		self.on_pointer_press = None;
+
 		self.on_pointer_release = None;
 	}
 }

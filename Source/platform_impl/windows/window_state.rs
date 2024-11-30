@@ -56,26 +56,38 @@ pub struct MouseProperties {
 bitflags! {
 	pub struct CursorFlags: u8 {
 		const GRABBED   = 1 << 0;
+
 		const HIDDEN    = 1 << 1;
+
 		const IN_WINDOW = 1 << 2;
 	}
 }
 bitflags! {
 	pub struct WindowFlags: u32 {
 		const RESIZABLE      = 1 << 0;
+
 		const DECORATIONS    = 1 << 1;
+
 		const VISIBLE        = 1 << 2;
+
 		const ON_TASKBAR     = 1 << 3;
+
 		const ALWAYS_ON_TOP  = 1 << 4;
+
 		const NO_BACK_BUFFER = 1 << 5;
+
 		const TRANSPARENT    = 1 << 6;
+
 		const CHILD          = 1 << 7;
+
 		const MAXIMIZED      = 1 << 8;
+
 		const POPUP          = 1 << 14;
 
 		/// Marker flag for fullscreen. Should always match `WindowState::fullscreen`, but is
 		/// included here to make masking easier.
 		const MARKER_EXCLUSIVE_FULLSCREEN = 1 << 9;
+
 		const MARKER_BORDERLESS_FULLSCREEN = 1 << 13;
 
 		/// The `WM_SIZE` event contains some parameters that can effect the state of `WindowFlags`.
@@ -90,7 +102,9 @@ bitflags! {
 		const MINIMIZED = 1 << 12;
 
 		const EXCLUSIVE_FULLSCREEN_OR_MASK = WindowFlags::ALWAYS_ON_TOP.bits;
+
 		const NO_DECORATIONS_AND_MASK = !WindowFlags::RESIZABLE.bits;
+
 		const INVISIBLE_AND_MASK = !WindowFlags::MAXIMIZED.bits;
 	}
 }
@@ -135,10 +149,13 @@ impl WindowState {
 	where
 		F: FnOnce(&mut WindowFlags), {
 		let old_flags = this.window_flags;
+
 		f(&mut this.window_flags);
+
 		let new_flags = this.window_flags;
 
 		drop(this);
+
 		old_flags.apply_diff(window, new_flags);
 	}
 
@@ -156,11 +173,14 @@ impl MouseProperties {
 	where
 		F: FnOnce(&mut CursorFlags), {
 		let old_flags = self.cursor_flags;
+
 		f(&mut self.cursor_flags);
+
 		match self.cursor_flags.refresh_os_cursor(window) {
 			Ok(()) => (),
 			Err(e) => {
 				self.cursor_flags = old_flags;
+
 				return Err(e);
 			},
 		}
@@ -174,12 +194,15 @@ impl WindowFlags {
 		if self.contains(WindowFlags::MARKER_EXCLUSIVE_FULLSCREEN) {
 			self |= WindowFlags::EXCLUSIVE_FULLSCREEN_OR_MASK;
 		}
+
 		if !self.contains(WindowFlags::VISIBLE) {
 			self &= WindowFlags::INVISIBLE_AND_MASK;
 		}
+
 		if !self.contains(WindowFlags::DECORATIONS) {
 			self &= WindowFlags::NO_DECORATIONS_AND_MASK;
 		}
+
 		self
 	}
 
@@ -191,36 +214,47 @@ impl WindowFlags {
 		if self.contains(WindowFlags::RESIZABLE) {
 			style |= WS_SIZEBOX | WS_MAXIMIZEBOX;
 		}
+
 		if self.contains(WindowFlags::DECORATIONS) {
 			style |= WS_CAPTION | WS_MINIMIZEBOX | WS_BORDER;
+
 			style_ex = WS_EX_WINDOWEDGE;
 		}
+
 		if self.contains(WindowFlags::VISIBLE) {
 			style |= WS_VISIBLE;
 		}
+
 		if self.contains(WindowFlags::ON_TASKBAR) {
 			style_ex |= WS_EX_APPWINDOW;
 		}
+
 		if self.contains(WindowFlags::ALWAYS_ON_TOP) {
 			style_ex |= WS_EX_TOPMOST;
 		}
+
 		if self.contains(WindowFlags::NO_BACK_BUFFER) {
 			style_ex |= WS_EX_NOREDIRECTIONBITMAP;
 		}
+
 		if self.contains(WindowFlags::CHILD) {
 			style |= WS_CHILD; // This is incompatible with WS_POPUP if that gets added eventually.
 		}
+
 		if self.contains(WindowFlags::POPUP) {
 			style |= WS_POPUP;
 		}
+
 		if self.contains(WindowFlags::MINIMIZED) {
 			style |= WS_MINIMIZE;
 		}
+
 		if self.contains(WindowFlags::MAXIMIZED) {
 			style |= WS_MAXIMIZE;
 		}
 
 		style |= WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_SYSMENU;
+
 		style_ex |= WS_EX_ACCEPTFILES;
 
 		if self.intersects(
@@ -235,9 +269,11 @@ impl WindowFlags {
 	/// Adjust the window client rectangle to the return value, if present.
 	fn apply_diff(mut self, window:HWND, mut new:WindowFlags) {
 		self = self.mask();
+
 		new = new.mask();
 
 		let diff = self ^ new;
+
 		if diff == WindowFlags::empty() {
 			return;
 		}
@@ -253,6 +289,7 @@ impl WindowFlags {
 				);
 			}
 		}
+
 		if diff.contains(WindowFlags::ALWAYS_ON_TOP) {
 			unsafe {
 				winuser::SetWindowPos(
@@ -270,6 +307,7 @@ impl WindowFlags {
 						| winuser::SWP_NOSIZE
 						| winuser::SWP_NOACTIVATE,
 				);
+
 				winuser::InvalidateRgn(window, ptr::null_mut(), 0);
 			}
 		}
@@ -310,6 +348,7 @@ impl WindowFlags {
 				// window
 				if !new.contains(WindowFlags::MINIMIZED) {
 					winuser::SetWindowLongW(window, winuser::GWL_STYLE, style as _);
+
 					winuser::SetWindowLongW(window, winuser::GWL_EXSTYLE, style_ex as _);
 				}
 
@@ -329,6 +368,7 @@ impl WindowFlags {
 
 				// Refresh the window frame
 				winuser::SetWindowPos(window, ptr::null_mut(), 0, 0, 0, 0, flags);
+
 				winuser::SendMessageW(window, *event_loop::SET_RETAIN_STATE_ON_SIZE_MSG_ID, 0, 0);
 			}
 		}
@@ -346,7 +386,9 @@ impl CursorFlags {
 			};
 
 			let rect_to_tuple = |rect:RECT| (rect.left, rect.top, rect.right, rect.bottom);
+
 			let active_cursor_clip = rect_to_tuple(util::get_cursor_clip()?);
+
 			let desktop_rect = rect_to_tuple(util::get_desktop_rect());
 
 			let active_cursor_clip = match desktop_rect == active_cursor_clip {
@@ -364,6 +406,7 @@ impl CursorFlags {
 		}
 
 		let cursor_in_client = self.contains(CursorFlags::IN_WINDOW);
+
 		if cursor_in_client {
 			util::set_cursor_hidden(self.contains(CursorFlags::HIDDEN));
 		} else {

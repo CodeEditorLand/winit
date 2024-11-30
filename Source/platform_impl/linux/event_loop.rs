@@ -69,16 +69,20 @@ pub struct EventLoop<T:'static> {
 impl<T:'static> EventLoop<T> {
 	pub fn new() -> EventLoop<T> {
 		assert_is_main_thread("new_any_thread");
+
 		EventLoop::new_gtk().expect("Failed to initialize any backend!")
 	}
 
 	fn new_gtk() -> Result<EventLoop<T>, Box<dyn Error>> {
 		let app = gtk::Application::new(Some("org.tauri"), gio::ApplicationFlags::empty())?;
+
 		let cancellable:Option<&Cancellable> = None;
+
 		app.register(cancellable)?;
 
 		// Create event loop window target.
 		let (window_requests_tx, window_requests_rx) = channel();
+
 		let window_target = EventLoopWindowTarget {
 			app,
 			windows:Rc::new(RefCell::new(HashSet::new())),
@@ -105,6 +109,7 @@ impl<T:'static> EventLoop<T> {
 	where
 		F: FnMut(Event<'_, T>, &RootELW<T>, &mut ControlFlow) + 'static, {
 		self.run_return(callback);
+
 		process::exit(0)
 	}
 
@@ -112,23 +117,32 @@ impl<T:'static> EventLoop<T> {
 	where
 		F: FnMut(Event<'_, T>, &RootELW<T>, &mut ControlFlow) + 'static, {
 		let mut control_flow = ControlFlow::default();
+
 		let window_target = self.window_target;
+
 		let (event_tx, event_rx) = channel::<Event<'_, T>>();
 
 		// Send StartCause::Init event
 		let tx_clone = event_tx.clone();
+
 		window_target.p.app.connect_activate(move |_| {
 			if let Err(e) = tx_clone.send(Event::NewEvents(StartCause::Init)) {
 				log::warn!("Failed to send init event to event channel: {}", e);
 			}
 		});
+
 		window_target.p.app.activate();
 
 		let context = MainContext::default();
+
 		context.push_thread_default();
+
 		let keep_running = Rc::new(RefCell::new(true));
+
 		let keep_running_ = keep_running.clone();
+
 		let user_event_rx = self.user_event_rx;
+
 		idle_add_local(move || {
 			// User event
 			if let Ok(event) = user_event_rx.try_recv() {
@@ -211,11 +225,13 @@ impl<T:'static> EventLoop<T> {
 					},
 					WindowRequest::DragWindow => {
 						let display = window.get_display();
+
 						if let Some(cursor) = display
 							.get_device_manager()
 							.and_then(|device_manager| device_manager.get_client_pointer())
 						{
 							let (_, x, y) = cursor.get_position();
+
 							window.begin_move_drag(1, x, y, 0);
 						}
 					},
@@ -243,6 +259,7 @@ impl<T:'static> EventLoop<T> {
 					WindowRequest::CursorIcon(cursor) => {
 						if let Some(gdk_window) = window.get_window() {
 							let display = window.get_display();
+
 							match cursor {
 								Some(cr) => {
 									gdk_window.set_cursor(
@@ -300,10 +317,12 @@ impl<T:'static> EventLoop<T> {
 					},
 					WindowRequest::WireUpEvents => {
 						let windows_rc = window_target.p.windows.clone();
+
 						let tx_clone = event_tx.clone();
 
 						window.connect_delete_event(move |_, _| {
 							windows_rc.borrow_mut().remove(&id);
+
 							if let Err(e) = tx_clone.send(Event::WindowEvent {
 								window_id:RootWindowId(id),
 								event:WindowEvent::CloseRequested,
@@ -313,12 +332,15 @@ impl<T:'static> EventLoop<T> {
 									e
 								);
 							}
+
 							Inhibit(false)
 						});
 
 						let tx_clone = event_tx.clone();
+
 						window.connect_configure_event(move |_, event| {
 							let (x, y) = event.get_position();
+
 							if let Err(e) = tx_clone.send(Event::WindowEvent {
 								window_id:RootWindowId(id),
 								event:WindowEvent::Moved(PhysicalPosition::new(x, y)),
@@ -330,6 +352,7 @@ impl<T:'static> EventLoop<T> {
 							}
 
 							let (w, h) = event.get_size();
+
 							if let Err(e) = tx_clone.send(Event::WindowEvent {
 								window_id:RootWindowId(id),
 								event:WindowEvent::Resized(PhysicalSize::new(w, h)),
@@ -339,10 +362,12 @@ impl<T:'static> EventLoop<T> {
 									e
 								);
 							}
+
 							false
 						});
 
 						let tx_clone = event_tx.clone();
+
 						window.connect_window_state_event(move |_window, event| {
 							let state = event.get_new_window_state();
 
@@ -355,10 +380,12 @@ impl<T:'static> EventLoop<T> {
 									e
 								);
 							}
+
 							Inhibit(false)
 						});
 
 						let tx_clone = event_tx.clone();
+
 						window.connect_destroy_event(move |_, _| {
 							if let Err(e) = tx_clone.send(Event::WindowEvent {
 								window_id:RootWindowId(id),
@@ -369,10 +396,12 @@ impl<T:'static> EventLoop<T> {
 									e
 								);
 							}
+
 							Inhibit(false)
 						});
 
 						let tx_clone = event_tx.clone();
+
 						window.connect_enter_notify_event(move |_, _| {
 							if let Err(e) = tx_clone.send(Event::WindowEvent {
 								window_id:RootWindowId(id),
@@ -387,17 +416,21 @@ impl<T:'static> EventLoop<T> {
 									e
 								);
 							}
+
 							Inhibit(false)
 						});
 
 						let tx_clone = event_tx.clone();
+
 						window.connect_motion_notify_event(move |window, _| {
 							let display = window.get_display();
+
 							if let Some(cursor) = display
 								.get_device_manager()
 								.and_then(|device_manager| device_manager.get_client_pointer())
 							{
 								let (_, x, y) = cursor.get_position();
+
 								if let Err(e) = tx_clone.send(Event::WindowEvent {
 									window_id:RootWindowId(id),
 									event:WindowEvent::CursorMoved {
@@ -417,10 +450,12 @@ impl<T:'static> EventLoop<T> {
 									);
 								}
 							}
+
 							Inhibit(false)
 						});
 
 						let tx_clone = event_tx.clone();
+
 						window.connect_leave_notify_event(move |_, _| {
 							if let Err(e) = tx_clone.send(Event::WindowEvent {
 								window_id:RootWindowId(id),
@@ -435,12 +470,15 @@ impl<T:'static> EventLoop<T> {
 									e
 								);
 							}
+
 							Inhibit(false)
 						});
 
 						let tx_clone = event_tx.clone();
+
 						window.connect_button_press_event(move |_, event| {
 							let button = event.get_button();
+
 							if let Err(e) = tx_clone.send(Event::WindowEvent {
 								window_id:RootWindowId(id),
 								event:WindowEvent::MouseInput {
@@ -464,12 +502,15 @@ impl<T:'static> EventLoop<T> {
 									e
 								);
 							}
+
 							Inhibit(false)
 						});
 
 						let tx_clone = event_tx.clone();
+
 						window.connect_button_release_event(move |_, event| {
 							let button = event.get_button();
+
 							if let Err(e) = tx_clone.send(Event::WindowEvent {
 								window_id:RootWindowId(id),
 								event:WindowEvent::MouseInput {
@@ -494,6 +535,7 @@ impl<T:'static> EventLoop<T> {
 									e
 								);
 							}
+
 							Inhibit(false)
 						});
 					},
@@ -505,6 +547,7 @@ impl<T:'static> EventLoop<T> {
 			match control_flow {
 				ControlFlow::Exit => {
 					keep_running_.replace(false);
+
 					Continue(false)
 				},
 				// TODO better control flow handling
@@ -514,10 +557,12 @@ impl<T:'static> EventLoop<T> {
 					} else {
 						callback(Event::MainEventsCleared, &window_target, &mut control_flow);
 					}
+
 					Continue(true)
 				},
 			}
 		});
+
 		context.pop_thread_default();
 
 		while *keep_running.borrow() {

@@ -18,6 +18,7 @@ extern {
 	pub static kCFRunLoopCommonModes: CFRunLoopMode;
 
 	pub fn CFRunLoopGetMain() -> CFRunLoopRef;
+
 	pub fn CFRunLoopWakeUp(rl:CFRunLoopRef);
 
 	pub fn CFRunLoopObserverCreate(
@@ -28,6 +29,7 @@ extern {
 		callout:CFRunLoopObserverCallBack,
 		context:*mut CFRunLoopObserverContext,
 	) -> CFRunLoopObserverRef;
+
 	pub fn CFRunLoopAddObserver(rl:CFRunLoopRef, observer:CFRunLoopObserverRef, mode:CFRunLoopMode);
 
 	pub fn CFRunLoopTimerCreate(
@@ -39,8 +41,11 @@ extern {
 		callout:CFRunLoopTimerCallBack,
 		context:*mut CFRunLoopTimerContext,
 	) -> CFRunLoopTimerRef;
+
 	pub fn CFRunLoopAddTimer(rl:CFRunLoopRef, timer:CFRunLoopTimerRef, mode:CFRunLoopMode);
+
 	pub fn CFRunLoopTimerSetNextFireDate(timer:CFRunLoopTimerRef, fireDate:CFAbsoluteTime);
+
 	pub fn CFRunLoopTimerInvalidate(time:CFRunLoopTimerRef);
 
 	pub fn CFRunLoopSourceCreate(
@@ -48,12 +53,15 @@ extern {
 		order:CFIndex,
 		context:*mut CFRunLoopSourceContext,
 	) -> CFRunLoopSourceRef;
+
 	pub fn CFRunLoopAddSource(rl:CFRunLoopRef, source:CFRunLoopSourceRef, mode:CFRunLoopMode);
 	#[allow(dead_code)]
 	pub fn CFRunLoopSourceInvalidate(source:CFRunLoopSourceRef);
+
 	pub fn CFRunLoopSourceSignal(source:CFRunLoopSourceRef);
 
 	pub fn CFAbsoluteTimeGetCurrent() -> CFAbsoluteTime;
+
 	pub fn CFRelease(cftype:*const c_void);
 }
 
@@ -151,6 +159,7 @@ extern fn control_flow_begin_handler(
 			match activity {
 				kCFRunLoopAfterWaiting => {
 					// trace!("Triggered `CFRunLoopAfterWaiting`");
+
 					AppState::wakeup(panic_info);
 					// trace!("Completed `CFRunLoopAfterWaiting`");
 				},
@@ -175,6 +184,7 @@ extern fn control_flow_end_handler(
 			match activity {
 				kCFRunLoopBeforeWaiting => {
 					// trace!("Triggered `CFRunLoopBeforeWaiting`");
+
 					AppState::cleared(panic_info);
 					// trace!("Completed `CFRunLoopBeforeWaiting`");
 				},
@@ -205,6 +215,7 @@ impl RunLoop {
 			handler,
 			context,
 		);
+
 		CFRunLoopAddObserver(self.0, observer, kCFRunLoopCommonModes);
 	}
 }
@@ -218,13 +229,16 @@ pub fn setup_control_flow_observers(panic_info:Weak<PanicInfo>) {
 			release:None,
 			copyDescription:None,
 		};
+
 		let run_loop = RunLoop::get();
+
 		run_loop.add_observer(
 			kCFRunLoopEntry | kCFRunLoopAfterWaiting,
 			CFIndex::min_value(),
 			control_flow_begin_handler,
 			&mut context as *mut _,
 		);
+
 		run_loop.add_observer(
 			kCFRunLoopExit | kCFRunLoopBeforeWaiting,
 			CFIndex::max_value(),
@@ -242,6 +256,7 @@ impl Drop for EventLoopWaker {
 	fn drop(&mut self) {
 		unsafe {
 			CFRunLoopTimerInvalidate(self.timer);
+
 			CFRelease(self.timer as _);
 		}
 	}
@@ -250,6 +265,7 @@ impl Drop for EventLoopWaker {
 impl Default for EventLoopWaker {
 	fn default() -> EventLoopWaker {
 		extern fn wakeup_main_loop(_timer:CFRunLoopTimerRef, _info:*mut c_void) {}
+
 		unsafe {
 			// Create a timer with a 0.1µs interval (1ns does not work) to mimic
 			// polling. It is initially setup with a first fire time really
@@ -264,7 +280,9 @@ impl Default for EventLoopWaker {
 				wakeup_main_loop,
 				ptr::null_mut(),
 			);
+
 			CFRunLoopAddTimer(CFRunLoopGetMain(), timer, kCFRunLoopCommonModes);
+
 			EventLoopWaker { timer }
 		}
 	}
@@ -277,14 +295,18 @@ impl EventLoopWaker {
 
 	pub fn start_at(&mut self, instant:Instant) {
 		let now = Instant::now();
+
 		if now >= instant {
 			self.start();
 		} else {
 			unsafe {
 				let current = CFAbsoluteTimeGetCurrent();
+
 				let duration = instant - now;
+
 				let fsecs =
 					duration.subsec_nanos() as f64 / 1_000_000_000.0 + duration.as_secs() as f64;
+
 				CFRunLoopTimerSetNextFireDate(self.timer, current + fsecs)
 			}
 		}

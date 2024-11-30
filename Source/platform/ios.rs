@@ -193,24 +193,28 @@ impl WindowBuilderExtIOS for WindowBuilder {
 	#[inline]
 	fn with_root_view_class(mut self, root_view_class:*const c_void) -> WindowBuilder {
 		self.platform_specific.root_view_class = unsafe { &*(root_view_class as *const _) };
+
 		self
 	}
 
 	#[inline]
 	fn with_scale_factor(mut self, scale_factor:f64) -> WindowBuilder {
 		self.platform_specific.scale_factor = Some(scale_factor);
+
 		self
 	}
 
 	#[inline]
 	fn with_valid_orientations(mut self, valid_orientations:ValidOrientations) -> WindowBuilder {
 		self.platform_specific.valid_orientations = valid_orientations;
+
 		self
 	}
 
 	#[inline]
 	fn with_prefers_home_indicator_hidden(mut self, hidden:bool) -> WindowBuilder {
 		self.platform_specific.prefers_home_indicator_hidden = hidden;
+
 		self
 	}
 
@@ -220,12 +224,14 @@ impl WindowBuilderExtIOS for WindowBuilder {
 		edges:ScreenEdge,
 	) -> WindowBuilder {
 		self.platform_specific.preferred_screen_edges_deferring_system_gestures = edges;
+
 		self
 	}
 
 	#[inline]
 	fn with_prefers_status_bar_hidden(mut self, hidden:bool) -> WindowBuilder {
 		self.platform_specific.prefers_status_bar_hidden = hidden;
+
 		self
 	}
 }
@@ -293,10 +299,15 @@ bitflags! {
 	#[derive(Default)]
 	pub struct ScreenEdge: u8 {
 		const NONE   = 0;
+
 		const TOP    = 1 << 0;
+
 		const LEFT   = 1 << 1;
+
 		const BOTTOM = 1 << 2;
+
 		const RIGHT  = 1 << 3;
+
 		const ALL = ScreenEdge::TOP.bits | ScreenEdge::LEFT.bits
 			| ScreenEdge::BOTTOM.bits | ScreenEdge::RIGHT.bits;
 	}

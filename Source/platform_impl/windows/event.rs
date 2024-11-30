@@ -20,13 +20,18 @@ pub fn get_key_mods() -> ModifiersState {
 	let filter_out_altgr = layout_uses_altgr() && key_pressed(winuser::VK_RMENU);
 
 	let mut mods = ModifiersState::empty();
+
 	mods.set(ModifiersState::SHIFT, key_pressed(winuser::VK_SHIFT));
+
 	mods.set(ModifiersState::CTRL, key_pressed(winuser::VK_CONTROL) && !filter_out_altgr);
+
 	mods.set(ModifiersState::ALT, key_pressed(winuser::VK_MENU) && !filter_out_altgr);
+
 	mods.set(
 		ModifiersState::LOGO,
 		key_pressed(winuser::VK_LWIN) || key_pressed(winuser::VK_RWIN),
 	);
+
 	mods
 }
 
@@ -34,15 +39,19 @@ bitflags! {
 	#[derive(Default)]
 	pub struct ModifiersStateSide: u32 {
 		const LSHIFT = 0b010 << 0;
+
 		const RSHIFT = 0b001 << 0;
 
 		const LCTRL = 0b010 << 3;
+
 		const RCTRL = 0b001 << 3;
 
 		const LALT = 0b010 << 6;
+
 		const RALT = 0b001 << 6;
 
 		const LLOGO = 0b010 << 9;
+
 		const RLOGO = 0b001 << 9;
 	}
 }
@@ -59,26 +68,33 @@ impl ModifiersStateSide {
 impl From<ModifiersStateSide> for ModifiersState {
 	fn from(side:ModifiersStateSide) -> Self {
 		let mut state = ModifiersState::default();
+
 		state.set(
 			Self::SHIFT,
 			side.intersects(ModifiersStateSide::LSHIFT | ModifiersStateSide::RSHIFT),
 		);
+
 		state.set(
 			Self::CTRL,
 			side.intersects(ModifiersStateSide::LCTRL | ModifiersStateSide::RCTRL),
 		);
+
 		state.set(Self::ALT, side.intersects(ModifiersStateSide::LALT | ModifiersStateSide::RALT));
+
 		state.set(
 			Self::LOGO,
 			side.intersects(ModifiersStateSide::LLOGO | ModifiersStateSide::RLOGO),
 		);
+
 		state
 	}
 }
 
 pub fn get_pressed_keys() -> impl Iterator<Item = c_int> {
 	let mut keyboard_state = vec![0u8; 256];
+
 	unsafe { winuser::GetKeyboardState(keyboard_state.as_mut_ptr()) };
+
 	keyboard_state
         .into_iter()
         .enumerate()
@@ -88,6 +104,7 @@ pub fn get_pressed_keys() -> impl Iterator<Item = c_int> {
 
 unsafe fn get_char(keyboard_state:&[u8; 256], v_key:u32, hkl:HKL) -> Option<char> {
 	let mut unicode_bytes = [0u16; 5];
+
 	let len = winuser::ToUnicodeEx(
 		v_key,
 		0,
@@ -97,6 +114,7 @@ unsafe fn get_char(keyboard_state:&[u8; 256], v_key:u32, hkl:HKL) -> Option<char
 		0,
 		hkl,
 	);
+
 	if len >= 1 {
 		char::decode_utf16(unicode_bytes.iter().cloned()).next().and_then(|c| c.ok())
 	} else {
@@ -117,9 +135,11 @@ unsafe fn get_char(keyboard_state:&[u8; 256], v_key:u32, hkl:HKL) -> Option<char
 fn layout_uses_altgr() -> bool {
 	unsafe {
 		static ACTIVE_LAYOUT:AtomicPtr<HKL__> = AtomicPtr::new(ptr::null_mut());
+
 		static USES_ALTGR:AtomicBool = AtomicBool::new(false);
 
 		let hkl = winuser::GetKeyboardLayout(0);
+
 		let old_hkl = ACTIVE_LAYOUT.swap(hkl, Ordering::SeqCst);
 
 		if hkl == old_hkl {
@@ -130,22 +150,27 @@ fn layout_uses_altgr() -> bool {
 		// AltGr is an alias for Ctrl+Alt for... some reason. Whatever it is,
 		// those are the keypresses we have to emulate to do an AltGr test.
 		keyboard_state_altgr[winuser::VK_MENU as usize] = 0x80;
+
 		keyboard_state_altgr[winuser::VK_CONTROL as usize] = 0x80;
 
 		let keyboard_state_empty = [0u8; 256];
 
 		for v_key in 0..=255 {
 			let key_noaltgr = get_char(&keyboard_state_empty, v_key, hkl);
+
 			let key_altgr = get_char(&keyboard_state_altgr, v_key, hkl);
+
 			if let (Some(noaltgr), Some(altgr)) = (key_noaltgr, key_altgr) {
 				if noaltgr != altgr {
 					USES_ALTGR.store(true, Ordering::SeqCst);
+
 					return true;
 				}
 			}
 		}
 
 		USES_ALTGR.store(false, Ordering::SeqCst);
+
 		false
 	}
 }
@@ -330,6 +355,7 @@ pub fn vkey_to_winit_vkey(vkey:c_int) -> Option<VirtualKeyCode> {
 pub fn handle_extended_keys(vkey:c_int, mut scancode:UINT, extended:bool) -> Option<(c_int, UINT)> {
 	// Welcome to hell https://blog.molecular-matters.com/2011/09/05/properly-handling-keyboard-input/
 	scancode = if extended { 0xE000 } else { 0x0000 } | scancode;
+
 	let vkey = match vkey {
 		winuser::VK_SHIFT => unsafe {
 			winuser::MapVirtualKeyA(scancode, winuser::MAPVK_VSC_TO_VK_EX) as _
@@ -359,6 +385,7 @@ pub fn handle_extended_keys(vkey:c_int, mut scancode:UINT, extended:bool) -> Opt
 				// ...and emit the Pause event for the second event in the pair.
 				0x45 if vkey == winuser::VK_PAUSE || vkey == 0xFF as _ => {
 					scancode = 0xE059;
+
 					winuser::VK_PAUSE
 				},
 				// VK_PAUSE has an incorrect vkey value when used with
@@ -366,6 +393,7 @@ pub fn handle_extended_keys(vkey:c_int, mut scancode:UINT, extended:bool) -> Opt
 				// scancode when used with modifiers than when used without
 				0xE046 => {
 					scancode = 0xE059;
+
 					winuser::VK_PAUSE
 				},
 				// VK_SCROLL has an incorrect vkey value when used with
@@ -375,6 +403,7 @@ pub fn handle_extended_keys(vkey:c_int, mut scancode:UINT, extended:bool) -> Opt
 			}
 		},
 	};
+
 	Some((vkey, scancode))
 }
 
@@ -383,7 +412,9 @@ pub fn process_key_params(
 	lparam:LPARAM,
 ) -> Option<(ScanCode, Option<VirtualKeyCode>)> {
 	let scancode = ((lparam >> 16) & 0xFF) as UINT;
+
 	let extended = (lparam & 0x01000000) != 0;
+
 	handle_extended_keys(wparam as _, scancode, extended)
 		.map(|(vkey, scancode)| (scancode, vkey_to_winit_vkey(vkey)))
 }
@@ -394,6 +425,7 @@ fn map_text_keys(win_virtual_key:i32) -> Option<VirtualKeyCode> {
 	let char_key =
 		unsafe { winuser::MapVirtualKeyA(win_virtual_key as u32, winuser::MAPVK_VK_TO_CHAR) }
 			& 0x7FFF;
+
 	match char::from_u32(char_key) {
 		Some(';') => Some(VirtualKeyCode::Semicolon),
 		Some('/') => Some(VirtualKeyCode::Slash),

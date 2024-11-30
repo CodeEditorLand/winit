@@ -52,7 +52,9 @@ impl Drop for Inner {
 	fn drop(&mut self) {
 		unsafe {
 			let () = msg_send![self.view, release];
+
 			let () = msg_send![self.view_controller, release];
+
 			let () = msg_send![self.window, release];
 		}
 	}
@@ -95,9 +97,12 @@ impl Inner {
 	pub fn inner_position(&self) -> Result<PhysicalPosition<i32>, NotSupportedError> {
 		unsafe {
 			let safe_area = self.safe_area_screen_space();
+
 			let position =
 				LogicalPosition { x:safe_area.origin.x as f64, y:safe_area.origin.y as f64 };
+
 			let scale_factor = self.scale_factor();
+
 			Ok(position.to_physical(scale_factor))
 		}
 	}
@@ -105,9 +110,12 @@ impl Inner {
 	pub fn outer_position(&self) -> Result<PhysicalPosition<i32>, NotSupportedError> {
 		unsafe {
 			let screen_frame = self.screen_frame();
+
 			let position =
 				LogicalPosition { x:screen_frame.origin.x as f64, y:screen_frame.origin.y as f64 };
+
 			let scale_factor = self.scale_factor();
+
 			Ok(position.to_physical(scale_factor))
 		}
 	}
@@ -115,13 +123,18 @@ impl Inner {
 	pub fn set_outer_position(&self, physical_position:Position) {
 		unsafe {
 			let scale_factor = self.scale_factor();
+
 			let position = physical_position.to_logical::<f64>(scale_factor);
+
 			let screen_frame = self.screen_frame();
+
 			let new_screen_frame = CGRect {
 				origin:CGPoint { x:position.x as _, y:position.y as _ },
 				size:screen_frame.size,
 			};
+
 			let bounds = self.from_screen_space(new_screen_frame);
+
 			let () = msg_send![self.window, setBounds: bounds];
 		}
 	}
@@ -129,11 +142,14 @@ impl Inner {
 	pub fn inner_size(&self) -> PhysicalSize<u32> {
 		unsafe {
 			let scale_factor = self.scale_factor();
+
 			let safe_area = self.safe_area_screen_space();
+
 			let size = LogicalSize {
 				width:safe_area.size.width as f64,
 				height:safe_area.size.height as f64,
 			};
+
 			size.to_physical(scale_factor)
 		}
 	}
@@ -141,11 +157,14 @@ impl Inner {
 	pub fn outer_size(&self) -> PhysicalSize<u32> {
 		unsafe {
 			let scale_factor = self.scale_factor();
+
 			let screen_frame = self.screen_frame();
+
 			let size = LogicalSize {
 				width:screen_frame.size.width as f64,
 				height:screen_frame.size.height as f64,
 			};
+
 			size.to_physical(scale_factor)
 		}
 	}
@@ -169,6 +188,7 @@ impl Inner {
 	pub fn scale_factor(&self) -> f64 {
 		unsafe {
 			let hidpi:CGFloat = msg_send![self.view, contentScaleFactor];
+
 			hidpi as _
 		}
 	}
@@ -203,6 +223,7 @@ impl Inner {
 
 	pub fn is_maximized(&self) -> bool {
 		warn!("`Window::is_maximized` is ignored on iOS");
+
 		false
 	}
 
@@ -211,7 +232,9 @@ impl Inner {
 			let uiscreen = match monitor {
 				Some(Fullscreen::Exclusive(video_mode)) => {
 					let uiscreen = video_mode.video_mode.monitor.ui_screen() as id;
+
 					let () = msg_send![uiscreen, setCurrentMode: video_mode.video_mode.screen_mode];
+
 					uiscreen
 				},
 				Some(Fullscreen::Borderless(monitor)) => {
@@ -219,17 +242,20 @@ impl Inner {
 				},
 				None => {
 					warn!("`Window::set_fullscreen(None)` ignored on iOS");
+
 					return;
 				},
 			};
 
 			// this is pretty slow on iOS, so avoid doing it if we can
 			let current:id = msg_send![self.window, screen];
+
 			if uiscreen != current {
 				let () = msg_send![self.window, setScreen: uiscreen];
 			}
 
 			let bounds:CGRect = msg_send![uiscreen, bounds];
+
 			let () = msg_send![self.window, setFrame: bounds];
 
 			// For external displays, we must disable overscan compensation or
@@ -245,8 +271,11 @@ impl Inner {
 	pub fn fullscreen(&self) -> Option<Fullscreen> {
 		unsafe {
 			let monitor = self.current_monitor_inner();
+
 			let uiscreen = monitor.inner.ui_screen();
+
 			let screen_space_bounds = self.screen_frame();
+
 			let screen_bounds:CGRect = msg_send![uiscreen, bounds];
 
 			// TODO: track fullscreen instead of relying on brittle float
@@ -288,6 +317,7 @@ impl Inner {
 	fn current_monitor_inner(&self) -> RootMonitorHandle {
 		unsafe {
 			let uiscreen:id = msg_send![self.window, screen];
+
 			RootMonitorHandle { inner:MonitorHandle::retained_new(uiscreen) }
 		}
 	}
@@ -300,6 +330,7 @@ impl Inner {
 
 	pub fn primary_monitor(&self) -> Option<RootMonitorHandle> {
 		let monitor = unsafe { monitor::main_uiscreen() };
+
 		Some(RootMonitorHandle { inner:monitor })
 	}
 
@@ -312,6 +343,7 @@ impl Inner {
 			ui_view_controller:self.view_controller as _,
 			..IOSHandle::empty()
 		};
+
 		RawWindowHandle::IOS(handle)
 	}
 }
@@ -360,9 +392,11 @@ impl Window {
 		if let Some(_) = window_attributes.min_inner_size {
 			warn!("`WindowAttributes::min_inner_size` is ignored on iOS");
 		}
+
 		if let Some(_) = window_attributes.max_inner_size {
 			warn!("`WindowAttributes::max_inner_size` is ignored on iOS");
 		}
+
 		if window_attributes.always_on_top {
 			warn!("`WindowAttributes::always_on_top` is unsupported on iOS");
 		}
@@ -384,7 +418,9 @@ impl Window {
 			let frame = match window_attributes.inner_size {
 				Some(dim) => {
 					let scale_factor = msg_send![screen, scale];
+
 					let size = dim.to_logical::<f64>(scale_factor);
+
 					CGRect {
 						origin:screen_bounds.origin,
 						size:CGSize { width:size.width as _, height:size.height as _ },
@@ -397,14 +433,19 @@ impl Window {
 
 			let gl_or_metal_backed = {
 				let view_class:id = msg_send![view, class];
+
 				let layer_class:id = msg_send![view_class, layerClass];
+
 				let is_metal:BOOL = msg_send![layer_class, isSubclassOfClass: class!(CAMetalLayer)];
+
 				let is_gl:BOOL = msg_send![layer_class, isSubclassOfClass: class!(CAEAGLLayer)];
+
 				is_metal == YES || is_gl == YES
 			};
 
 			let view_controller =
 				view::create_view_controller(&window_attributes, &platform_attributes, view);
+
 			let window = view::create_window(
 				&window_attributes,
 				&platform_attributes,
@@ -414,23 +455,31 @@ impl Window {
 
 			let result =
 				Window { inner:Inner { window, view_controller, view, gl_or_metal_backed } };
+
 			app_state::set_key_window(window);
 
 			// Like the Windows and macOS backends, we send a
 			// `ScaleFactorChanged` and `Resized` event on window creation if
 			// the DPI factor != 1.0
 			let scale_factor:CGFloat = msg_send![view, contentScaleFactor];
+
 			let scale_factor:f64 = scale_factor.into();
+
 			if scale_factor != 1.0 {
 				let bounds:CGRect = msg_send![view, bounds];
+
 				let screen:id = msg_send![window, screen];
+
 				let screen_space:id = msg_send![screen, coordinateSpace];
+
 				let screen_frame:CGRect =
 					msg_send![view, convertRect:bounds toCoordinateSpace:screen_space];
+
 				let size = crate::dpi::LogicalSize {
 					width:screen_frame.size.width as _,
 					height:screen_frame.size.height as _,
 				};
+
 				app_state::handle_nonuser_events(
 					std::iter::once(EventWrapper::EventProxy(EventProxy::DpiChangedProxy {
 						window_id:window,
@@ -463,7 +512,9 @@ impl Inner {
 				dpi::validate_scale_factor(scale_factor),
 				"`WindowExtIOS::set_scale_factor` received an invalid hidpi factor"
 			);
+
 			let scale_factor = scale_factor as CGFloat;
+
 			let () = msg_send![self.view, setContentScaleFactor: scale_factor];
 		}
 	}
@@ -471,10 +522,12 @@ impl Inner {
 	pub fn set_valid_orientations(&self, valid_orientations:ValidOrientations) {
 		unsafe {
 			let idiom = event_loop::get_idiom();
+
 			let supported_orientations = UIInterfaceOrientationMask::from_valid_orientations_idiom(
 				valid_orientations,
 				idiom,
 			);
+
 			msg_send![
 				self.view_controller,
 				setSupportedInterfaceOrientations: supported_orientations
@@ -485,6 +538,7 @@ impl Inner {
 	pub fn set_prefers_home_indicator_hidden(&self, hidden:bool) {
 		unsafe {
 			let prefers_home_indicator_hidden = if hidden { YES } else { NO };
+
 			let () = msg_send![
 				self.view_controller,
 				setPrefersHomeIndicatorAutoHidden: prefers_home_indicator_hidden
@@ -494,6 +548,7 @@ impl Inner {
 
 	pub fn set_preferred_screen_edges_deferring_system_gestures(&self, edges:ScreenEdge) {
 		let edges:UIRectEdge = edges.into();
+
 		unsafe {
 			let () = msg_send![
 				self.view_controller,
@@ -505,6 +560,7 @@ impl Inner {
 	pub fn set_prefers_status_bar_hidden(&self, hidden:bool) {
 		unsafe {
 			let status_bar_hidden = if hidden { YES } else { NO };
+
 			let () = msg_send![
 				self.view_controller,
 				setPrefersStatusBarHidden: status_bar_hidden
@@ -520,8 +576,10 @@ impl Inner {
 	// requires main thread
 	unsafe fn to_screen_space(&self, rect:CGRect) -> CGRect {
 		let screen:id = msg_send![self.window, screen];
+
 		if !screen.is_null() {
 			let screen_space:id = msg_send![screen, coordinateSpace];
+
 			msg_send![self.window, convertRect:rect toCoordinateSpace:screen_space]
 		} else {
 			rect
@@ -531,8 +589,10 @@ impl Inner {
 	// requires main thread
 	unsafe fn from_screen_space(&self, rect:CGRect) -> CGRect {
 		let screen:id = msg_send![self.window, screen];
+
 		if !screen.is_null() {
 			let screen_space:id = msg_send![screen, coordinateSpace];
+
 			msg_send![self.window, convertRect:rect fromCoordinateSpace:screen_space]
 		} else {
 			rect
@@ -542,8 +602,10 @@ impl Inner {
 	// requires main thread
 	unsafe fn safe_area_screen_space(&self) -> CGRect {
 		let bounds:CGRect = msg_send![self.window, bounds];
+
 		if app_state::os_capabilities().safe_area {
 			let safe_area:UIEdgeInsets = msg_send![self.window, safeAreaInsets];
+
 			let safe_bounds = CGRect {
 				origin:CGPoint {
 					x:bounds.origin.x + safe_area.left,
@@ -554,25 +616,32 @@ impl Inner {
 					height:bounds.size.height - safe_area.top - safe_area.bottom,
 				},
 			};
+
 			self.to_screen_space(safe_bounds)
 		} else {
 			let screen_frame = self.to_screen_space(bounds);
+
 			let status_bar_frame:CGRect = {
 				let app:id = msg_send![class!(UIApplication), sharedApplication];
+
 				assert!(
 					!app.is_null(),
 					"`Window::get_inner_position` cannot be called before `EventLoop::run` on iOS"
 				);
+
 				msg_send![app, statusBarFrame]
 			};
+
 			let (y, height) = if screen_frame.origin.y > status_bar_frame.size.height {
 				(screen_frame.origin.y, screen_frame.size.height)
 			} else {
 				let y = status_bar_frame.size.height;
+
 				let height = screen_frame.size.height
 					- (status_bar_frame.size.height - screen_frame.origin.y);
 				(y, height)
 			};
+
 			CGRect {
 				origin:CGPoint { x:screen_frame.origin.x, y },
 				size:CGSize { width:screen_frame.size.width, height },

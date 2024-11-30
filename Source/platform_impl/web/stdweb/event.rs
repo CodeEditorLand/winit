@@ -22,10 +22,15 @@ pub fn mouse_button(event:&impl IMouseEvent) -> MouseButton {
 
 pub fn mouse_modifiers(event:&impl IMouseEvent) -> ModifiersState {
 	let mut m = ModifiersState::empty();
+
 	m.set(ModifiersState::SHIFT, event.shift_key());
+
 	m.set(ModifiersState::CTRL, event.ctrl_key());
+
 	m.set(ModifiersState::ALT, event.alt_key());
+
 	m.set(ModifiersState::LOGO, event.meta_key());
+
 	m
 }
 
@@ -39,12 +44,14 @@ pub fn mouse_delta(event:&impl IMouseEvent) -> LogicalPosition<f64> {
 
 pub fn mouse_scroll_delta(event:&MouseWheelEvent) -> Option<MouseScrollDelta> {
 	let x = event.delta_x();
+
 	let y = -event.delta_y();
 
 	match event.delta_mode() {
 		MouseWheelDeltaMode::Line => Some(MouseScrollDelta::LineDelta(x as f32, y as f32)),
 		MouseWheelDeltaMode::Pixel => {
 			let delta = LogicalPosition::new(x, y).to_physical(super::scale_factor());
+
 			Some(MouseScrollDelta::PixelDelta(delta))
 		},
 		MouseWheelDeltaMode::Page => None,
@@ -222,10 +229,15 @@ pub fn virtual_key_code(event:&impl IKeyboardEvent) -> Option<VirtualKeyCode> {
 
 pub fn keyboard_modifiers(event:&impl IKeyboardEvent) -> ModifiersState {
 	let mut m = ModifiersState::empty();
+
 	m.set(ModifiersState::SHIFT, event.shift_key());
+
 	m.set(ModifiersState::CTRL, event.ctrl_key());
+
 	m.set(ModifiersState::ALT, event.alt_key());
+
 	m.set(ModifiersState::LOGO, event.meta_key());
+
 	m
 }
 

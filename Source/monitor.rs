@@ -39,7 +39,9 @@ impl Ord for VideoMode {
 		// TODO: we can impl `Ord` for `PhysicalSize` once we switch from `f32`
 		// to `u32` there
 		let size:(u32, u32) = self.size().into();
+
 		let other_size:(u32, u32) = other.size().into();
+
 		self.monitor().cmp(&other.monitor()).then(
 			size.cmp(&other_size)
 				.then(

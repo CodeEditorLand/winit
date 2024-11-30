@@ -239,11 +239,17 @@ pub fn check_function_keys(string:&str) -> Option<VirtualKeyCode> {
 
 pub fn event_mods(event:id) -> ModifiersState {
 	let flags = unsafe { NSEvent::modifierFlags(event) };
+
 	let mut m = ModifiersState::empty();
+
 	m.set(ModifiersState::SHIFT, flags.contains(NSEventModifierFlags::NSShiftKeyMask));
+
 	m.set(ModifiersState::CTRL, flags.contains(NSEventModifierFlags::NSControlKeyMask));
+
 	m.set(ModifiersState::ALT, flags.contains(NSEventModifierFlags::NSAlternateKeyMask));
+
 	m.set(ModifiersState::LOGO, flags.contains(NSEventModifierFlags::NSCommandKeyMask));
+
 	m
 }
 
@@ -267,6 +273,7 @@ pub unsafe fn modifier_event(
 		let state = if was_key_pressed { ElementState::Released } else { ElementState::Pressed };
 
 		let scancode = get_scancode(ns_event);
+
 		let virtual_keycode = scancode_to_keycode(scancode);
 		#[allow(deprecated)]
 		Some(WindowEvent::KeyboardInput {

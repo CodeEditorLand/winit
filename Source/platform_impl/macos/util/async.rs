@@ -43,7 +43,9 @@ unsafe fn set_style_mask(ns_window:id, ns_view:id, mask:NSWindowStyleMask) {
 // and fail to do anything.
 pub unsafe fn set_style_mask_async(ns_window:id, ns_view:id, mask:NSWindowStyleMask) {
 	let ns_window = MainThreadSafe(ns_window);
+
 	let ns_view = MainThreadSafe(ns_view);
+
 	Queue::main().exec_async(move || {
 		set_style_mask(*ns_window, *ns_view, mask);
 	});
@@ -53,7 +55,9 @@ pub unsafe fn set_style_mask_sync(ns_window:id, ns_view:id, mask:NSWindowStyleMa
 		set_style_mask(ns_window, ns_view, mask);
 	} else {
 		let ns_window = MainThreadSafe(ns_window);
+
 		let ns_view = MainThreadSafe(ns_view);
+
 		Queue::main().exec_sync(move || {
 			set_style_mask(*ns_window, *ns_view, mask);
 		})
@@ -64,6 +68,7 @@ pub unsafe fn set_style_mask_sync(ns_window:id, ns_view:id, mask:NSWindowStyleMa
 // and just fails silently. Anyway, GCD to the rescue!
 pub unsafe fn set_content_size_async(ns_window:id, size:LogicalSize<f64>) {
 	let ns_window = MainThreadSafe(ns_window);
+
 	Queue::main().exec_async(move || {
 		ns_window.setContentSize_(NSSize::new(size.width as CGFloat, size.height as CGFloat));
 	});
@@ -73,6 +78,7 @@ pub unsafe fn set_content_size_async(ns_window:id, size:LogicalSize<f64>) {
 // to log errors.
 pub unsafe fn set_frame_top_left_point_async(ns_window:id, point:NSPoint) {
 	let ns_window = MainThreadSafe(ns_window);
+
 	Queue::main().exec_async(move || {
 		ns_window.setFrameTopLeftPoint_(point);
 	});
@@ -81,6 +87,7 @@ pub unsafe fn set_frame_top_left_point_async(ns_window:id, point:NSPoint) {
 // `setFrameTopLeftPoint:` isn't thread-safe, and fails silently.
 pub unsafe fn set_level_async(ns_window:id, level:ffi::NSWindowLevel) {
 	let ns_window = MainThreadSafe(ns_window);
+
 	Queue::main().exec_async(move || {
 		ns_window.setLevel_(level as _);
 	});
@@ -95,22 +102,30 @@ pub unsafe fn toggle_full_screen_async(
 	shared_state:Weak<Mutex<SharedState>>,
 ) {
 	let ns_window = MainThreadSafe(ns_window);
+
 	let ns_view = MainThreadSafe(ns_view);
+
 	let shared_state = MainThreadSafe(shared_state);
+
 	Queue::main().exec_async(move || {
 		// `toggleFullScreen` doesn't work if the `StyleMask` is none, so we
 		// set a normal style temporarily. The previous state will be
 		// restored in `WindowDelegate::window_did_exit_fullscreen`.
 		if not_fullscreen {
 			let curr_mask = ns_window.styleMask();
+
 			let required =
 				NSWindowStyleMask::NSTitledWindowMask | NSWindowStyleMask::NSResizableWindowMask;
+
 			if !curr_mask.contains(required) {
 				set_style_mask(*ns_window, *ns_view, required);
+
 				if let Some(shared_state) = shared_state.upgrade() {
 					trace!("Locked shared state in `toggle_full_screen_callback`");
+
 					let mut shared_state_lock = shared_state.lock().unwrap();
 					(*shared_state_lock).saved_style = Some(curr_mask);
+
 					trace!("Unlocked shared state in `toggle_full_screen_callback`");
 				}
 			}
@@ -119,6 +134,7 @@ pub unsafe fn toggle_full_screen_async(
 		// + 1` back to normal in order for `toggleFullScreen` to do
 		// anything
 		ns_window.setLevel_(0);
+
 		ns_window.toggleFullScreen_(nil);
 	});
 }
@@ -126,6 +142,7 @@ pub unsafe fn toggle_full_screen_async(
 pub unsafe fn restore_display_mode_async(ns_screen:u32) {
 	Queue::main().exec_async(move || {
 		ffi::CGRestorePermanentDisplayConfiguration();
+
 		assert_eq!(ffi::CGDisplayRelease(ns_screen), ffi::kCGErrorSuccess);
 	});
 }
@@ -138,10 +155,13 @@ pub unsafe fn set_maximized_async(
 	shared_state:Weak<Mutex<SharedState>>,
 ) {
 	let ns_window = MainThreadSafe(ns_window);
+
 	let shared_state = MainThreadSafe(shared_state);
+
 	Queue::main().exec_async(move || {
 		if let Some(shared_state) = shared_state.upgrade() {
 			trace!("Locked shared state in `set_maximized`");
+
 			let mut shared_state_lock = shared_state.lock().unwrap();
 
 			// Save the standard frame sized if it is not zoomed
@@ -152,6 +172,7 @@ pub unsafe fn set_maximized_async(
 			shared_state_lock.maximized = maximized;
 
 			let curr_mask = ns_window.styleMask();
+
 			if shared_state_lock.fullscreen.is_some() {
 				// Handle it in window_did_exit_fullscreen
 				return;
@@ -162,10 +183,12 @@ pub unsafe fn set_maximized_async(
 				// if it's not resizable, we set the frame directly
 				let new_rect = if maximized {
 					let screen = NSScreen::mainScreen(nil);
+
 					NSScreen::visibleFrame(screen)
 				} else {
 					shared_state_lock.saved_standard_frame()
 				};
+
 				ns_window.setFrame_display_(new_rect, NO);
 			}
 
@@ -178,6 +201,7 @@ pub unsafe fn set_maximized_async(
 // but with an odd delay.
 pub unsafe fn order_out_async(ns_window:id) {
 	let ns_window = MainThreadSafe(ns_window);
+
 	Queue::main().exec_async(move || {
 		ns_window.orderOut_(nil);
 	});
@@ -187,6 +211,7 @@ pub unsafe fn order_out_async(ns_window:id) {
 // actually works, but with an odd delay.
 pub unsafe fn make_key_and_order_front_async(ns_window:id) {
 	let ns_window = MainThreadSafe(ns_window);
+
 	Queue::main().exec_async(move || {
 		ns_window.makeKeyAndOrderFront_(nil);
 	});
@@ -197,8 +222,10 @@ pub unsafe fn make_key_and_order_front_async(ns_window:id) {
 // thread
 pub unsafe fn set_title_async(ns_window:id, title:String) {
 	let ns_window = MainThreadSafe(ns_window);
+
 	Queue::main().exec_async(move || {
 		let title = IdRef::new(NSString::alloc(nil).init_str(&title));
+
 		ns_window.setTitle_(*title);
 	});
 }
@@ -211,6 +238,7 @@ pub unsafe fn set_title_async(ns_window:id, title:String) {
 // memory
 pub unsafe fn close_async(ns_window:IdRef) {
 	let ns_window = MainThreadSafe(ns_window);
+
 	Queue::main().exec_async(move || {
 		autoreleasepool(move || {
 			ns_window.close();

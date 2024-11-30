@@ -19,7 +19,9 @@ pub fn main() {
 		let canvas = window.canvas();
 
 		let window = web_sys::window().unwrap();
+
 		let document = window.document().unwrap();
+
 		let body = document.body().unwrap();
 
 		body.append_child(&canvas).expect("Append canvas to HTML body");
@@ -28,11 +30,13 @@ pub fn main() {
 	#[cfg(feature = "stdweb")]
 	{
 		use std_web::web::INode;
+
 		use winit::platform::web::WindowExtStdweb;
 
 		let canvas = window.canvas();
 
 		let document = std_web::web::document();
+
 		let body:std_web::web::Node = document.body().expect("Get HTML body").into();
 
 		body.append_child(&canvas);
@@ -49,6 +53,7 @@ pub fn main() {
 
 		match event {
 			Event::WindowEvent { event: WindowEvent::CloseRequested, window_id }
+
 				if window_id == window.id() =>
 			{
 				*control_flow = ControlFlow::Exit

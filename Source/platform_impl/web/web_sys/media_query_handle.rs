@@ -9,11 +9,13 @@ pub(super) struct MediaQueryListHandle {
 impl MediaQueryListHandle {
 	pub fn new(media_query:&str, listener:Closure<dyn FnMut(MediaQueryListEvent)>) -> Option<Self> {
 		let window = web_sys::window().expect("Failed to obtain window");
+
 		let mql = window.match_media(media_query).ok().flatten().and_then(|mql| {
 			mql.add_listener_with_opt_callback(Some(&listener.as_ref().unchecked_ref()))
 				.map(|_| mql)
 				.ok()
 		});
+
 		mql.map(|mql| Self { mql, listener:Some(listener) })
 	}
 
@@ -23,7 +25,9 @@ impl MediaQueryListHandle {
 	/// can be reused.
 	pub fn remove(mut self) -> Closure<dyn FnMut(MediaQueryListEvent)> {
 		let listener = self.listener.take().unwrap_or_else(|| unreachable!());
+
 		remove_listener(&self.mql, &listener);
+
 		listener
 	}
 }

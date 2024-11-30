@@ -10,6 +10,7 @@ use winit::{
 
 fn main() {
 	SimpleLogger::new().init().unwrap();
+
 	let event_loop = EventLoop::new();
 
 	let _window = WindowBuilder::new()
@@ -28,6 +29,7 @@ fn main() {
 			},
 			Event::NewEvents(StartCause::ResumeTimeReached { .. }) => {
 				*control_flow = ControlFlow::WaitUntil(Instant::now() + timer_length);
+
 				println!("\nTimer\n");
 			},
 			Event::WindowEvent { event: WindowEvent::CloseRequested, .. } => {

@@ -224,6 +224,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_inner_size<S:Into<Size>>(mut self, size:S) -> Self {
 		self.window.inner_size = Some(size.into());
+
 		self
 	}
 
@@ -235,6 +236,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_min_inner_size<S:Into<Size>>(mut self, min_size:S) -> Self {
 		self.window.min_inner_size = Some(min_size.into());
+
 		self
 	}
 
@@ -246,6 +248,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_max_inner_size<S:Into<Size>>(mut self, max_size:S) -> Self {
 		self.window.max_inner_size = Some(max_size.into());
+
 		self
 	}
 
@@ -257,6 +260,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_position<P:Into<Position>>(mut self, position:P) -> Self {
 		self.window.position = Some(position.into());
+
 		self
 	}
 
@@ -268,6 +272,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_resizable(mut self, resizable:bool) -> Self {
 		self.window.resizable = resizable;
+
 		self
 	}
 
@@ -279,6 +284,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_title<T:Into<String>>(mut self, title:T) -> Self {
 		self.window.title = title.into();
+
 		self
 	}
 
@@ -290,6 +296,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_fullscreen(mut self, fullscreen:Option<Fullscreen>) -> Self {
 		self.window.fullscreen = fullscreen;
+
 		self
 	}
 
@@ -301,6 +308,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_maximized(mut self, maximized:bool) -> Self {
 		self.window.maximized = maximized;
+
 		self
 	}
 
@@ -312,6 +320,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_visible(mut self, visible:bool) -> Self {
 		self.window.visible = visible;
+
 		self
 	}
 
@@ -319,6 +328,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_transparent(mut self, transparent:bool) -> Self {
 		self.window.transparent = transparent;
+
 		self
 	}
 
@@ -330,6 +340,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_decorations(mut self, decorations:bool) -> Self {
 		self.window.decorations = decorations;
+
 		self
 	}
 
@@ -341,6 +352,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_always_on_top(mut self, always_on_top:bool) -> Self {
 		self.window.always_on_top = always_on_top;
+
 		self
 	}
 
@@ -352,6 +364,7 @@ impl WindowBuilder {
 	#[inline]
 	pub fn with_window_icon(mut self, window_icon:Option<Icon>) -> Self {
 		self.window.window_icon = window_icon;
+
 		self
 	}
 
@@ -372,6 +385,7 @@ impl WindowBuilder {
 		platform_impl::Window::new(&window_target.p, self.window, self.platform_specific).map(
 			|window| {
 				window.request_redraw();
+
 				Window { window }
 			},
 		)
@@ -397,6 +411,7 @@ impl Window {
 	#[inline]
 	pub fn new<T:'static>(event_loop:&EventLoopWindowTarget<T>) -> Result<Window, OsError> {
 		let builder = WindowBuilder::new();
+
 		builder.build(event_loop)
 	}
 

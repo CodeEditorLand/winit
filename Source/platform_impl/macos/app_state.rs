@@ -55,6 +55,7 @@ impl<'a, Never> Event<'a, Never> {
 pub trait EventHandler: Debug {
 	// Not sure probably it should accept Event<'static, Never>
 	fn handle_nonuser_event(&mut self, event:Event<'_, Never>, control_flow:&mut ControlFlow);
+
 	fn handle_user_events(&mut self, control_flow:&mut ControlFlow);
 }
 
@@ -96,7 +97,9 @@ impl<T> EventHandler for EventLoopHandler<T> {
 	fn handle_nonuser_event(&mut self, event:Event<'_, Never>, control_flow:&mut ControlFlow) {
 		self.with_callback(|this, mut callback| {
 			(callback)(event.userify(), &this.window_target, control_flow);
+
 			this.will_exit |= *control_flow == ControlFlow::Exit;
+
 			if this.will_exit {
 				*control_flow = ControlFlow::Exit;
 			}
@@ -106,13 +109,17 @@ impl<T> EventHandler for EventLoopHandler<T> {
 	fn handle_user_events(&mut self, control_flow:&mut ControlFlow) {
 		self.with_callback(|this, mut callback| {
 			let mut will_exit = this.will_exit;
+
 			for event in this.window_target.p.receiver.try_iter() {
 				(callback)(Event::UserEvent(event), &this.window_target, control_flow);
+
 				will_exit |= *control_flow == ControlFlow::Exit;
+
 				if will_exit {
 					*control_flow = ControlFlow::Exit;
 				}
 			}
+
 			this.will_exit = will_exit;
 		});
 	}
@@ -158,6 +165,7 @@ impl Handler {
 
 	fn get_old_and_new_control_flow(&self) -> (ControlFlow, ControlFlow) {
 		let old = *self.control_flow_prev.lock().unwrap();
+
 		let new = *self.control_flow.lock().unwrap();
 		(old, new)
 	}
@@ -205,7 +213,9 @@ impl Handler {
 		scale_factor:f64,
 	) {
 		let mut size = suggested_size.to_physical(scale_factor);
+
 		let new_inner_size = &mut size;
+
 		let event = Event::WindowEvent {
 			window_id:WindowId(get_window_id(*ns_window)),
 			event:WindowEvent::ScaleFactorChanged { scale_factor, new_inner_size },
@@ -214,8 +224,11 @@ impl Handler {
 		callback.handle_nonuser_event(event, &mut *self.control_flow.lock().unwrap());
 
 		let physical_size = *new_inner_size;
+
 		let logical_size = physical_size.to_logical(scale_factor);
+
 		let size = NSSize::new(logical_size.width, logical_size.height);
+
 		unsafe { NSWindow::setContentSize_(*ns_window, size) };
 	}
 
@@ -248,31 +261,43 @@ impl AppState {
 
 	pub fn exit() {
 		HANDLER.set_in_callback(true);
+
 		HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::LoopDestroyed));
+
 		HANDLER.set_in_callback(false);
+
 		HANDLER.callback.lock().unwrap().take();
 	}
 
 	pub fn launched(app_delegate:&Object) {
 		apply_activation_policy(app_delegate);
+
 		unsafe {
 			let ns_app = NSApp();
+
 			window_activation_hack(ns_app);
 			// TODO: Consider allowing the user to specify they don't want their
 			// application activated
 			ns_app.activateIgnoringOtherApps_(YES);
 		};
+
 		HANDLER.set_ready();
+
 		HANDLER.waker().start();
+
 		let create_default_menu = unsafe { get_aux_state_mut(app_delegate).create_default_menu };
+
 		if create_default_menu {
 			// The menubar initialization should be before the `NewEvents`
 			// event, to allow overriding of the default menu even if it's
 			// created
 			menu::initialize();
 		}
+
 		HANDLER.set_in_callback(true);
+
 		HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::NewEvents(StartCause::Init)));
+
 		HANDLER.set_in_callback(false);
 	}
 
@@ -280,10 +305,13 @@ impl AppState {
 		let panic_info = panic_info
 			.upgrade()
 			.expect("The panic info must exist here. This failure indicates a developer error.");
+
 		if panic_info.is_panicking() || !HANDLER.is_ready() {
 			return;
 		}
+
 		let start = HANDLER.get_start_time().unwrap();
+
 		let cause = match HANDLER.get_control_flow_and_update_prev() {
 			ControlFlow::Poll => StartCause::Poll,
 			ControlFlow::Wait => StartCause::WaitCancelled { start, requested_resume:None },
@@ -297,19 +325,25 @@ impl AppState {
 			ControlFlow::Exit => StartCause::Poll, /* panic!("unexpected
 			                                        * `ControlFlow::Exit`"), */
 		};
+
 		HANDLER.set_in_callback(true);
+
 		HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::NewEvents(cause)));
+
 		HANDLER.set_in_callback(false);
 	}
 
 	// This is called from multiple threads at present
 	pub fn queue_redraw(window_id:WindowId) {
 		let mut pending_redraw = HANDLER.redraw();
+
 		if !pending_redraw.contains(&window_id) {
 			pending_redraw.push(window_id);
 		}
+
 		unsafe {
 			let rl = CFRunLoopGetMain();
+
 			CFRunLoopWakeUp(rl);
 		}
 	}
@@ -322,6 +356,7 @@ impl AppState {
 		if !unsafe { msg_send![class!(NSThread), isMainThread] } {
 			panic!("Event queued from different thread: {:#?}", wrapper);
 		}
+
 		HANDLER.events().push_back(wrapper);
 	}
 
@@ -329,6 +364,7 @@ impl AppState {
 		if !unsafe { msg_send![class!(NSThread), isMainThread] } {
 			panic!("Events queued from different thread: {:#?}", wrappers);
 		}
+
 		HANDLER.events().append(&mut wrappers);
 	}
 
@@ -336,40 +372,55 @@ impl AppState {
 		let panic_info = panic_info
 			.upgrade()
 			.expect("The panic info must exist here. This failure indicates a developer error.");
+
 		if panic_info.is_panicking() || !HANDLER.is_ready() {
 			return;
 		}
+
 		if !HANDLER.get_in_callback() {
 			HANDLER.set_in_callback(true);
+
 			HANDLER.handle_user_events();
+
 			for event in HANDLER.take_events() {
 				HANDLER.handle_nonuser_event(event);
 			}
+
 			HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::MainEventsCleared));
+
 			for window_id in HANDLER.should_redraw() {
 				HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::RedrawRequested(
 					window_id,
 				)));
 			}
+
 			HANDLER.handle_nonuser_event(EventWrapper::StaticEvent(Event::RedrawEventsCleared));
+
 			HANDLER.set_in_callback(false);
 		}
+
 		if HANDLER.should_exit() {
 			unsafe {
 				let app:id = NSApp();
+
 				let windows:id = msg_send![app, windows];
+
 				let window_count:usize = msg_send![windows, count];
 
 				let dialog_open = if window_count > 1 {
 					let dialog:id = msg_send![windows, lastObject];
+
 					let is_main_window:bool = msg_send![dialog, isMainWindow];
+
 					msg_send![dialog, isVisible] && !is_main_window
 				} else {
 					false
 				};
 
 				let dialog_is_closing = HANDLER.dialog_is_closing.load(Ordering::SeqCst);
+
 				let pool = NSAutoreleasePool::new(nil);
+
 				if !INTERRUPT_EVENT_LOOP_EXIT.load(Ordering::SeqCst)
 					&& !dialog_open && !dialog_is_closing
 				{
@@ -378,21 +429,27 @@ impl AppState {
 					// event here.
 					post_dummy_event(app);
 				}
+
 				pool.drain();
 
 				if window_count > 0 {
 					let window:id = msg_send![windows, objectAtIndex:0];
+
 					let window_has_focus = msg_send![window, isKeyWindow];
+
 					if !dialog_open && window_has_focus && dialog_is_closing {
 						HANDLER.dialog_is_closing.store(false, Ordering::SeqCst);
 					}
+
 					if dialog_open {
 						HANDLER.dialog_is_closing.store(true, Ordering::SeqCst);
 					}
 				}
 			};
 		}
+
 		HANDLER.update_start_time();
+
 		match HANDLER.get_old_and_new_control_flow() {
 			(ControlFlow::Exit, _) | (_, ControlFlow::Exit) => (),
 			(old, new) if old == new => (),
@@ -416,10 +473,13 @@ unsafe fn window_activation_hack(ns_app:id) {
 	// Get the application's windows
 	// TODO: Proper ordering of the windows
 	let ns_windows:id = msg_send![ns_app, windows];
+
 	let ns_enumerator:id = msg_send![ns_windows, objectEnumerator];
+
 	loop {
 		// Enumerate over the windows
 		let ns_window:id = msg_send![ns_enumerator, nextObject];
+
 		if ns_window == nil {
 			break;
 		}
@@ -429,6 +489,7 @@ unsafe fn window_activation_hack(ns_app:id) {
 		// the window, and maybe other things?
 		if ns_window.isVisible() == YES {
 			trace!("Activating visible window");
+
 			ns_window.makeKeyAndOrderFront_(nil);
 		} else {
 			trace!("Skipping activating invisible window");
@@ -438,11 +499,13 @@ unsafe fn window_activation_hack(ns_app:id) {
 fn apply_activation_policy(app_delegate:&Object) {
 	unsafe {
 		use cocoa::appkit::NSApplicationActivationPolicy::*;
+
 		let ns_app = NSApp();
 		// We need to delay setting the activation policy and activating the app
 		// until `applicationDidFinishLaunching` has been called. Otherwise the
 		// menu bar won't be interactable.
 		let act_pol = get_aux_state_mut(app_delegate).activation_policy;
+
 		ns_app.setActivationPolicy_(match act_pol {
 			ActivationPolicy::Regular => NSApplicationActivationPolicyRegular,
 			ActivationPolicy::Accessory => NSApplicationActivationPolicyAccessory,

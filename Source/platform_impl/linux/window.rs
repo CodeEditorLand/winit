@@ -70,7 +70,9 @@ impl PlatformIcon {
 				BadIcon::OsError(io::Error::new(io::ErrorKind::InvalidData, "Invalid icon data!"))
 			})?
 			.into_rgba8();
+
 		let row_stride = image.sample_layout().height_stride;
+
 		Ok(Self {
 			raw:image.into_raw(),
 			width:width as i32,
@@ -101,17 +103,23 @@ impl Window {
 		_pl_attribs:PlatformSpecificWindowBuilderAttributes,
 	) -> Result<Self, RootOsError> {
 		let app = &event_loop_window_target.app;
+
 		let window = gtk::ApplicationWindow::new(app);
+
 		let window_id = WindowId(window.get_id());
+
 		event_loop_window_target.windows.borrow_mut().insert(window_id);
 
 		// Set Width/Height & Resizable
 		let win_scale_factor = window.get_scale_factor();
+
 		let (width, height) = attributes
 			.inner_size
 			.map(|size| size.to_logical::<f64>(win_scale_factor as f64).into())
 			.unwrap_or((800, 600));
+
 		window.set_resizable(attributes.resizable);
+
 		if attributes.resizable {
 			window.set_default_size(width, height);
 		} else {
@@ -128,14 +136,17 @@ impl Window {
 		} else {
 			gdk::WindowHints::empty()
 		});
+
 		let (min_width, min_height) = attributes
 			.min_inner_size
 			.map(|size| size.to_logical::<f64>(win_scale_factor as f64).into())
 			.unwrap_or_default();
+
 		let (max_width, max_height) = attributes
 			.max_inner_size
 			.map(|size| size.to_logical::<f64>(win_scale_factor as f64).into())
 			.unwrap_or_default();
+
 		window.set_geometry_hints::<ApplicationWindow>(
 			None,
 			Some(&gdk::Geometry {
@@ -157,6 +168,7 @@ impl Window {
 		// Set Position
 		if let Some(position) = attributes.position {
 			let (x, y):(i32, i32) = position.to_physical::<i32>(win_scale_factor as f64).into();
+
 			window.move_(x, y);
 		}
 
@@ -170,23 +182,32 @@ impl Window {
 
 			window.connect_draw(|_, cr| {
 				cr.set_source_rgba(0., 0., 0., 0.);
+
 				cr.set_operator(cairo::Operator::Source);
+
 				cr.paint();
+
 				cr.set_operator(cairo::Operator::Over);
+
 				Inhibit(false)
 			});
+
 			window.set_app_paintable(true);
 		}
 
 		// Rest attributes
 		window.set_title(&attributes.title);
+
 		if attributes.fullscreen.is_some() {
 			window.fullscreen();
 		}
+
 		if attributes.maximized {
 			window.maximize();
 		}
+
 		window.set_visible(attributes.visible);
+
 		window.set_decorated(attributes.decorations);
 
 		if !attributes.decorations && attributes.resizable {
@@ -195,8 +216,10 @@ impl Window {
 			window.connect_motion_notify_event(|window, event| {
 				if let Some(gdk_window) = window.get_window() {
 					let (cx, cy) = event.get_root();
+
 					hit_test(&gdk_window, cx, cy);
 				}
+
 				Inhibit(false)
 			});
 
@@ -204,6 +227,7 @@ impl Window {
 				if event.get_button() == 1 {
 					if let Some(gdk_window) = window.get_window() {
 						let (cx, cy) = event.get_root();
+
 						let result = hit_test(&gdk_window, cx, cy);
 
 						// this check is necessary, otherwise the window won't
@@ -219,11 +243,13 @@ impl Window {
 						}
 					}
 				}
+
 				Inhibit(false)
 			});
 		}
 
 		window.set_keep_above(attributes.always_on_top);
+
 		if let Some(icon) = attributes.window_icon {
 			window.set_icon(Some(&icon.inner.into()));
 		}
@@ -237,38 +263,51 @@ impl Window {
 		let window_requests_tx = event_loop_window_target.window_requests_tx.clone();
 
 		let w_pos = window.get_position();
+
 		let position:Rc<(AtomicI32, AtomicI32)> = Rc::new((w_pos.0.into(), w_pos.1.into()));
+
 		let position_clone = position.clone();
 
 		let w_size = window.get_size();
+
 		let size:Rc<(AtomicI32, AtomicI32)> = Rc::new((w_size.0.into(), w_size.1.into()));
+
 		let size_clone = size.clone();
 
 		window.connect_configure_event(move |_window, event| {
 			let (x, y) = event.get_position();
+
 			position_clone.0.store(x, Ordering::Release);
+
 			position_clone.1.store(y, Ordering::Release);
 
 			let (w, h) = event.get_size();
+
 			size_clone.0.store(w as i32, Ordering::Release);
+
 			size_clone.1.store(h as i32, Ordering::Release);
 
 			false
 		});
 
 		let w_max = window.get_property_is_maximized();
+
 		let maximized:Rc<AtomicBool> = Rc::new(w_max.into());
+
 		let max_clone = maximized.clone();
 
 		window.connect_window_state_event(move |_window, event| {
 			let state = event.get_new_window_state();
+
 			max_clone.store(state.contains(WindowState::MAXIMIZED), Ordering::Release);
 
 			Inhibit(false)
 		});
 
 		let scale_factor:Rc<AtomicI32> = Rc::new(win_scale_factor.into());
+
 		let scale_factor_clone = scale_factor.clone();
+
 		window.connect_property_scale_factor_notify(move |window| {
 			scale_factor_clone.store(window.get_scale_factor(), Ordering::Release);
 		});
@@ -278,6 +317,7 @@ impl Window {
 		}
 
 		window.queue_draw();
+
 		Ok(Self {
 			window_id,
 			window,
@@ -302,11 +342,13 @@ impl Window {
 
 	pub fn inner_position(&self) -> Result<PhysicalPosition<i32>, NotSupportedError> {
 		let (x, y) = &*self.position;
+
 		Ok(PhysicalPosition::new(x.load(Ordering::Acquire), y.load(Ordering::Acquire)))
 	}
 
 	pub fn outer_position(&self) -> Result<PhysicalPosition<i32>, NotSupportedError> {
 		let (x, y) = &*self.position;
+
 		Ok(PhysicalPosition::new(x.load(Ordering::Acquire), y.load(Ordering::Acquire)))
 	}
 
@@ -425,11 +467,13 @@ impl Window {
 		if let Err(e) = self.window_requests_tx.send((self.window_id, WindowRequest::DragWindow)) {
 			log::warn!("Fail to send drag window request: {}", e);
 		}
+
 		Ok(())
 	}
 
 	pub fn set_fullscreen(&self, fullscreen:Option<Fullscreen>) {
 		self.fullscreen.replace(fullscreen.clone());
+
 		if let Err(e) = self
 			.window_requests_tx
 			.send((self.window_id, WindowRequest::Fullscreen(fullscreen)))
@@ -495,6 +539,7 @@ impl Window {
 
 	pub fn set_cursor_visible(&self, visible:bool) {
 		let cursor = if visible { Some(CursorIcon::Default) } else { None };
+
 		if let Err(e) = self
 			.window_requests_tx
 			.send((self.window_id, WindowRequest::CursorIcon(cursor)))
@@ -548,8 +593,11 @@ pub enum WindowRequest {
 
 fn hit_test(window:&gdk::Window, cx:f64, cy:f64) -> WindowEdge {
 	let (left, top) = window.get_position();
+
 	let (w, h) = (window.get_width(), window.get_height());
+
 	let (right, bottom) = (left + w, top + h);
+
 	let (cx, cy) = (cx as i32, cy as i32);
 
 	let fake_border = 5; // change this to manipulate how far inside the window, the resize can happen
@@ -557,12 +605,19 @@ fn hit_test(window:&gdk::Window, cx:f64, cy:f64) -> WindowEdge {
 	let display = window.get_display();
 
 	const LEFT:i32 = 0b00001;
+
 	const RIGHT:i32 = 0b0010;
+
 	const TOP:i32 = 0b0100;
+
 	const BOTTOM:i32 = 0b1000;
+
 	const TOPLEFT:i32 = TOP | LEFT;
+
 	const TOPRIGHT:i32 = TOP | RIGHT;
+
 	const BOTTOMLEFT:i32 = BOTTOM | LEFT;
+
 	const BOTTOMRIGHT:i32 = BOTTOM | RIGHT;
 
 	let result = (LEFT * (if cx < (left + fake_border) { 1 } else { 0 }))

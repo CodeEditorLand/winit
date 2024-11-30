@@ -1,6 +1,7 @@
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
 	use simple_logger::SimpleLogger;
+
 	use winit::{
 		event::{Event, WindowEvent},
 		event_loop::{ControlFlow, EventLoop},
@@ -13,6 +14,7 @@ fn main() {
 	}
 
 	SimpleLogger::new().init().unwrap();
+
 	let event_loop = EventLoop::<CustomEvent>::with_user_event();
 
 	let _window = WindowBuilder::new()
@@ -29,6 +31,7 @@ fn main() {
 		// event from a different thread.
 		loop {
 			std::thread::sleep(std::time::Duration::from_secs(1));
+
 			event_loop_proxy.send_event(CustomEvent::Timer).ok();
 		}
 	});

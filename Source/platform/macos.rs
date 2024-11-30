@@ -105,7 +105,9 @@ pub trait WindowBuilderExtMacOS {
 	fn with_fullsize_content_view(self, fullsize_content_view:bool) -> WindowBuilder;
 	/// Build window with `resizeIncrements` property. Values must not be 0.
 	fn with_resize_increments(self, increments:LogicalSize<f64>) -> WindowBuilder;
+
 	fn with_disallow_hidpi(self, disallow_hidpi:bool) -> WindowBuilder;
+
 	fn with_has_shadow(self, has_shadow:bool) -> WindowBuilder;
 }
 
@@ -116,54 +118,63 @@ impl WindowBuilderExtMacOS for WindowBuilder {
 		movable_by_window_background:bool,
 	) -> WindowBuilder {
 		self.platform_specific.movable_by_window_background = movable_by_window_background;
+
 		self
 	}
 
 	#[inline]
 	fn with_titlebar_transparent(mut self, titlebar_transparent:bool) -> WindowBuilder {
 		self.platform_specific.titlebar_transparent = titlebar_transparent;
+
 		self
 	}
 
 	#[inline]
 	fn with_titlebar_hidden(mut self, titlebar_hidden:bool) -> WindowBuilder {
 		self.platform_specific.titlebar_hidden = titlebar_hidden;
+
 		self
 	}
 
 	#[inline]
 	fn with_titlebar_buttons_hidden(mut self, titlebar_buttons_hidden:bool) -> WindowBuilder {
 		self.platform_specific.titlebar_buttons_hidden = titlebar_buttons_hidden;
+
 		self
 	}
 
 	#[inline]
 	fn with_title_hidden(mut self, title_hidden:bool) -> WindowBuilder {
 		self.platform_specific.title_hidden = title_hidden;
+
 		self
 	}
 
 	#[inline]
 	fn with_fullsize_content_view(mut self, fullsize_content_view:bool) -> WindowBuilder {
 		self.platform_specific.fullsize_content_view = fullsize_content_view;
+
 		self
 	}
 
 	#[inline]
 	fn with_resize_increments(mut self, increments:LogicalSize<f64>) -> WindowBuilder {
 		self.platform_specific.resize_increments = Some(increments.into());
+
 		self
 	}
 
 	#[inline]
 	fn with_disallow_hidpi(mut self, disallow_hidpi:bool) -> WindowBuilder {
 		self.platform_specific.disallow_hidpi = disallow_hidpi;
+
 		self
 	}
 
 	#[inline]
 	fn with_has_shadow(mut self, has_shadow:bool) -> WindowBuilder {
 		self.platform_specific.has_shadow = has_shadow;
+
 		self
 	}
 }
@@ -230,13 +241,17 @@ pub trait EventLoopWindowTargetExtMacOS {
 impl<T> EventLoopWindowTargetExtMacOS for EventLoopWindowTarget<T> {
 	fn hide_application(&self) {
 		let cls = objc::runtime::Class::get("NSApplication").unwrap();
+
 		let app:cocoa::base::id = unsafe { msg_send![cls, sharedApplication] };
+
 		unsafe { msg_send![app, hide: 0] }
 	}
 
 	fn hide_other_applications(&self) {
 		let cls = objc::runtime::Class::get("NSApplication").unwrap();
+
 		let app:cocoa::base::id = unsafe { msg_send![cls, sharedApplication] };
+
 		unsafe { msg_send![app, hideOtherApplications: 0] }
 	}
 }

@@ -42,6 +42,7 @@ pub fn get_raw_input_device_list() -> Option<Vec<RAWINPUTDEVICELIST>> {
 	let list_size = size_of::<RAWINPUTDEVICELIST>() as UINT;
 
 	let mut num_devices = 0;
+
 	let status =
 		unsafe { winuser::GetRawInputDeviceList(ptr::null_mut(), &mut num_devices, list_size) };
 
@@ -89,11 +90,13 @@ impl From<RID_DEVICE_INFO> for RawDeviceInfo {
 #[allow(dead_code)]
 pub fn get_raw_input_device_info(handle:HANDLE) -> Option<RawDeviceInfo> {
 	let mut info:RID_DEVICE_INFO = unsafe { mem::zeroed() };
+
 	let info_size = size_of::<RID_DEVICE_INFO>() as UINT;
 
 	info.cbSize = info_size;
 
 	let mut minimum_size = 0;
+
 	let status = unsafe {
 		winuser::GetRawInputDeviceInfoW(
 			handle,
@@ -114,6 +117,7 @@ pub fn get_raw_input_device_info(handle:HANDLE) -> Option<RawDeviceInfo> {
 
 pub fn get_raw_input_device_name(handle:HANDLE) -> Option<String> {
 	let mut minimum_size = 0;
+
 	let status = unsafe {
 		winuser::GetRawInputDeviceInfoW(handle, RIDI_DEVICENAME, ptr::null_mut(), &mut minimum_size)
 	};
@@ -179,7 +183,9 @@ pub fn register_all_mice_and_keyboards_for_raw_input(window_handle:HWND) -> bool
 
 pub fn get_raw_input_data(handle:HRAWINPUT) -> Option<RAWINPUT> {
 	let mut data:RAWINPUT = unsafe { mem::zeroed() };
+
 	let mut data_size = size_of::<RAWINPUT>() as UINT;
+
 	let header_size = size_of::<RAWINPUTHEADER>() as UINT;
 
 	let status = unsafe {

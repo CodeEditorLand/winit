@@ -88,6 +88,7 @@ impl<T> EventLoopRunner<T> {
 			Option<Box<dyn FnMut(Event<'_, T>, &mut ControlFlow)>>,
 			Option<Box<dyn FnMut(Event<'_, T>, &mut ControlFlow)>>,
 		>(Some(Box::new(f))));
+
 		assert!(old_event_handler.is_none());
 	}
 
@@ -103,9 +104,13 @@ impl<T> EventLoopRunner<T> {
 			event_buffer: _,
 			owned_windows: _,
 		} = self;
+
 		runner_state.set(RunnerState::Uninitialized);
+
 		panic_error.set(None);
+
 		control_flow.set(ControlFlow::Poll);
+
 		event_handler.set(None);
 	}
 }
@@ -131,8 +136,11 @@ impl<T> EventLoopRunner<T> {
 
 	pub fn should_buffer(&self) -> bool {
 		let handler = self.event_handler.take();
+
 		let should_buffer = handler.is_none();
+
 		self.event_handler.set(handler);
+
 		should_buffer
 	}
 }
@@ -141,6 +149,7 @@ impl<T> EventLoopRunner<T> {
 impl<T> EventLoopRunner<T> {
 	pub fn catch_unwind<R>(&self, f:impl FnOnce() -> R) -> Option<R> {
 		let panic_error = self.panic_error.take();
+
 		if panic_error.is_none() {
 			let result = panic::catch_unwind(panic::AssertUnwindSafe(f));
 
@@ -154,40 +163,51 @@ impl<T> EventLoopRunner<T> {
 						Ok(r) => Some(r),
 						Err(e) => {
 							self.panic_error.set(Some(e));
+
 							None
 						},
 					}
 				},
 				Some(e) => {
 					self.panic_error.set(Some(e));
+
 					None
 				},
 			}
 		} else {
 			self.panic_error.set(panic_error);
+
 			None
 		}
 	}
 
 	pub fn register_window(&self, window:HWND) {
 		let mut owned_windows = self.owned_windows.take();
+
 		owned_windows.insert(window);
+
 		self.owned_windows.set(owned_windows);
 	}
 
 	pub fn remove_window(&self, window:HWND) {
 		let mut owned_windows = self.owned_windows.take();
+
 		owned_windows.remove(&window);
+
 		self.owned_windows.set(owned_windows);
 	}
 
 	pub fn owned_windows(&self, mut f:impl FnMut(HWND)) {
 		let mut owned_windows = self.owned_windows.take();
+
 		for hwnd in &owned_windows {
 			f(*hwnd);
 		}
+
 		let new_owned_windows = self.owned_windows.take();
+
 		owned_windows.extend(&new_owned_windows);
+
 		self.owned_windows.set(owned_windows);
 	}
 }
@@ -200,8 +220,10 @@ impl<T> EventLoopRunner<T> {
 		if let Event::RedrawRequested(_) = event {
 			if self.runner_state.get() != RunnerState::HandlingRedrawEvents {
 				warn!("RedrawRequested dispatched without explicit MainEventsCleared");
+
 				self.move_state_to(RunnerState::HandlingRedrawEvents);
 			}
+
 			self.call_event_handler(event);
 		} else {
 			if self.should_buffer() {
@@ -210,7 +232,9 @@ impl<T> EventLoopRunner<T> {
 				self.event_buffer.borrow_mut().push_back(BufferedEvent::from_event(event))
 			} else {
 				self.move_state_to(RunnerState::HandlingMainEvents);
+
 				self.call_event_handler(event);
+
 				self.dispatch_buffered_events();
 			}
 		}
@@ -227,6 +251,7 @@ impl<T> EventLoopRunner<T> {
 	unsafe fn call_event_handler(&self, event:Event<'_, T>) {
 		self.catch_unwind(|| {
 			let mut control_flow = self.control_flow.take();
+
 			let mut event_handler = self.event_handler.take().expect(
 				"either event handler is re-entrant (likely), or no event handler is registered \
 				 (very unlikely)",
@@ -239,6 +264,7 @@ impl<T> EventLoopRunner<T> {
 			}
 
 			assert!(self.event_handler.replace(Some(event_handler)).is_none());
+
 			self.control_flow.set(control_flow);
 		});
 	}
@@ -250,6 +276,7 @@ impl<T> EventLoopRunner<T> {
 			// the end of the loop's body and attempts to add events to the event buffer
 			// while in `process_event` will fail.
 			let buffered_event_opt = self.event_buffer.borrow_mut().pop_front();
+
 			match buffered_event_opt {
 				Some(e) => e.dispatch_event(|e| self.call_event_handler(e)),
 				None => break,
@@ -305,17 +332,23 @@ impl<T> EventLoopRunner<T> {
 			},
 			(Uninitialized, HandlingRedrawEvents) => {
 				self.call_new_events(true);
+
 				self.call_event_handler(Event::MainEventsCleared);
 			},
 			(Uninitialized, Idle) => {
 				self.call_new_events(true);
+
 				self.call_event_handler(Event::MainEventsCleared);
+
 				self.call_redraw_events_cleared();
 			},
 			(Uninitialized, Destroyed) => {
 				self.call_new_events(true);
+
 				self.call_event_handler(Event::MainEventsCleared);
+
 				self.call_redraw_events_cleared();
+
 				self.call_event_handler(Event::LoopDestroyed);
 			},
 			(_, Uninitialized) => panic!("cannot move state to Uninitialized"),
@@ -326,6 +359,7 @@ impl<T> EventLoopRunner<T> {
 			},
 			(Idle, HandlingRedrawEvents) => {
 				self.call_new_events(false);
+
 				self.call_event_handler(Event::MainEventsCleared);
 			},
 			(Idle, Destroyed) => {
@@ -337,12 +371,16 @@ impl<T> EventLoopRunner<T> {
 			},
 			(HandlingMainEvents, Idle) => {
 				warn!("RedrawEventsCleared emitted without explicit MainEventsCleared");
+
 				self.call_event_handler(Event::MainEventsCleared);
+
 				self.call_redraw_events_cleared();
 			},
 			(HandlingMainEvents, Destroyed) => {
 				self.call_event_handler(Event::MainEventsCleared);
+
 				self.call_redraw_events_cleared();
+
 				self.call_event_handler(Event::LoopDestroyed);
 			},
 
@@ -351,11 +389,14 @@ impl<T> EventLoopRunner<T> {
 			},
 			(HandlingRedrawEvents, HandlingMainEvents) => {
 				warn!("NewEvents emitted without explicit RedrawEventsCleared");
+
 				self.call_redraw_events_cleared();
+
 				self.call_new_events(false);
 			},
 			(HandlingRedrawEvents, Destroyed) => {
 				self.call_redraw_events_cleared();
+
 				self.call_event_handler(Event::LoopDestroyed);
 			},
 
@@ -387,8 +428,11 @@ impl<T> EventLoopRunner<T> {
 				}
 			},
 		};
+
 		self.call_event_handler(Event::NewEvents(start_cause));
+
 		self.dispatch_buffered_events();
+
 		winuser::RedrawWindow(
 			self.thread_msg_target,
 			ptr::null(),
@@ -399,6 +443,7 @@ impl<T> EventLoopRunner<T> {
 
 	unsafe fn call_redraw_events_cleared(&self) {
 		self.call_event_handler(Event::RedrawEventsCleared);
+
 		self.last_events_cleared.set(Instant::now());
 	}
 }
@@ -425,6 +470,7 @@ impl<T> BufferedEvent<T> {
 						new_inner_size:&mut new_inner_size,
 					},
 				});
+
 				util::set_inner_size_physical(
 					(window_id.0).0,
 					new_inner_size.width as _,

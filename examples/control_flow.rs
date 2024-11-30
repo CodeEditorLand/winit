@@ -21,25 +21,35 @@ fn main() {
 	SimpleLogger::new().init().unwrap();
 
 	println!("Press '1' to switch to Wait mode.");
+
 	println!("Press '2' to switch to WaitUntil mode.");
+
 	println!("Press '3' to switch to Poll mode.");
+
 	println!("Press 'R' to toggle request_redraw() calls.");
+
 	println!("Press 'Esc' to close the window.");
 
 	let event_loop = EventLoop::new();
+
 	let window = WindowBuilder::new()
 		.with_title("Press 1, 2, 3 to change control flow mode. Press R to toggle redraw requests.")
 		.build(&event_loop)
 		.unwrap();
 
 	let mut mode = Mode::Wait;
+
 	let mut request_redraw = false;
+
 	let mut wait_cancelled = false;
+
 	let mut close_requested = false;
 
 	event_loop.run(move |event, _, control_flow| {
 		use winit::event::{ElementState, StartCause, VirtualKeyCode};
+
 		println!("{:?}", event);
+
 		match event {
 			Event::NewEvents(start_cause) => {
 				wait_cancelled = match start_cause {
@@ -64,18 +74,22 @@ fn main() {
 						match virtual_code {
 							VirtualKeyCode::Key1 => {
 								mode = Mode::Wait;
+
 								println!("\nmode: {:?}\n", mode);
 							},
 							VirtualKeyCode::Key2 => {
 								mode = Mode::WaitUntil;
+
 								println!("\nmode: {:?}\n", mode);
 							},
 							VirtualKeyCode::Key3 => {
 								mode = Mode::Poll;
+
 								println!("\nmode: {:?}\n", mode);
 							},
 							VirtualKeyCode::R => {
 								request_redraw = !request_redraw;
+
 								println!("\nrequest_redraw: {}\n", request_redraw);
 							},
 							VirtualKeyCode::Escape => {
@@ -91,6 +105,7 @@ fn main() {
 				if request_redraw && !wait_cancelled && !close_requested {
 					window.request_redraw();
 				}
+
 				if close_requested {
 					*control_flow = ControlFlow::Exit;
 				}
@@ -108,6 +123,7 @@ fn main() {
 					},
 					Mode::Poll => {
 						thread::sleep(POLL_SLEEP_TIME);
+
 						ControlFlow::Poll
 					},
 				};

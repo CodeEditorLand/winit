@@ -120,9 +120,13 @@ unsafe impl Encode for UIUserInterfaceIdiom {
 
 impl UIUserInterfaceIdiom {
 	pub const CarPlay:UIUserInterfaceIdiom = UIUserInterfaceIdiom(3);
+
 	pub const Pad:UIUserInterfaceIdiom = UIUserInterfaceIdiom(1);
+
 	pub const Phone:UIUserInterfaceIdiom = UIUserInterfaceIdiom(0);
+
 	pub const TV:UIUserInterfaceIdiom = UIUserInterfaceIdiom(2);
+
 	pub const Unspecified:UIUserInterfaceIdiom = UIUserInterfaceIdiom(-1);
 }
 
@@ -162,13 +166,19 @@ unsafe impl Encode for UIInterfaceOrientationMask {
 impl UIInterfaceOrientationMask {
 	pub const All:UIInterfaceOrientationMask =
 		UIInterfaceOrientationMask(Self::AllButUpsideDown.0 | Self::PortraitUpsideDown.0);
+
 	pub const AllButUpsideDown:UIInterfaceOrientationMask =
 		UIInterfaceOrientationMask(Self::Landscape.0 | Self::Portrait.0);
+
 	pub const Landscape:UIInterfaceOrientationMask =
 		UIInterfaceOrientationMask(Self::LandscapeLeft.0 | Self::LandscapeRight.0);
+
 	pub const LandscapeLeft:UIInterfaceOrientationMask = UIInterfaceOrientationMask(1 << 4);
+
 	pub const LandscapeRight:UIInterfaceOrientationMask = UIInterfaceOrientationMask(1 << 3);
+
 	pub const Portrait:UIInterfaceOrientationMask = UIInterfaceOrientationMask(1 << 1);
+
 	pub const PortraitUpsideDown:UIInterfaceOrientationMask = UIInterfaceOrientationMask(1 << 2);
 }
 
@@ -209,6 +219,7 @@ unsafe impl Encode for UIRectEdge {
 impl From<ScreenEdge> for UIRectEdge {
 	fn from(screen_edge:ScreenEdge) -> UIRectEdge {
 		assert_eq!(screen_edge.bits() & !ScreenEdge::ALL.bits(), 0, "invalid `ScreenEdge`");
+
 		UIRectEdge(screen_edge.bits().into())
 	}
 }
@@ -216,6 +227,7 @@ impl From<ScreenEdge> for UIRectEdge {
 impl Into<ScreenEdge> for UIRectEdge {
 	fn into(self) -> ScreenEdge {
 		let bits:u8 = self.0.try_into().expect("invalid `UIRectEdge`");
+
 		ScreenEdge::from_bits(bits).expect("invalid `ScreenEdge`")
 	}
 }
@@ -231,7 +243,9 @@ unsafe impl Encode for UIScreenOverscanCompensation {
 #[allow(dead_code)]
 impl UIScreenOverscanCompensation {
 	pub const InsetBounds:UIScreenOverscanCompensation = UIScreenOverscanCompensation(1);
+
 	pub const None:UIScreenOverscanCompensation = UIScreenOverscanCompensation(2);
+
 	pub const Scale:UIScreenOverscanCompensation = UIScreenOverscanCompensation(0);
 }
 
@@ -239,6 +253,7 @@ impl UIScreenOverscanCompensation {
 #[link(name = "CoreFoundation", kind = "framework")]
 extern {
 	pub static kCFRunLoopDefaultMode: CFRunLoopMode;
+
 	pub static kCFRunLoopCommonModes: CFRunLoopMode;
 
 	pub fn UIApplicationMain(
@@ -249,6 +264,7 @@ extern {
 	) -> c_int;
 
 	pub fn CFRunLoopGetMain() -> CFRunLoopRef;
+
 	pub fn CFRunLoopWakeUp(rl:CFRunLoopRef);
 
 	pub fn CFRunLoopObserverCreate(
@@ -259,6 +275,7 @@ extern {
 		callout:CFRunLoopObserverCallBack,
 		context:*mut CFRunLoopObserverContext,
 	) -> CFRunLoopObserverRef;
+
 	pub fn CFRunLoopAddObserver(rl:CFRunLoopRef, observer:CFRunLoopObserverRef, mode:CFRunLoopMode);
 
 	pub fn CFRunLoopTimerCreate(
@@ -270,8 +287,11 @@ extern {
 		callout:CFRunLoopTimerCallBack,
 		context:*mut CFRunLoopTimerContext,
 	) -> CFRunLoopTimerRef;
+
 	pub fn CFRunLoopAddTimer(rl:CFRunLoopRef, timer:CFRunLoopTimerRef, mode:CFRunLoopMode);
+
 	pub fn CFRunLoopTimerSetNextFireDate(timer:CFRunLoopTimerRef, fireDate:CFAbsoluteTime);
+
 	pub fn CFRunLoopTimerInvalidate(time:CFRunLoopTimerRef);
 
 	pub fn CFRunLoopSourceCreate(
@@ -279,11 +299,15 @@ extern {
 		order:CFIndex,
 		context:*mut CFRunLoopSourceContext,
 	) -> CFRunLoopSourceRef;
+
 	pub fn CFRunLoopAddSource(rl:CFRunLoopRef, source:CFRunLoopSourceRef, mode:CFRunLoopMode);
+
 	pub fn CFRunLoopSourceInvalidate(source:CFRunLoopSourceRef);
+
 	pub fn CFRunLoopSourceSignal(source:CFRunLoopSourceRef);
 
 	pub fn CFAbsoluteTimeGetCurrent() -> CFAbsoluteTime;
+
 	pub fn CFRelease(cftype:*const c_void);
 }
 
@@ -344,8 +368,11 @@ pub trait NSStringRust: Sized {
 	unsafe fn alloc(_:Self) -> id { msg_send![class!(NSString), alloc] }
 
 	unsafe fn initWithUTF8String_(self, c_string:*const c_char) -> id;
+
 	unsafe fn stringByAppendingString_(self, other:id) -> id;
+
 	unsafe fn init_str(self, string:&str) -> Self;
+
 	unsafe fn UTF8String(self) -> *const c_char;
 }
 
@@ -360,6 +387,7 @@ impl NSStringRust for id {
 
 	unsafe fn init_str(self, string:&str) -> id {
 		let cstring = CString::new(string).unwrap();
+
 		self.initWithUTF8String_(cstring.as_ptr())
 	}
 

@@ -46,8 +46,11 @@ impl RefUnwindSafe for PanicInfo {}
 impl PanicInfo {
 	pub fn is_panicking(&self) -> bool {
 		let inner = self.inner.take();
+
 		let result = inner.is_some();
+
 		self.inner.set(inner);
+
 		result
 	}
 
@@ -69,6 +72,7 @@ pub struct EventLoopWindowTarget<T:'static> {
 impl<T> Default for EventLoopWindowTarget<T> {
 	fn default() -> Self {
 		let (sender, receiver) = mpsc::channel();
+
 		EventLoopWindowTarget { sender, receiver }
 	}
 }
@@ -80,6 +84,7 @@ impl<T:'static> EventLoopWindowTarget<T> {
 	#[inline]
 	pub fn primary_monitor(&self) -> Option<RootMonitorHandle> {
 		let monitor = monitor::primary_monitor();
+
 		Some(RootMonitorHandle { inner:monitor })
 	}
 }
@@ -113,13 +118,20 @@ impl<T> EventLoop<T> {
 			let app:id = msg_send![APP_CLASS.0, sharedApplication];
 
 			let delegate = IdRef::new(msg_send![APP_DELEGATE_CLASS.0, new]);
+
 			let pool = NSAutoreleasePool::new(nil);
+
 			let _:() = msg_send![app, setDelegate:*delegate];
+
 			let _:() = msg_send![pool, drain];
+
 			delegate
 		};
+
 		let panic_info:Rc<PanicInfo> = Default::default();
+
 		setup_control_flow_observers(Rc::downgrade(&panic_info));
+
 		EventLoop {
 			delegate,
 			window_target:Rc::new(RootWindowTarget { p:Default::default(), _marker:PhantomData }),
@@ -134,6 +146,7 @@ impl<T> EventLoop<T> {
 	where
 		F: 'static + FnMut(Event<'_, T>, &RootWindowTarget<T>, &mut ControlFlow), {
 		self.run_return(callback);
+
 		process::exit(0);
 	}
 
@@ -156,21 +169,27 @@ impl<T> EventLoop<T> {
 
 		unsafe {
 			let pool = NSAutoreleasePool::new(nil);
+
 			defer!(pool.drain());
+
 			let app = NSApp();
+
 			assert_ne!(app, nil);
 
 			// A bit of juggling with the callback references to make sure
 			// that `self.callback` is the only owner of the callback.
 			let weak_cb:Weak<_> = Rc::downgrade(&callback);
+
 			mem::drop(callback);
 
 			AppState::set_callback(weak_cb, Rc::clone(&self.window_target));
+
 			let () = msg_send![app, run];
 
 			if let Some(panic) = self.panic_info.take() {
 				resume_unwind(panic);
 			}
+
 			AppState::exit();
 		}
 	}
@@ -181,6 +200,7 @@ impl<T> EventLoop<T> {
 #[inline]
 pub unsafe fn post_dummy_event(target:id) {
 	let event_class = class!(NSEvent);
+
 	let dummy_event:id = msg_send![
 		event_class,
 		otherEventWithType: NSApplicationDefined
@@ -193,6 +213,7 @@ pub unsafe fn post_dummy_event(target:id) {
 		data1: 0
 		data2: 0
 	];
+
 	let () = msg_send![target, postEvent: dummy_event atStart: YES];
 }
 
@@ -212,17 +233,22 @@ pub fn stop_app_on_panic<F:FnOnce() -> R + UnwindSafe, R>(
 			// currently panicking
 			{
 				let panic_info = panic_info.upgrade().unwrap();
+
 				panic_info.set_panic(e);
 			}
+
 			unsafe {
 				let app_class = class!(NSApplication);
+
 				let app:id = msg_send![app_class, sharedApplication];
+
 				let () = msg_send![app, stop: nil];
 
 				// Posting a dummy event to get `stop` to take effect
 				// immediately. See: https://stackoverflow.com/questions/48041279/stopping-the-nsapplication-main-event-loop/48064752#48064752
 				post_dummy_event(app);
 			}
+
 			None
 		},
 	}
@@ -256,11 +282,16 @@ impl<T> Proxy<T> {
 			// adding a Source to the main CFRunLoop lets us wake it up and
 			// process user events through the normal OS EventLoop mechanisms.
 			let rl = CFRunLoopGetMain();
+
 			let mut context:CFRunLoopSourceContext = mem::zeroed();
+
 			context.perform = Some(event_loop_proxy_handler);
+
 			let source =
 				CFRunLoopSourceCreate(ptr::null_mut(), CFIndex::max_value() - 1, &mut context);
+
 			CFRunLoopAddSource(rl, source, kCFRunLoopCommonModes);
+
 			CFRunLoopWakeUp(rl);
 
 			Proxy { sender, source }
@@ -269,12 +300,16 @@ impl<T> Proxy<T> {
 
 	pub fn send_event(&self, event:T) -> Result<(), EventLoopClosed<T>> {
 		self.sender.send(event).map_err(|mpsc::SendError(x)| EventLoopClosed(x))?;
+
 		unsafe {
 			// let the main thread know there's a new event
 			CFRunLoopSourceSignal(self.source);
+
 			let rl = CFRunLoopGetMain();
+
 			CFRunLoopWakeUp(rl);
 		}
+
 		Ok(())
 	}
 }

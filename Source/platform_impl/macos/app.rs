@@ -19,6 +19,7 @@ unsafe impl Sync for AppClass {}
 lazy_static! {
 	pub static ref APP_CLASS: AppClass = unsafe {
 		let superclass = class!(NSApplication);
+
 		let mut decl = ClassDecl::new("WinitApp", superclass).unwrap();
 
 		decl.add_method(sel!(sendEvent:), send_event as extern fn(&Object, Sel, id));
@@ -36,15 +37,20 @@ extern fn send_event(this:&Object, _sel:Sel, event:id) {
 		// (https://github.com/servo/cocoa-rs/issues/155)
 		// but that doesn't really matter here.
 		let event_type = event.eventType();
+
 		let modifier_flags = event.modifierFlags();
+
 		if event_type == appkit::NSKeyUp
 			&& util::has_flag(modifier_flags, appkit::NSEventModifierFlags::NSCommandKeyMask)
 		{
 			let key_window:id = msg_send![this, keyWindow];
+
 			let _:() = msg_send![key_window, sendEvent: event];
 		} else {
 			maybe_dispatch_device_event(event);
+
 			let superclass = util::superclass(this);
+
 			let _:() = msg_send![super(this, superclass), sendEvent: event];
 		}
 	}
@@ -52,6 +58,7 @@ extern fn send_event(this:&Object, _sel:Sel, event:id) {
 
 unsafe fn maybe_dispatch_device_event(event:id) {
 	let event_type = event.eventType();
+
 	match event_type {
 		appkit::NSMouseMoved
 		| appkit::NSLeftMouseDragged
@@ -60,6 +67,7 @@ unsafe fn maybe_dispatch_device_event(event:id) {
 			let mut events = VecDeque::with_capacity(3);
 
 			let delta_x = event.deltaX() as f64;
+
 			let delta_y = event.deltaY() as f64;
 
 			if delta_x != 0.0 {

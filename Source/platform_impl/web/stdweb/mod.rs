@@ -56,7 +56,9 @@ impl WindowExtStdweb for Window {
 
 pub fn window_size() -> LogicalSize<f64> {
 	let window = window();
+
 	let width = window.inner_width() as f64;
+
 	let height = window.inner_height() as f64;
 
 	LogicalSize { width, height }
@@ -64,6 +66,7 @@ pub fn window_size() -> LogicalSize<f64> {
 
 pub fn scale_factor() -> f64 {
 	let window = window();
+
 	window.device_pixel_ratio()
 }
 
@@ -71,12 +74,15 @@ pub fn set_canvas_size(raw:&CanvasElement, size:Size) {
 	let scale_factor = scale_factor();
 
 	let physical_size = size.to_physical::<u32>(scale_factor);
+
 	let logical_size = size.to_logical::<f64>(scale_factor);
 
 	raw.set_width(physical_size.width);
+
 	raw.set_height(physical_size.height);
 
 	set_canvas_style_property(raw, "width", &format!("{}px", logical_size.width));
+
 	set_canvas_style_property(raw, "height", &format!("{}px", logical_size.height));
 }
 
@@ -90,6 +96,7 @@ pub fn is_fullscreen(canvas:&CanvasElement) -> bool {
 	match document().fullscreen_element() {
 		Some(elem) => {
 			let raw:Element = canvas.clone().into();
+
 			raw == elem
 		},
 		None => false,

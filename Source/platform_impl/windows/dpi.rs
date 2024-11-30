@@ -28,6 +28,7 @@ const DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2:DPI_AWARENESS_CONTEXT = -4isize
 
 pub fn become_dpi_aware() {
 	static ENABLE_DPI_AWARENESS:Once = Once::new();
+
 	ENABLE_DPI_AWARENESS.call_once(|| {
 		unsafe {
 			if let Some(SetProcessDpiAwarenessContext) = *SET_PROCESS_DPI_AWARENESS_CONTEXT {
@@ -63,7 +64,9 @@ pub fn get_monitor_dpi(hmonitor:HMONITOR) -> Option<u32> {
 		if let Some(GetDpiForMonitor) = *GET_DPI_FOR_MONITOR {
 			// We are on Windows 8.1 or later.
 			let mut dpi_x = 0;
+
 			let mut dpi_y = 0;
+
 			if GetDpiForMonitor(hmonitor, MDT_EFFECTIVE_DPI, &mut dpi_x, &mut dpi_y) == S_OK {
 				// MSDN says that "the values of *dpiX and *dpiY are identical.
 				// You only need to record one of the values to determine
@@ -72,6 +75,7 @@ pub fn get_monitor_dpi(hmonitor:HMONITOR) -> Option<u32> {
 			}
 		}
 	}
+
 	None
 }
 
@@ -80,9 +84,11 @@ pub fn dpi_to_scale_factor(dpi:u32) -> f64 { dpi as f64 / BASE_DPI as f64 }
 
 pub unsafe fn hwnd_dpi(hwnd:HWND) -> u32 {
 	let hdc = winuser::GetDC(hwnd);
+
 	if hdc.is_null() {
 		panic!("[winit] `GetDC` returned null!");
 	}
+
 	if let Some(GetDpiForWindow) = *GET_DPI_FOR_WINDOW {
 		// We are on Windows 10 Anniversary Update (1607) or later.
 		match GetDpiForWindow(hwnd) {
@@ -92,12 +98,15 @@ pub unsafe fn hwnd_dpi(hwnd:HWND) -> u32 {
 	} else if let Some(GetDpiForMonitor) = *GET_DPI_FOR_MONITOR {
 		// We are on Windows 8.1 or later.
 		let monitor = winuser::MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+
 		if monitor.is_null() {
 			return BASE_DPI;
 		}
 
 		let mut dpi_x = 0;
+
 		let mut dpi_y = 0;
+
 		if GetDpiForMonitor(monitor, MDT_EFFECTIVE_DPI, &mut dpi_x, &mut dpi_y) == S_OK {
 			dpi_x as u32
 		} else {

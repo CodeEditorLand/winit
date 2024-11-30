@@ -133,6 +133,7 @@ impl Canvas {
 		self.on_keyboard_release =
 			Some(self.common.add_user_event("keyup", move |event:KeyboardEvent| {
 				event.prevent_default();
+
 				handler(
 					event::scan_code(&event),
 					event::virtual_key_code(&event),
@@ -151,12 +152,16 @@ impl Canvas {
 				// Ctrl+R, PgUp/Down to scroll, etc. We should not do it for key sequences
 				// that result in meaningful character input though.
 				let event_key = &event.key();
+
 				let is_key_string = event_key.len() == 1 || !event_key.is_ascii();
+
 				let is_shortcut_modifiers =
 					(event.ctrl_key() || event.alt_key()) && !event.get_modifier_state("AltGr");
+
 				if !is_key_string || is_shortcut_modifiers {
 					event.prevent_default();
 				}
+
 				handler(
 					event::scan_code(&event),
 					event::virtual_key_code(&event),
@@ -178,6 +183,7 @@ impl Canvas {
 				// Supress further handling to stop keys like the space key from scrolling the
 				// page.
 				event.prevent_default();
+
 				handler(event::codepoint(&event));
 			}));
 	}
@@ -232,6 +238,7 @@ impl Canvas {
 		F: 'static + FnMut(i32, MouseScrollDelta, ModifiersState), {
 		self.on_mouse_wheel = Some(self.common.add_event("wheel", move |event:WheelEvent| {
 			event.prevent_default();
+
 			if let Some(delta) = event::mouse_scroll_delta(&event) {
 				handler(0, delta, event::mouse_modifiers(&event));
 			}
@@ -251,6 +258,7 @@ impl Canvas {
 		let closure =
 			Closure::wrap(Box::new(move |event:MediaQueryListEvent| handler(event.matches()))
 				as Box<dyn FnMut(_)>);
+
 		self.on_dark_mode = MediaQueryListHandle::new("(prefers-color-scheme: dark)", closure);
 	}
 
@@ -260,13 +268,21 @@ impl Canvas {
 
 	pub fn remove_listeners(&mut self) {
 		self.on_focus = None;
+
 		self.on_blur = None;
+
 		self.on_keyboard_release = None;
+
 		self.on_keyboard_press = None;
+
 		self.on_received_character = None;
+
 		self.on_mouse_wheel = None;
+
 		self.on_fullscreen_change = None;
+
 		self.on_dark_mode = None;
+
 		match &mut self.mouse_state {
 			MouseState::HasPointerEvent(h) => h.remove_listeners(),
 			MouseState::NoPointerEvent(h) => h.remove_listeners(),
@@ -286,7 +302,9 @@ impl Common {
 		let closure = Closure::wrap(Box::new(move |event:E| {
 			{
 				let event_ref = event.as_ref();
+
 				event_ref.stop_propagation();
+
 				event_ref.cancel_bubble();
 			}
 
@@ -311,6 +329,7 @@ impl Common {
 		E: 'static + AsRef<web_sys::Event> + wasm_bindgen::convert::FromWasmAbi,
 		F: 'static + FnMut(E), {
 		let wants_fullscreen = self.wants_fullscreen.clone();
+
 		let canvas = self.raw.clone();
 
 		self.add_event(event_name, move |event:E| {
@@ -335,7 +354,9 @@ impl Common {
 	where
 		F: 'static + FnMut(MouseEvent), {
 		let wants_fullscreen = self.wants_fullscreen.clone();
+
 		let canvas = self.raw.clone();
+
 		let window = web_sys::window().expect("Failed to obtain window");
 
 		let closure = Closure::wrap(Box::new(move |event:MouseEvent| {

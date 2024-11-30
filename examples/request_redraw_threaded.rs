@@ -9,6 +9,7 @@ use winit::{
 
 fn main() {
 	SimpleLogger::new().init().unwrap();
+
 	let event_loop = EventLoop::new();
 
 	let window = WindowBuilder::new()
@@ -19,6 +20,7 @@ fn main() {
 	thread::spawn(move || {
 		loop {
 			thread::sleep(time::Duration::from_secs(1));
+
 			window.request_redraw();
 		}
 	});

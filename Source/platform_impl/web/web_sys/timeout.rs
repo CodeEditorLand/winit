@@ -50,9 +50,12 @@ impl AnimationFrameRequest {
 		let window = web_sys::window().expect("Failed to obtain window");
 
 		let fired = Rc::new(Cell::new(false));
+
 		let c_fired = fired.clone();
+
 		let closure = Closure::wrap(Box::new(move || {
 			(*c_fired).set(true);
+
 			f();
 		}) as Box<dyn FnMut()>);
 
@@ -68,6 +71,7 @@ impl Drop for AnimationFrameRequest {
 	fn drop(&mut self) {
 		if !(*self.fired).get() {
 			let window = web_sys::window().expect("Failed to obtain window");
+
 			window
 				.cancel_animation_frame(self.handle)
 				.expect("Failed to cancel animation frame");

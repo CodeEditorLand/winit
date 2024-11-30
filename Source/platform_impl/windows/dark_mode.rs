@@ -33,6 +33,7 @@ lazy_static! {
 		}
 
 		type RtlGetVersion = unsafe extern "system" fn (*mut OSVERSIONINFOW) -> NTSTATUS;
+
 		let handle = get_function!("ntdll.dll", RtlGetVersion);
 
 		if let Some(rtl_get_version) = handle {
@@ -69,6 +70,7 @@ lazy_static! {
 	};
 
 	static ref DARK_THEME_NAME: Vec<u16> = widestring("DarkMode_Explorer");
+
 	static ref LIGHT_THEME_NAME: Vec<u16> = widestring("");
 }
 
@@ -82,6 +84,7 @@ pub fn try_theme(hwnd:HWND, preferred_theme:Option<Theme>) -> Theme {
 		};
 
 		let theme = if is_dark_mode { Theme::Dark } else { Theme::Light };
+
 		let theme_name = match theme {
 			Theme::Dark => DARK_THEME_NAME.as_ptr(),
 			Theme::Light => LIGHT_THEME_NAME.as_ptr(),
@@ -106,6 +109,7 @@ fn set_dark_mode_for_window(hwnd:HWND, is_dark_mode:bool) -> bool {
 
 	#[allow(non_snake_case)]
 	type WINDOWCOMPOSITIONATTRIB = u32;
+
 	const WCA_USEDARKMODECOLORS:WINDOWCOMPOSITIONATTRIB = 26;
 
 	#[allow(non_snake_case)]
@@ -145,6 +149,7 @@ fn should_use_dark_mode() -> bool { should_apps_use_dark_mode() && !is_high_cont
 
 fn should_apps_use_dark_mode() -> bool {
 	type ShouldAppsUseDarkMode = unsafe extern "system" fn() -> bool;
+
 	lazy_static! {
 		static ref SHOULD_APPS_USE_DARK_MODE: Option<ShouldAppsUseDarkMode> = {
 			unsafe {

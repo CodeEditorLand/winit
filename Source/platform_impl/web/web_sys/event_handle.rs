@@ -12,9 +12,11 @@ impl<T:?Sized> EventListenerHandle<T> {
 	where
 		U: Clone + Into<EventTarget>, {
 		let target = target.clone().into();
+
 		target
 			.add_event_listener_with_callback(event_type, listener.as_ref().unchecked_ref())
 			.expect("Failed to add event listener");
+
 		EventListenerHandle { target, event_type, listener }
 	}
 
@@ -27,6 +29,7 @@ impl<T:?Sized> EventListenerHandle<T> {
 	where
 		U: Clone + Into<EventTarget>, {
 		let target = target.clone().into();
+
 		target
 			.add_event_listener_with_callback_and_add_event_listener_options(
 				event_type,
@@ -34,6 +37,7 @@ impl<T:?Sized> EventListenerHandle<T> {
 				options,
 			)
 			.expect("Failed to add event listener");
+
 		EventListenerHandle { target, event_type, listener }
 	}
 }

@@ -142,7 +142,9 @@ impl AppState {
 				"bug in winit: `AppState::get_mut()` can only be called on the main thread"
 			);
 		}
+
 		let mut guard = APP_STATE.borrow_mut();
+
 		if guard.is_none() {
 			#[inline(never)]
 			#[cold]
@@ -158,8 +160,10 @@ impl AppState {
 					waker,
 				});
 			}
+
 			init_guard(&mut guard)
 		}
+
 		RefMut::map(guard, |state| state.as_mut().unwrap())
 	}
 
@@ -190,6 +194,7 @@ impl AppState {
 			"attempted to set an `AppState` without calling `take_state` first {:?}",
 			self.app_state
 		);
+
 		self.app_state = Some(new_state)
 	}
 
@@ -214,6 +219,7 @@ impl AppState {
 			},
 			s => bug!("unexpected state {:?}", s),
 		};
+
 		self.set_state(AppStateImpl::Launching {
 			queued_windows,
 			queued_events,
@@ -232,6 +238,7 @@ impl AppState {
 			} => (queued_windows, queued_events, queued_event_handler, queued_gpu_redraws),
 			s => bug!("unexpected state {:?}", s),
 		};
+
 		self.set_state(AppStateImpl::ProcessingEvents {
 			event_handler,
 			active_control_flow:ControlFlow::Poll,
@@ -291,6 +298,7 @@ impl AppState {
 			queued_gpu_redraws:Default::default(),
 			active_control_flow:self.control_flow,
 		});
+
 		Some(event)
 	}
 
@@ -339,10 +347,12 @@ impl AppState {
 				| AppStateImpl::Waiting { .. }
 				| AppStateImpl::Terminated => unreachable!(),
 			};
+
 		self.set_state(AppStateImpl::InUserCallback {
 			queued_events:Vec::new(),
 			queued_gpu_redraws,
 		});
+
 		UserCallbackTransitionResult::Success {
 			event_handler,
 			active_control_flow,
@@ -359,7 +369,9 @@ impl AppState {
 			} => (event_handler, queued_gpu_redraws, active_control_flow),
 			s => bug!("unexpected state {:?}", s),
 		};
+
 		self.set_state(AppStateImpl::ProcessingRedraws { event_handler, active_control_flow });
+
 		queued_gpu_redraws
 	}
 
@@ -367,6 +379,7 @@ impl AppState {
 		if !self.has_launched() {
 			return;
 		}
+
 		let (waiting_event_handler, old) = match self.take_state() {
 			AppStateImpl::ProcessingRedraws { event_handler, active_control_flow } => {
 				(event_handler, active_control_flow)
@@ -375,32 +388,40 @@ impl AppState {
 		};
 
 		let new = self.control_flow;
+
 		match (old, new) {
 			(ControlFlow::Poll, ControlFlow::Poll) => {
 				self.set_state(AppStateImpl::PollFinished { waiting_event_handler })
 			},
 			(ControlFlow::Wait, ControlFlow::Wait) => {
 				let start = Instant::now();
+
 				self.set_state(AppStateImpl::Waiting { waiting_event_handler, start });
 			},
 			(ControlFlow::WaitUntil(old_instant), ControlFlow::WaitUntil(new_instant))
 				if old_instant == new_instant =>
 			{
 				let start = Instant::now();
+
 				self.set_state(AppStateImpl::Waiting { waiting_event_handler, start });
 			},
 			(_, ControlFlow::Wait) => {
 				let start = Instant::now();
+
 				self.set_state(AppStateImpl::Waiting { waiting_event_handler, start });
+
 				self.waker.stop()
 			},
 			(_, ControlFlow::WaitUntil(new_instant)) => {
 				let start = Instant::now();
+
 				self.set_state(AppStateImpl::Waiting { waiting_event_handler, start });
+
 				self.waker.start_at(new_instant)
 			},
 			(_, ControlFlow::Poll) => {
 				self.set_state(AppStateImpl::PollFinished { waiting_event_handler });
+
 				self.waker.start()
 			},
 			(_, ControlFlow::Exit) => {
@@ -408,6 +429,7 @@ impl AppState {
 				// it is not possible to quit an iOS app gracefully and
 				// programatically
 				warn!("`ControlFlow::Exit` ignored on iOS");
+
 				self.control_flow = old
 			},
 		}
@@ -429,11 +451,14 @@ pub unsafe fn set_key_window(window:id) {
 	bug_assert!(
 		{
 			let is_window:BOOL = msg_send![window, isKindOfClass: class!(UIWindow)];
+
 			is_window == YES
 		},
 		"set_key_window called with an incorrect type"
 	);
+
 	let mut this = AppState::get_mut();
+
 	match this.state_mut() {
 		&mut AppStateImpl::NotLaunched { ref mut queued_windows, .. } => {
 			return queued_windows.push(msg_send![window, retain]);
@@ -450,7 +475,9 @@ pub unsafe fn set_key_window(window:id) {
 			panic!("Attempt to create a `Window` after the app has terminated")
 		},
 	}
+
 	drop(this);
+
 	msg_send![window, makeKeyAndVisible]
 }
 
@@ -460,11 +487,14 @@ pub unsafe fn queue_gl_or_metal_redraw(window:id) {
 	bug_assert!(
 		{
 			let is_window:BOOL = msg_send![window, isKindOfClass: class!(UIWindow)];
+
 			is_window == YES
 		},
 		"set_key_window called with an incorrect type"
 	);
+
 	let mut this = AppState::get_mut();
+
 	match this.state_mut() {
 		&mut AppStateImpl::NotLaunched { ref mut queued_gpu_redraws, .. }
 		| &mut AppStateImpl::Launching { ref mut queued_gpu_redraws, .. }
@@ -481,6 +511,7 @@ pub unsafe fn queue_gl_or_metal_redraw(window:id) {
 			panic!("Attempt to create a `Window` after the app has terminated")
 		},
 	}
+
 	drop(this);
 }
 
@@ -492,6 +523,7 @@ pub unsafe fn will_launch(queued_event_handler:Box<dyn EventHandler>) {
 // requires main thread
 pub unsafe fn did_finish_launching() {
 	let mut this = AppState::get_mut();
+
 	let windows = match this.state_mut() {
 		AppStateImpl::Launching { queued_windows, .. } => mem::replace(queued_windows, Vec::new()),
 		s => bug!("unexpected state {:?}", s),
@@ -502,6 +534,7 @@ pub unsafe fn did_finish_launching() {
 		this.control_flow == ControlFlow::Poll,
 		"unexpectedly not setup to `Poll` on launch!"
 	);
+
 	this.waker.start();
 
 	// have to drop RefMut because the window setup code below can trigger new
@@ -524,15 +557,24 @@ pub unsafe fn did_finish_launching() {
 			// completed. This may result in incorrect visual appearance.
 			// ```
 			let screen:id = msg_send![window, screen];
+
 			let _:id = msg_send![screen, retain];
+
 			let () = msg_send![window, setScreen:0 as id];
+
 			let () = msg_send![window, setScreen: screen];
+
 			let () = msg_send![screen, release];
+
 			let controller:id = msg_send![window, rootViewController];
+
 			let () = msg_send![window, setRootViewController:ptr::null::<()>()];
+
 			let () = msg_send![window, setRootViewController: controller];
+
 			let () = msg_send![window, makeKeyAndVisible];
 		}
+
 		let () = msg_send![window, release];
 	}
 
@@ -540,6 +582,7 @@ pub unsafe fn did_finish_launching() {
 
 	let events = std::iter::once(EventWrapper::StaticEvent(Event::NewEvents(StartCause::Init)))
 		.chain(events);
+
 	handle_nonuser_events(events);
 
 	// the above window dance hack, could possibly trigger new windows to be
@@ -551,6 +594,7 @@ pub unsafe fn did_finish_launching() {
 		if count > 1 {
 			let () = msg_send![window, makeKeyAndVisible];
 		}
+
 		let () = msg_send![window, release];
 	}
 }
@@ -559,10 +603,12 @@ pub unsafe fn did_finish_launching() {
 // AppState::did_finish_launching handles the special transition `Init`
 pub unsafe fn handle_wakeup_transition() {
 	let mut this = AppState::get_mut();
+
 	let wakeup_event = match this.wakeup_transition() {
 		None => return,
 		Some(wakeup_event) => wakeup_event,
 	};
+
 	drop(this);
 
 	handle_nonuser_event(wakeup_event)
@@ -576,10 +622,12 @@ pub unsafe fn handle_nonuser_event(event:EventWrapper) {
 // requires main thread
 pub unsafe fn handle_nonuser_events<I:IntoIterator<Item = EventWrapper>>(events:I) {
 	let mut this = AppState::get_mut();
+
 	let (mut event_handler, active_control_flow, processing_redraws) =
 		match this.try_user_callback_transition() {
 			UserCallbackTransitionResult::ReentrancyPrevented { queued_events } => {
 				queued_events.extend(events);
+
 				return;
 			},
 			UserCallbackTransitionResult::Success {
@@ -588,7 +636,9 @@ pub unsafe fn handle_nonuser_events<I:IntoIterator<Item = EventWrapper>>(events:
 				processing_redraws,
 			} => (event_handler, active_control_flow, processing_redraws),
 		};
+
 	let mut control_flow = this.control_flow;
+
 	drop(this);
 
 	for wrapper in events {
@@ -602,6 +652,7 @@ pub unsafe fn handle_nonuser_events<I:IntoIterator<Item = EventWrapper>>(events:
 						event
 					);
 				}
+
 				event_handler.handle_nonuser_event(event, &mut control_flow)
 			},
 			EventWrapper::EventProxy(proxy) => {
@@ -612,12 +663,14 @@ pub unsafe fn handle_nonuser_events<I:IntoIterator<Item = EventWrapper>>(events:
 
 	loop {
 		let mut this = AppState::get_mut();
+
 		let queued_events = match this.state_mut() {
 			&mut AppStateImpl::InUserCallback { ref mut queued_events, queued_gpu_redraws: _ } => {
 				mem::replace(queued_events, Vec::new())
 			},
 			s => bug!("unexpected state {:?}", s),
 		};
+
 		if queued_events.is_empty() {
 			let queued_gpu_redraws = match this.take_state() {
 				AppStateImpl::InUserCallback { queued_events: _, queued_gpu_redraws } => {
@@ -625,11 +678,13 @@ pub unsafe fn handle_nonuser_events<I:IntoIterator<Item = EventWrapper>>(events:
 				},
 				_ => unreachable!(),
 			};
+
 			this.app_state = Some(if processing_redraws {
 				bug_assert!(
 					queued_gpu_redraws.is_empty(),
 					"redraw queued while processing redraws"
 				);
+
 				AppStateImpl::ProcessingRedraws { event_handler, active_control_flow }
 			} else {
 				AppStateImpl::ProcessingEvents {
@@ -638,9 +693,12 @@ pub unsafe fn handle_nonuser_events<I:IntoIterator<Item = EventWrapper>>(events:
 					active_control_flow,
 				}
 			});
+
 			this.control_flow = control_flow;
+
 			break;
 		}
+
 		drop(this);
 
 		for wrapper in queued_events {
@@ -655,6 +713,7 @@ pub unsafe fn handle_nonuser_events<I:IntoIterator<Item = EventWrapper>>(events:
 							event
 						);
 					}
+
 					event_handler.handle_nonuser_event(event, &mut control_flow)
 				},
 				EventWrapper::EventProxy(proxy) => {
@@ -668,7 +727,9 @@ pub unsafe fn handle_nonuser_events<I:IntoIterator<Item = EventWrapper>>(events:
 // requires main thread
 unsafe fn handle_user_events() {
 	let mut this = AppState::get_mut();
+
 	let mut control_flow = this.control_flow;
+
 	let (mut event_handler, active_control_flow, processing_redraws) =
 		match this.try_user_callback_transition() {
 			UserCallbackTransitionResult::ReentrancyPrevented { .. } => {
@@ -680,21 +741,25 @@ unsafe fn handle_user_events() {
 				processing_redraws,
 			} => (event_handler, active_control_flow, processing_redraws),
 		};
+
 	if processing_redraws {
 		bug!("user events attempted to be sent out while `ProcessingRedraws`");
 	}
+
 	drop(this);
 
 	event_handler.handle_user_events(&mut control_flow);
 
 	loop {
 		let mut this = AppState::get_mut();
+
 		let queued_events = match this.state_mut() {
 			&mut AppStateImpl::InUserCallback { ref mut queued_events, queued_gpu_redraws: _ } => {
 				mem::replace(queued_events, Vec::new())
 			},
 			s => bug!("unexpected state {:?}", s),
 		};
+
 		if queued_events.is_empty() {
 			let queued_gpu_redraws = match this.take_state() {
 				AppStateImpl::InUserCallback { queued_events: _, queued_gpu_redraws } => {
@@ -702,14 +767,18 @@ unsafe fn handle_user_events() {
 				},
 				_ => unreachable!(),
 			};
+
 			this.app_state = Some(AppStateImpl::ProcessingEvents {
 				event_handler,
 				queued_gpu_redraws,
 				active_control_flow,
 			});
+
 			this.control_flow = control_flow;
+
 			break;
 		}
+
 		drop(this);
 
 		for wrapper in queued_events {
@@ -722,6 +791,7 @@ unsafe fn handle_user_events() {
 				},
 			}
 		}
+
 		event_handler.handle_user_events(&mut control_flow);
 	}
 }
@@ -729,20 +799,25 @@ unsafe fn handle_user_events() {
 // requires main thread
 pub unsafe fn handle_main_events_cleared() {
 	let mut this = AppState::get_mut();
+
 	if !this.has_launched() {
 		return;
 	}
+
 	match this.state_mut() {
 		&mut AppStateImpl::ProcessingEvents { .. } => {},
 		_ => bug!("`ProcessingRedraws` happened unexpectedly"),
 	};
+
 	drop(this);
 
 	// User events are always sent out at the end of the "MainEventLoop"
 	handle_user_events();
+
 	handle_nonuser_event(EventWrapper::StaticEvent(Event::MainEventsCleared));
 
 	let mut this = AppState::get_mut();
+
 	let mut redraw_events:Vec<EventWrapper> = this
 		.main_events_cleared_transition()
 		.into_iter()
@@ -754,6 +829,7 @@ pub unsafe fn handle_main_events_cleared() {
 	if !redraw_events.is_empty() {
 		redraw_events.push(EventWrapper::StaticEvent(Event::RedrawEventsCleared));
 	}
+
 	drop(this);
 
 	handle_nonuser_events(redraw_events);
@@ -765,8 +841,11 @@ pub unsafe fn handle_events_cleared() { AppState::get_mut().events_cleared_trans
 // requires main thread
 pub unsafe fn terminated() {
 	let mut this = AppState::get_mut();
+
 	let mut event_handler = this.terminated_transition();
+
 	let mut control_flow = this.control_flow;
+
 	drop(this);
 
 	event_handler.handle_nonuser_event(Event::LoopDestroyed, &mut control_flow)
@@ -792,17 +871,26 @@ fn handle_hidpi_proxy(
 	window_id:id,
 ) {
 	let mut size = suggested_size.to_physical(scale_factor);
+
 	let new_inner_size = &mut size;
+
 	let event = Event::WindowEvent {
 		window_id:RootWindowId(window_id.into()),
 		event:WindowEvent::ScaleFactorChanged { scale_factor, new_inner_size },
 	};
+
 	event_handler.handle_nonuser_event(event, &mut control_flow);
+
 	let (view, screen_frame) = get_view_and_screen_frame(window_id);
+
 	let physical_size = *new_inner_size;
+
 	let logical_size = physical_size.to_logical(scale_factor);
+
 	let size = CGSize::new(logical_size);
+
 	let new_frame:CGRect = CGRect::new(screen_frame.origin, size);
+
 	unsafe {
 		let () = msg_send![view, setFrame: new_frame];
 	}
@@ -811,10 +899,15 @@ fn handle_hidpi_proxy(
 fn get_view_and_screen_frame(window_id:id) -> (id, CGRect) {
 	unsafe {
 		let view_controller:id = msg_send![window_id, rootViewController];
+
 		let view:id = msg_send![view_controller, view];
+
 		let bounds:CGRect = msg_send![window_id, bounds];
+
 		let screen:id = msg_send![window_id, screen];
+
 		let screen_space:id = msg_send![screen, coordinateSpace];
+
 		let screen_frame:CGRect =
 			msg_send![window_id, convertRect:bounds toCoordinateSpace:screen_space];
 		(view, screen_frame)
@@ -829,6 +922,7 @@ impl Drop for EventLoopWaker {
 	fn drop(&mut self) {
 		unsafe {
 			CFRunLoopTimerInvalidate(self.timer);
+
 			CFRelease(self.timer as _);
 		}
 	}
@@ -837,6 +931,7 @@ impl Drop for EventLoopWaker {
 impl EventLoopWaker {
 	fn new(rl:CFRunLoopRef) -> EventLoopWaker {
 		extern fn wakeup_main_loop(_timer:CFRunLoopTimerRef, _info:*mut c_void) {}
+
 		unsafe {
 			// Create a timer with a 0.1µs interval (1ns does not work) to mimic
 			// polling. It is initially setup with a first fire time really
@@ -851,6 +946,7 @@ impl EventLoopWaker {
 				wakeup_main_loop,
 				ptr::null_mut(),
 			);
+
 			CFRunLoopAddTimer(rl, timer, kCFRunLoopCommonModes);
 
 			EventLoopWaker { timer }
@@ -863,14 +959,18 @@ impl EventLoopWaker {
 
 	fn start_at(&mut self, instant:Instant) {
 		let now = Instant::now();
+
 		if now >= instant {
 			self.start();
 		} else {
 			unsafe {
 				let current = CFAbsoluteTimeGetCurrent();
+
 				let duration = instant - now;
+
 				let fsecs =
 					duration.subsec_nanos() as f64 / 1_000_000_000.0 + duration.as_secs() as f64;
+
 				CFRunLoopTimerSetNextFireDate(self.timer, current + fsecs)
 			}
 		}
@@ -946,6 +1046,7 @@ pub fn os_capabilities() -> OSCapabilities {
 		static ref OS_CAPABILITIES: OSCapabilities = {
 			let version: NSOperatingSystemVersion = unsafe {
 				let process_info: id = msg_send![class!(NSProcessInfo), processInfo];
+
 				let atleast_ios_8: BOOL = msg_send![
 					process_info,
 					respondsToSelector: sel!(operatingSystemVersion)
@@ -961,10 +1062,13 @@ pub fn os_capabilities() -> OSCapabilities {
 					atleast_ios_8 == YES,
 					"`winit` requires iOS version 8 or greater"
 				);
+
 				msg_send![process_info, operatingSystemVersion]
 			};
+
 			version.into()
 		};
 	}
+
 	OS_CAPABILITIES.clone()
 }

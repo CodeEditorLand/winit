@@ -40,6 +40,7 @@ impl Clone for NativeDisplayMode {
 		unsafe {
 			let _:id = msg_send![self.0, retain];
 		}
+
 		NativeDisplayMode(self.0)
 	}
 }
@@ -59,7 +60,9 @@ impl Clone for VideoMode {
 impl VideoMode {
 	unsafe fn retained_new(uiscreen:id, screen_mode:id) -> VideoMode {
 		assert_main_thread!("`VideoMode` can only be created on the main thread on iOS");
+
 		let os_capabilities = app_state::os_capabilities();
+
 		let refresh_rate:NSInteger = if os_capabilities.maximum_frames_per_second {
 			msg_send![uiscreen, maximumFramesPerSecond]
 		} else {
@@ -76,11 +79,16 @@ impl VideoMode {
 			// FIXME: earlier OSs could calculate the refresh rate using
 			// `-[CADisplayLink duration]`.
 			os_capabilities.maximum_frames_per_second_err_msg("defaulting to 60 fps");
+
 			60
 		};
+
 		let size:CGSize = msg_send![screen_mode, size];
+
 		let screen_mode:id = msg_send![screen_mode, retain];
+
 		let screen_mode = NativeDisplayMode(screen_mode);
+
 		VideoMode {
 			size:(size.width as u32, size.height as u32),
 			bit_depth:32,
@@ -181,8 +189,10 @@ impl MonitorHandle {
 	pub fn retained_new(uiscreen:id) -> MonitorHandle {
 		unsafe {
 			assert_main_thread!("`MonitorHandle` can only be cloned on the main thread on iOS");
+
 			let () = msg_send![uiscreen, retain];
 		}
+
 		MonitorHandle { inner:Inner { uiscreen } }
 	}
 }
@@ -191,6 +201,7 @@ impl Inner {
 	pub fn name(&self) -> Option<String> {
 		unsafe {
 			let main = main_uiscreen();
+
 			if self.uiscreen == main.uiscreen {
 				Some("Primary".to_string())
 			} else if self.uiscreen == mirrored_uiscreen(&main).uiscreen {
@@ -207,6 +218,7 @@ impl Inner {
 	pub fn size(&self) -> PhysicalSize<u32> {
 		unsafe {
 			let bounds:CGRect = msg_send![self.ui_screen(), nativeBounds];
+
 			PhysicalSize::new(bounds.size.width as u32, bounds.size.height as u32)
 		}
 	}
@@ -221,18 +233,22 @@ impl Inner {
 	pub fn scale_factor(&self) -> f64 {
 		unsafe {
 			let scale:CGFloat = msg_send![self.ui_screen(), nativeScale];
+
 			scale as f64
 		}
 	}
 
 	pub fn video_modes(&self) -> impl Iterator<Item = RootVideoMode> {
 		let mut modes = BTreeSet::new();
+
 		unsafe {
 			let available_modes:id = msg_send![self.uiscreen, availableModes];
+
 			let available_mode_count:NSUInteger = msg_send![available_modes, count];
 
 			for i in 0..available_mode_count {
 				let mode:id = msg_send![available_modes, objectAtIndex: i];
+
 				modes.insert(RootVideoMode {
 					video_mode:VideoMode::retained_new(self.uiscreen, mode),
 				});
@@ -250,6 +266,7 @@ impl Inner {
 	pub fn preferred_video_mode(&self) -> RootVideoMode {
 		unsafe {
 			let mode:id = msg_send![self.uiscreen, preferredMode];
+
 			RootVideoMode { video_mode:VideoMode::retained_new(self.uiscreen, mode) }
 		}
 	}
@@ -258,26 +275,34 @@ impl Inner {
 // requires being run on main thread
 pub unsafe fn main_uiscreen() -> MonitorHandle {
 	let uiscreen:id = msg_send![class!(UIScreen), mainScreen];
+
 	MonitorHandle::retained_new(uiscreen)
 }
 
 // requires being run on main thread
 unsafe fn mirrored_uiscreen(monitor:&MonitorHandle) -> MonitorHandle {
 	let uiscreen:id = msg_send![monitor.uiscreen, mirroredScreen];
+
 	MonitorHandle::retained_new(uiscreen)
 }
 
 // requires being run on main thread
 pub unsafe fn uiscreens() -> VecDeque<MonitorHandle> {
 	let screens:id = msg_send![class!(UIScreen), screens];
+
 	let count:NSUInteger = msg_send![screens, count];
+
 	let mut result = VecDeque::with_capacity(count as _);
+
 	let screens_enum:id = msg_send![screens, objectEnumerator];
+
 	loop {
 		let screen:id = msg_send![screens_enum, nextObject];
+
 		if screen == nil {
 			break result;
 		}
+
 		result.push_back(MonitorHandle::retained_new(screen));
 	}
 }

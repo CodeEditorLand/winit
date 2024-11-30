@@ -117,9 +117,11 @@ impl<T:'static> Shared<T> {
 	pub fn set_listener(&self, event_handler:Box<dyn FnMut(Event<'_, T>, &mut root::ControlFlow)>) {
 		{
 			let mut runner = self.0.runner.borrow_mut();
+
 			assert!(matches!(*runner, RunnerEnum::Pending));
 			*runner = RunnerEnum::Running(Runner::new(event_handler));
 		}
+
 		self.init();
 
 		let close_instance = self.clone();
@@ -147,6 +149,7 @@ impl<T:'static> Shared<T> {
 
 	pub fn init(&self) {
 		let start_cause = Event::NewEvents(StartCause::Init);
+
 		self.run_until_cleared(iter::once(start_cause));
 	}
 
@@ -154,6 +157,7 @@ impl<T:'static> Shared<T> {
 	// queue
 	pub fn poll(&self) {
 		let start_cause = Event::NewEvents(StartCause::Poll);
+
 		self.run_until_cleared(iter::once(start_cause));
 	}
 
@@ -162,6 +166,7 @@ impl<T:'static> Shared<T> {
 	pub fn resume_time_reached(&self, start:Instant, requested_resume:Instant) {
 		let start_cause =
 			Event::NewEvents(StartCause::ResumeTimeReached { start, requested_resume });
+
 		self.run_until_cleared(iter::once(start_cause));
 	}
 
@@ -183,6 +188,7 @@ impl<T:'static> Shared<T> {
 		// If we can run the event processing right now, or need to queue this and wait
 		// for later
 		let mut process_immediately = true;
+
 		match self.0.runner.try_borrow().as_ref().map(Deref::deref) {
 			Ok(RunnerEnum::Running(ref runner)) => {
 				// If we're currently polling, queue this and wait for the poll() method to be
@@ -204,9 +210,11 @@ impl<T:'static> Shared<T> {
 			// This is unreachable since `self.is_closed() == true`.
 			Ok(RunnerEnum::Destroyed) => unreachable!(),
 		}
+
 		if !process_immediately {
 			// Queue these events to look at later
 			self.0.events.borrow_mut().extend(events);
+
 			return;
 		}
 		// At this point, we know this is a fresh set of events
@@ -224,7 +232,9 @@ impl<T:'static> Shared<T> {
 		// Take the start event, then the events provided to this function, and run an
 		// iteration of the event loop
 		let start_event = Event::NewEvents(start_cause);
+
 		let events = iter::once(start_event).chain(events);
+
 		self.run_until_cleared(events);
 	}
 
@@ -234,10 +244,12 @@ impl<T:'static> Shared<T> {
 	fn process_destroy_pending_windows(&self, control:&mut root::ControlFlow) {
 		while let Some(id) = self.0.destroy_pending.borrow_mut().pop_front() {
 			self.0.all_canvases.borrow_mut().retain(|&(item_id, _)| item_id != id);
+
 			self.handle_event(
 				Event::WindowEvent { window_id:id, event:crate::event::WindowEvent::Destroyed },
 				control,
 			);
+
 			self.0.redraw_pending.borrow_mut().remove(&id);
 		}
 	}
@@ -249,17 +261,22 @@ impl<T:'static> Shared<T> {
 	// during processing
 	fn run_until_cleared(&self, events:impl Iterator<Item = Event<'static, T>>) {
 		let mut control = self.current_control_flow();
+
 		for event in events {
 			self.handle_event(event, &mut control);
 		}
+
 		self.process_destroy_pending_windows(&mut control);
+
 		self.handle_event(Event::MainEventsCleared, &mut control);
 
 		// Collect all of the redraw events to avoid double-locking the RefCell
 		let redraw_events:Vec<WindowId> = self.0.redraw_pending.borrow_mut().drain().collect();
+
 		for window_id in redraw_events {
 			self.handle_event(Event::RedrawRequested(window_id), &mut control);
 		}
+
 		self.handle_event(Event::RedrawEventsCleared, &mut control);
 
 		self.apply_control_flow(control);
@@ -284,6 +301,7 @@ impl<T:'static> Shared<T> {
 			// If we're in the exit state, don't do event processing
 			None => return,
 		};
+
 		let mut control = self.current_control_flow();
 
 		// Handle the start event and all other events in the queue.
@@ -306,8 +324,11 @@ impl<T:'static> Shared<T> {
 				width:canvas.width() as u32,
 				height:canvas.height() as u32,
 			};
+
 			let logical_size = current_size.to_logical::<f64>(old_scale);
+
 			let mut new_size = logical_size.to_physical(new_scale);
+
 			self.handle_single_event_sync(
 				Event::WindowEvent {
 					window_id:id,
@@ -321,6 +342,7 @@ impl<T:'static> Shared<T> {
 
 			// Then we resize the canvas to the new size and send a `Resized` event:
 			backend::set_canvas_size(&canvas, crate::dpi::Size::Physical(new_size));
+
 			self.handle_single_event_sync(
 				Event::WindowEvent {
 					window_id:id,
@@ -332,13 +354,16 @@ impl<T:'static> Shared<T> {
 
 		// Process the destroy-pending windows again.
 		self.process_destroy_pending_windows(&mut control);
+
 		self.handle_event(Event::MainEventsCleared, &mut control);
 
 		// Discard all the pending redraw as we shall just redraw all windows.
 		self.0.redraw_pending.borrow_mut().clear();
+
 		for &(window_id, _) in &*self.0.all_canvases.borrow() {
 			self.handle_event(Event::RedrawRequested(window_id), &mut control);
 		}
+
 		self.handle_event(Event::RedrawEventsCleared, &mut control);
 
 		self.apply_control_flow(control);
@@ -351,6 +376,7 @@ impl<T:'static> Shared<T> {
 
 	fn handle_unload(&self) {
 		self.apply_control_flow(root::ControlFlow::Exit);
+
 		let mut control = self.current_control_flow();
 		// We don't call `handle_loop_destroyed` here because we don't need to
 		// perform cleanup when the web browser is going to destroy the page.
@@ -364,6 +390,7 @@ impl<T:'static> Shared<T> {
 		if self.is_closed() {
 			*control = root::ControlFlow::Exit;
 		}
+
 		match *self.0.runner.borrow_mut() {
 			RunnerEnum::Running(ref mut runner) => {
 				runner.handle_single_event(event, control);
@@ -379,6 +406,7 @@ impl<T:'static> Shared<T> {
 		if self.is_closed() {
 			*control = root::ControlFlow::Exit;
 		}
+
 		match *self.0.runner.borrow_mut() {
 			RunnerEnum::Running(ref mut runner) => {
 				runner.handle_single_event(event, control);
@@ -399,6 +427,7 @@ impl<T:'static> Shared<T> {
 			// Take an event out of the queue and handle it
 			// Make sure not to let the borrow_mut live during the next handle_event
 			let event = { self.0.events.borrow_mut().pop_front() };
+
 			if let Some(event) = event {
 				self.handle_event(event, control);
 			}
@@ -411,6 +440,7 @@ impl<T:'static> Shared<T> {
 		let new_state = match control_flow {
 			root::ControlFlow::Poll => {
 				let cloned = self.clone();
+
 				State::Poll { request:backend::AnimationFrameRequest::new(move || cloned.poll()) }
 			},
 			root::ControlFlow::Wait => State::Wait { start:Instant::now() },
@@ -443,17 +473,20 @@ impl<T:'static> Shared<T> {
 
 	fn handle_loop_destroyed(&self, control:&mut root::ControlFlow) {
 		self.handle_event(Event::LoopDestroyed, control);
+
 		let all_canvases = std::mem::take(&mut *self.0.all_canvases.borrow_mut());
 		*self.0.scale_change_detector.borrow_mut() = None;
 		*self.0.unload_event_handle.borrow_mut() = None;
 		// Dropping the `Runner` drops the event handler closure, which will in
 		// turn drop all `Window`s moved into the closure.
 		*self.0.runner.borrow_mut() = RunnerEnum::Destroyed;
+
 		for (_, canvas) in all_canvases {
 			// In case any remaining `Window`s are still not dropped, we will need
 			// to explicitly remove the event handlers associated with their canvases.
 			if let Some(canvas) = canvas.upgrade() {
 				let mut canvas = canvas.borrow_mut();
+
 				canvas.remove_listeners();
 			}
 		}

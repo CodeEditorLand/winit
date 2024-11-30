@@ -7,6 +7,7 @@ use winit::{
 
 fn main() {
 	SimpleLogger::new().init().unwrap();
+
 	let event_loop = EventLoop::new();
 
 	let _window = WindowBuilder::new()
@@ -39,6 +40,7 @@ fn main() {
 						// example, so here we'll just respond to the Y and N
 						// keys.
 						println!("Are you ready to bid your window farewell? [Y/N]");
+
 						close_requested = true;
 
 						// In applications where you can safely close the window
@@ -76,6 +78,7 @@ fn main() {
 							N => {
 								if close_requested {
 									println!("Your window will continue to stay by your side.");
+
 									close_requested = false;
 								}
 							},

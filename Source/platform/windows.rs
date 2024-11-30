@@ -193,42 +193,49 @@ impl WindowBuilderExtWindows for WindowBuilder {
 	#[inline]
 	fn with_parent_window(mut self, parent:HWND) -> WindowBuilder {
 		self.platform_specific.parent = Parent::ChildOf(parent);
+
 		self
 	}
 
 	#[inline]
 	fn with_owner_window(mut self, parent:HWND) -> WindowBuilder {
 		self.platform_specific.parent = Parent::OwnedBy(parent);
+
 		self
 	}
 
 	#[inline]
 	fn with_menu(mut self, menu:HMENU) -> WindowBuilder {
 		self.platform_specific.menu = Some(menu);
+
 		self
 	}
 
 	#[inline]
 	fn with_taskbar_icon(mut self, taskbar_icon:Option<Icon>) -> WindowBuilder {
 		self.platform_specific.taskbar_icon = taskbar_icon;
+
 		self
 	}
 
 	#[inline]
 	fn with_no_redirection_bitmap(mut self, flag:bool) -> WindowBuilder {
 		self.platform_specific.no_redirection_bitmap = flag;
+
 		self
 	}
 
 	#[inline]
 	fn with_drag_and_drop(mut self, flag:bool) -> WindowBuilder {
 		self.platform_specific.drag_and_drop = flag;
+
 		self
 	}
 
 	#[inline]
 	fn with_theme(mut self, theme:Option<Theme>) -> WindowBuilder {
 		self.platform_specific.preferred_theme = theme;
+
 		self
 	}
 }
@@ -298,6 +305,7 @@ impl IconExtWindows for Icon {
 		size:Option<PhysicalSize<u32>>,
 	) -> Result<Self, BadIcon> {
 		let win_icon = WinIcon::from_path(path, size)?;
+
 		Ok(Icon { inner:win_icon })
 	}
 
@@ -306,6 +314,7 @@ impl IconExtWindows for Icon {
 		size:Option<PhysicalSize<u32>>,
 	) -> Result<Self, BadIcon> {
 		let win_icon = WinIcon::from_resource(ordinal, size)?;
+
 		Ok(Icon { inner:win_icon })
 	}
 }

@@ -18,10 +18,15 @@ pub fn mouse_button(event:&MouseEvent) -> MouseButton {
 
 pub fn mouse_modifiers(event:&MouseEvent) -> ModifiersState {
 	let mut m = ModifiersState::empty();
+
 	m.set(ModifiersState::SHIFT, event.shift_key());
+
 	m.set(ModifiersState::CTRL, event.ctrl_key());
+
 	m.set(ModifiersState::ALT, event.alt_key());
+
 	m.set(ModifiersState::LOGO, event.meta_key());
+
 	m
 }
 
@@ -38,6 +43,7 @@ pub fn mouse_position_by_client(
 	canvas:&HtmlCanvasElement,
 ) -> LogicalPosition<f64> {
 	let bounding_client_rect = canvas.get_bounding_client_rect();
+
 	LogicalPosition {
 		x:event.client_x() as f64 - bounding_client_rect.x(),
 		y:event.client_y() as f64 - bounding_client_rect.y(),
@@ -46,12 +52,14 @@ pub fn mouse_position_by_client(
 
 pub fn mouse_scroll_delta(event:&WheelEvent) -> Option<MouseScrollDelta> {
 	let x = event.delta_x();
+
 	let y = -event.delta_y();
 
 	match event.delta_mode() {
 		WheelEvent::DOM_DELTA_LINE => Some(MouseScrollDelta::LineDelta(x as f32, y as f32)),
 		WheelEvent::DOM_DELTA_PIXEL => {
 			let delta = LogicalPosition::new(x, y).to_physical(super::scale_factor());
+
 			Some(MouseScrollDelta::PixelDelta(delta))
 		},
 		_ => None,
@@ -230,10 +238,15 @@ pub fn virtual_key_code(event:&KeyboardEvent) -> Option<VirtualKeyCode> {
 
 pub fn keyboard_modifiers(event:&KeyboardEvent) -> ModifiersState {
 	let mut m = ModifiersState::empty();
+
 	m.set(ModifiersState::SHIFT, event.shift_key());
+
 	m.set(ModifiersState::CTRL, event.ctrl_key());
+
 	m.set(ModifiersState::ALT, event.alt_key());
+
 	m.set(ModifiersState::LOGO, event.meta_key());
+
 	m
 }
 

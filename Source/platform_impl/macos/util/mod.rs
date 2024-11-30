@@ -38,6 +38,7 @@ impl IdRef {
 		if inner != nil {
 			let () = unsafe { msg_send![inner, retain] };
 		}
+
 		IdRef(inner)
 	}
 
@@ -49,7 +50,9 @@ impl Drop for IdRef {
 		if self.0 != nil {
 			unsafe {
 				let pool = NSAutoreleasePool::new(nil);
+
 				let () = msg_send![self.0, release];
+
 				pool.drain();
 			};
 		}
@@ -67,6 +70,7 @@ impl Clone for IdRef {
 		if self.0 != nil {
 			let _:id = unsafe { msg_send![self.0, retain] };
 		}
+
 		IdRef(self.0)
 	}
 }
@@ -91,9 +95,13 @@ pub unsafe fn ns_string_id_ref(s:&str) -> IdRef { IdRef::new(NSString::alloc(nil
 #[allow(dead_code)] // In case we want to use this function in the future
 pub unsafe fn app_name() -> Option<id> {
 	let bundle:id = msg_send![class!(NSBundle), mainBundle];
+
 	let dict:id = msg_send![bundle, infoDictionary];
+
 	let key = ns_string_id_ref("CFBundleName");
+
 	let app_name:id = msg_send![dict, objectForKey:*key];
+
 	if app_name != nil { Some(app_name) } else { None }
 }
 
@@ -104,7 +112,9 @@ pub unsafe fn superclass<'a>(this:&'a Object) -> &'a Class {
 
 pub unsafe fn create_input_context(view:id) -> IdRef {
 	let input_context:id = msg_send![class!(NSTextInputContext), alloc];
+
 	let input_context:id = msg_send![input_context, initWithClient: view];
+
 	IdRef::new(input_context)
 }
 
@@ -117,6 +127,7 @@ pub unsafe fn toggle_style_mask(window:id, view:id, mask:NSWindowStyleMask, on:b
 	use cocoa::appkit::NSWindow;
 
 	let current_style_mask = window.styleMask();
+
 	if on {
 		window.setStyleMask_(current_style_mask | mask);
 	} else {

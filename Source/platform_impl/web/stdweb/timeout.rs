@@ -18,6 +18,7 @@ impl Timeout {
 impl Drop for Timeout {
 	fn drop(&mut self) {
 		let handle = self.handle.take().unwrap();
+
 		handle.clear();
 	}
 }
@@ -34,9 +35,12 @@ impl AnimationFrameRequest {
 	where
 		F: 'static + FnMut(), {
 		let fired = Rc::new(Cell::new(false));
+
 		let c_fired = fired.clone();
+
 		let handle = window().request_animation_frame(move |_| {
 			(*c_fired).set(true);
+
 			f();
 		});
 

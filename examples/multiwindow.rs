@@ -9,11 +9,14 @@ use winit::{
 
 fn main() {
 	SimpleLogger::new().init().unwrap();
+
 	let event_loop = EventLoop::new();
 
 	let mut windows = HashMap::new();
+
 	for _ in 0..3 {
 		let window = Window::new(&event_loop).unwrap();
+
 		windows.insert(window.id(), window);
 	}
 
@@ -38,6 +41,7 @@ fn main() {
 						..
 					} => {
 						let window = Window::new(&event_loop).unwrap();
+
 						windows.insert(window.id(), window);
 					},
 					_ => (),

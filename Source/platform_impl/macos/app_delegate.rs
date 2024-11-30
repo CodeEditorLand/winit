@@ -30,15 +30,18 @@ unsafe impl Sync for AppDelegateClass {}
 lazy_static! {
 	pub static ref APP_DELEGATE_CLASS: AppDelegateClass = unsafe {
 		let superclass = class!(NSResponder);
+
 		let mut decl = ClassDecl::new("WinitAppDelegate", superclass).unwrap();
 
 		decl.add_class_method(sel!(new), new as extern fn(&Class, Sel) -> id);
+
 		decl.add_method(sel!(dealloc), dealloc as extern fn(&Object, Sel));
 
 		decl.add_method(
 			sel!(applicationDidFinishLaunching:),
 			did_finish_launching as extern fn(&Object, Sel, id),
 		);
+
 		decl.add_ivar::<*mut c_void>(AUX_DELEGATE_STATE_NAME);
 
 		AppDelegateClass(decl.register())
@@ -55,6 +58,7 @@ pub unsafe fn get_aux_state_mut(this:&Object) -> RefMut<'_, AuxDelegateState> {
 extern fn new(class:&Class, _:Sel) -> id {
 	unsafe {
 		let this:id = msg_send![class, alloc];
+
 		let this:id = msg_send![this, init];
 		(*this).set_ivar(
 			AUX_DELEGATE_STATE_NAME,
@@ -63,6 +67,7 @@ extern fn new(class:&Class, _:Sel) -> id {
 				create_default_menu:true,
 			}))) as *mut c_void,
 		);
+
 		this
 	}
 }
@@ -78,6 +83,8 @@ extern fn dealloc(this:&Object, _:Sel) {
 
 extern fn did_finish_launching(this:&Object, _:Sel, _:id) {
 	trace!("Triggered `applicationDidFinishLaunching`");
+
 	AppState::launched(this);
+
 	trace!("Completed `applicationDidFinishLaunching`");
 }

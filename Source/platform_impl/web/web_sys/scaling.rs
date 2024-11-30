@@ -28,6 +28,7 @@ impl ScaleChangeDetectorInternal {
 	where
 		F: 'static + FnMut(ScaleChangeArgs), {
 		let current_scale = super::scale_factor();
+
 		let new_self = Rc::new(RefCell::new(Self {
 			callback:Box::new(handler),
 			mql:None,
@@ -35,6 +36,7 @@ impl ScaleChangeDetectorInternal {
 		}));
 
 		let weak_self = Rc::downgrade(&new_self);
+
 		let closure = Closure::wrap(Box::new(move |event:MediaQueryListEvent| {
 			if let Some(rc_self) = weak_self.upgrade() {
 				rc_self.borrow_mut().handler(event);
@@ -44,8 +46,10 @@ impl ScaleChangeDetectorInternal {
 		let mql = Self::create_mql(closure);
 		{
 			let mut borrowed_self = new_self.borrow_mut();
+
 			borrowed_self.mql = mql;
 		}
+
 		new_self
 	}
 
@@ -61,21 +65,30 @@ impl ScaleChangeDetectorInternal {
 			min_scale = current_scale - 0.0001,
 			max_scale = current_scale + 0.0001,
 		);
+
 		let mql = MediaQueryListHandle::new(&media_query, closure);
+
 		if let Some(mql) = &mql {
 			assert_eq!(mql.mql().matches(), true);
 		}
+
 		mql
 	}
 
 	fn handler(&mut self, event:MediaQueryListEvent) {
 		assert_eq!(event.matches(), false);
+
 		let mql = self.mql.take().expect("DevicePixelRatioChangeDetector::mql should not be None");
+
 		let closure = mql.remove();
+
 		let new_scale = super::scale_factor();
 		(self.callback)(ScaleChangeArgs { old_scale:self.last_scale, new_scale });
+
 		let new_mql = Self::create_mql(closure);
+
 		self.mql = new_mql;
+
 		self.last_scale = new_scale;
 	}
 }

@@ -103,6 +103,7 @@ impl<T:'static> EventLoop<T> {
 			);
 
 			let mut redraw = false;
+
 			let mut resized = false;
 
 			match self.first_event.take() {
@@ -130,12 +131,17 @@ impl<T:'static> EventLoop<T> {
 						Event::Resume => self.running = true,
 						Event::ConfigChanged => {
 							let am = ndk_glue::native_activity().asset_manager();
+
 							let config = Configuration::from_asset_manager(&am);
+
 							let old_scale_factor = MonitorHandle.scale_factor();
 							*CONFIG.write().unwrap() = config;
+
 							let scale_factor = MonitorHandle.scale_factor();
+
 							if (scale_factor - old_scale_factor).abs() < f64::EPSILON {
 								let mut size = MonitorHandle.size();
+
 								let event = event::Event::WindowEvent {
 									window_id:window::WindowId(WindowId),
 									event:event::WindowEvent::ScaleFactorChanged {
@@ -143,6 +149,7 @@ impl<T:'static> EventLoop<T> {
 										scale_factor,
 									},
 								};
+
 								call_event_handler!(
 									event_handler,
 									self.window_target(),
@@ -181,8 +188,11 @@ impl<T:'static> EventLoop<T> {
 						while let Some(event) = input_queue.get_event() {
 							if let Some(event) = input_queue.pre_dispatch(event) {
 								let mut handled = true;
+
 								let window_id = window::WindowId(WindowId);
+
 								let device_id = event::DeviceId(DeviceId);
+
 								match &event {
 									InputEvent::MotionEvent(motion_event) => {
 										let phase = match motion_event.action() {
@@ -198,9 +208,11 @@ impl<T:'static> EventLoop<T> {
 											},
 											_ => {
 												handled = false;
+
 												None // TODO mouse events
 											},
 										};
+
 										if let Some(phase) = phase {
 											let pointers:Box<
 												dyn Iterator<Item = ndk::event::Pointer<'_>>,
@@ -222,6 +234,7 @@ impl<T:'static> EventLoop<T> {
 													x:pointer.x() as _,
 													y:pointer.y() as _,
 												};
+
 												let event = event::Event::WindowEvent {
 													window_id,
 													event:event::WindowEvent::Touch(event::Touch {
@@ -232,6 +245,7 @@ impl<T:'static> EventLoop<T> {
 														force:None,
 													}),
 												};
+
 												call_event_handler!(
 													event_handler,
 													self.window_target(),
@@ -261,6 +275,7 @@ impl<T:'static> EventLoop<T> {
 												is_synthetic:false,
 											},
 										};
+
 										call_event_handler!(
 											event_handler,
 											self.window_target(),
@@ -269,6 +284,7 @@ impl<T:'static> EventLoop<T> {
 										);
 									},
 								};
+
 								input_queue.finish_event(event, handled);
 							}
 						}
@@ -276,6 +292,7 @@ impl<T:'static> EventLoop<T> {
 				},
 				Some(EventSource::User) => {
 					let mut user_queue = self.user_queue.lock().unwrap();
+
 					while let Some(event) = user_queue.pop_front() {
 						call_event_handler!(
 							event_handler,
@@ -297,15 +314,18 @@ impl<T:'static> EventLoop<T> {
 
 			if resized && self.running {
 				let size = MonitorHandle.size();
+
 				let event = event::Event::WindowEvent {
 					window_id:window::WindowId(WindowId),
 					event:event::WindowEvent::Resized(size),
 				};
+
 				call_event_handler!(event_handler, self.window_target(), control_flow, event);
 			}
 
 			if redraw && self.running {
 				let event = event::Event::RedrawRequested(window::WindowId(WindowId));
+
 				call_event_handler!(event_handler, self.window_target(), control_flow, event);
 			}
 
@@ -320,19 +340,23 @@ impl<T:'static> EventLoop<T> {
 				ControlFlow::Exit => {
 					self.first_event =
 						poll(self.looper.poll_once_timeout(Duration::from_millis(0)).unwrap());
+
 					self.start_cause = event::StartCause::WaitCancelled {
 						start:Instant::now(),
 						requested_resume:None,
 					};
+
 					break 'event_loop;
 				},
 				ControlFlow::Poll => {
 					self.first_event =
 						poll(self.looper.poll_all_timeout(Duration::from_millis(0)).unwrap());
+
 					self.start_cause = event::StartCause::Poll;
 				},
 				ControlFlow::Wait => {
 					self.first_event = poll(self.looper.poll_all().unwrap());
+
 					self.start_cause = event::StartCause::WaitCancelled {
 						start:Instant::now(),
 						requested_resume:None,
@@ -340,9 +364,12 @@ impl<T:'static> EventLoop<T> {
 				},
 				ControlFlow::WaitUntil(instant) => {
 					let start = Instant::now();
+
 					let duration =
 						if instant <= start { Duration::default() } else { instant - start };
+
 					self.first_event = poll(self.looper.poll_all_timeout(duration).unwrap());
+
 					self.start_cause = if self.first_event.is_some() {
 						event::StartCause::WaitCancelled { start, requested_resume:Some(instant) }
 					} else {
@@ -371,7 +398,9 @@ pub struct EventLoopProxy<T:'static> {
 impl<T> EventLoopProxy<T> {
 	pub fn send_event(&self, event:T) -> Result<(), event_loop::EventLoopClosed<T>> {
 		self.queue.lock().unwrap().push_back(event);
+
 		self.looper.wake();
+
 		Ok(())
 	}
 }
@@ -393,7 +422,9 @@ impl<T:'static> EventLoopWindowTarget<T> {
 
 	pub fn available_monitors(&self) -> VecDeque<MonitorHandle> {
 		let mut v = VecDeque::with_capacity(1);
+
 		v.push_back(MonitorHandle);
+
 		v
 	}
 }
@@ -435,7 +466,9 @@ impl Window {
 
 	pub fn available_monitors(&self) -> VecDeque<MonitorHandle> {
 		let mut v = VecDeque::with_capacity(1);
+
 		v.push_back(MonitorHandle);
+
 		v
 	}
 
@@ -527,8 +560,11 @@ impl Window {
 				 between those events."
 			);
 		};
+
 		let mut handle = raw_window_handle::android::AndroidHandle::empty();
+
 		handle.a_native_window = a_native_window;
+
 		raw_window_handle::RawWindowHandle::Android(handle)
 	}
 
@@ -558,7 +594,9 @@ impl MonitorHandle {
 	pub fn size(&self) -> PhysicalSize<u32> {
 		if let Some(native_window) = ndk_glue::native_window().as_ref() {
 			let width = native_window.width() as _;
+
 			let height = native_window.height() as _;
+
 			PhysicalSize::new(width, height)
 		} else {
 			PhysicalSize::new(0, 0)
@@ -569,17 +607,20 @@ impl MonitorHandle {
 
 	pub fn scale_factor(&self) -> f64 {
 		let config = CONFIG.read().unwrap();
+
 		config.density().map(|dpi| dpi as f64 / 160.0).unwrap_or(1.0)
 	}
 
 	pub fn video_modes(&self) -> impl Iterator<Item = monitor::VideoMode> {
 		let size = self.size().into();
+
 		let mut v = Vec::new();
 		// FIXME this is not the real refresh rate
 		// (it is guarunteed to support 32 bit color though)
 		v.push(monitor::VideoMode {
 			video_mode:VideoMode { size, bit_depth:32, refresh_rate:60, monitor:self.clone() },
 		});
+
 		v.into_iter()
 	}
 }
