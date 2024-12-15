@@ -30,7 +30,6 @@ pub fn main() {
 	#[cfg(feature = "stdweb")]
 	{
 		use std_web::web::INode;
-
 		use winit::platform::web::WindowExtStdweb;
 
 		let canvas = window.canvas();
@@ -53,7 +52,6 @@ pub fn main() {
 
 		match event {
 			Event::WindowEvent { event: WindowEvent::CloseRequested, window_id }
-
 				if window_id == window.id() =>
 			{
 				*control_flow = ControlFlow::Exit

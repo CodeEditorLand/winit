@@ -23,7 +23,6 @@ fn main() {
 
 		match event {
 			Event::WindowEvent { event: WindowEvent::CloseRequested, window_id }
-
 				if window_id == window.id() =>
 			{
 				*control_flow = ControlFlow::Exit

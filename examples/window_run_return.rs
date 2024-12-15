@@ -12,7 +12,6 @@ fn main() {
 	use std::{thread::sleep, time::Duration};
 
 	use simple_logger::SimpleLogger;
-
 	use winit::{
 		event::{Event, WindowEvent},
 		event_loop::{ControlFlow, EventLoop},

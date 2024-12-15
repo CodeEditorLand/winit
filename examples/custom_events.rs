@@ -1,7 +1,6 @@
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
 	use simple_logger::SimpleLogger;
-
 	use winit::{
 		event::{Event, WindowEvent},
 		event_loop::{ControlFlow, EventLoop},

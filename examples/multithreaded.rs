@@ -3,7 +3,6 @@ fn main() {
 	use std::{collections::HashMap, sync::mpsc, thread, time::Duration};
 
 	use simple_logger::SimpleLogger;
-
 	use winit::{
 		dpi::{PhysicalPosition, PhysicalSize, Position, Size},
 		event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
