@@ -1,7 +1,7 @@
 use std::{
 	f64,
 	os::raw::c_void,
-	sync::{atomic::Ordering, Arc, Weak},
+	sync::{Arc, Weak, atomic::Ordering},
 };
 
 use cocoa::{
@@ -11,7 +11,7 @@ use cocoa::{
 };
 use objc::{
 	declare::ClassDecl,
-	runtime::{Class, Object, Sel, BOOL, NO, YES},
+	runtime::{BOOL, Class, NO, Object, Sel, YES},
 };
 
 use crate::{
@@ -22,7 +22,7 @@ use crate::{
 		event::{EventProxy, EventWrapper},
 		util::{self, IdRef},
 		view::ViewState,
-		window::{get_window_id, UnownedWindow},
+		window::{UnownedWindow, get_window_id},
 	},
 	window::{Fullscreen, WindowId},
 };

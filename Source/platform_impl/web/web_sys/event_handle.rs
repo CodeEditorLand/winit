@@ -1,4 +1,4 @@
-use wasm_bindgen::{prelude::Closure, JsCast};
+use wasm_bindgen::{JsCast, prelude::Closure};
 use web_sys::{AddEventListenerOptions, EventTarget};
 
 pub(super) struct EventListenerHandle<T:?Sized> {

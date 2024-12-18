@@ -9,7 +9,7 @@ use cocoa::{
 	foundation::{NSAutoreleasePool, NSPoint, NSRect, NSString, NSUInteger},
 };
 use core_graphics::display::CGDisplay;
-use objc::runtime::{Class, Object, Sel, BOOL, YES};
+use objc::runtime::{BOOL, Class, Object, Sel, YES};
 
 pub use self::{r#async::*, cursor::*};
 use crate::{dpi::LogicalPosition, platform_impl::platform::ffi};

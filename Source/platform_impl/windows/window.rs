@@ -7,11 +7,11 @@ use std::{
 	mem,
 	os::windows::ffi::OsStrExt,
 	ptr,
-	sync::{mpsc::channel, Arc},
+	sync::{Arc, mpsc::channel},
 };
 
 use parking_lot::Mutex;
-use raw_window_handle::{windows::WindowsHandle, RawWindowHandle};
+use raw_window_handle::{RawWindowHandle, windows::WindowsHandle};
 use winapi::{
 	ctypes::c_int,
 	shared::{
@@ -39,17 +39,17 @@ use crate::{
 	icon::Icon,
 	monitor::MonitorHandle as RootMonitorHandle,
 	platform_impl::platform::{
+		Parent,
+		PlatformSpecificWindowBuilderAttributes,
+		WindowId,
 		dark_mode::try_theme,
 		dpi::{dpi_to_scale_factor, hwnd_dpi},
 		drop_handler::FileDropHandler,
-		event_loop::{self, EventLoopWindowTarget, DESTROY_MSG_ID},
+		event_loop::{self, DESTROY_MSG_ID, EventLoopWindowTarget},
 		icon::{self, IconType},
 		monitor,
 		util,
 		window_state::{CursorFlags, SavedWindow, WindowFlags, WindowState},
-		Parent,
-		PlatformSpecificWindowBuilderAttributes,
-		WindowId,
 	},
 	window::{CursorIcon, Fullscreen, Theme, UserAttentionType, WindowAttributes},
 };
@@ -1000,7 +1000,7 @@ unsafe fn taskbar_mark_fullscreen(handle:HWND, fullscreen:bool) {
 		let mut task_bar_list = task_bar_list_ptr.get();
 
 		if task_bar_list == ptr::null_mut() {
-			use winapi::{shared::winerror::S_OK, Interface};
+			use winapi::{Interface, shared::winerror::S_OK};
 
 			let hr = combaseapi::CoCreateInstance(
 				&CLSID_TaskbarList,

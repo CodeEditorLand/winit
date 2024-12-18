@@ -12,11 +12,11 @@ use core_foundation::{
 };
 use core_graphics::display::{CGDirectDisplayID, CGDisplay, CGDisplayBounds};
 use core_video_sys::{
-	kCVReturnSuccess,
-	kCVTimeIsIndefinite,
 	CVDisplayLinkCreateWithCGDisplay,
 	CVDisplayLinkGetNominalOutputVideoRefreshPeriod,
 	CVDisplayLinkRelease,
+	kCVReturnSuccess,
+	kCVTimeIsIndefinite,
 };
 
 use super::{ffi, util};

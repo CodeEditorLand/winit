@@ -6,7 +6,7 @@ mod scaling;
 mod timeout;
 
 use wasm_bindgen::closure::Closure;
-use web_sys::{window, BeforeUnloadEvent, Element, HtmlCanvasElement};
+use web_sys::{BeforeUnloadEvent, Element, HtmlCanvasElement, window};
 
 pub use self::{
 	canvas::Canvas,

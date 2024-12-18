@@ -1,6 +1,6 @@
 use std::{cell::Cell, rc::Rc, time::Duration};
 
-use stdweb::web::{window, IWindowOrWorker, RequestAnimationFrameHandle, TimeoutHandle};
+use stdweb::web::{IWindowOrWorker, RequestAnimationFrameHandle, TimeoutHandle, window};
 
 #[derive(Debug)]
 pub struct Timeout {

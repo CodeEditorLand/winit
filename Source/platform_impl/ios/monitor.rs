@@ -9,7 +9,7 @@ use crate::{
 	monitor::{MonitorHandle as RootMonitorHandle, VideoMode as RootVideoMode},
 	platform_impl::platform::{
 		app_state,
-		ffi::{id, nil, CGFloat, CGRect, CGSize, NSInteger, NSUInteger},
+		ffi::{CGFloat, CGRect, CGSize, NSInteger, NSUInteger, id, nil},
 	},
 };
 

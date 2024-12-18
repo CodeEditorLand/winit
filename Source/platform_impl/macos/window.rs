@@ -3,10 +3,10 @@ use std::{
 	f64,
 	os::raw::c_void,
 	sync::{
-		atomic::{AtomicBool, Ordering},
 		Arc,
 		Mutex,
 		Weak,
+		atomic::{AtomicBool, Ordering},
 	},
 };
 
@@ -31,9 +31,9 @@ use cocoa::{
 use core_graphics::display::{CGDisplay, CGDisplayMode};
 use objc::{
 	declare::ClassDecl,
-	runtime::{Class, Object, Sel, BOOL, NO, YES},
+	runtime::{BOOL, Class, NO, Object, Sel, YES},
 };
-use raw_window_handle::{macos::MacOSHandle, RawWindowHandle};
+use raw_window_handle::{RawWindowHandle, macos::MacOSHandle};
 
 use crate::{
 	dpi::{
@@ -50,13 +50,13 @@ use crate::{
 	monitor::{MonitorHandle as RootMonitorHandle, VideoMode as RootVideoMode},
 	platform::macos::WindowExtMacOS,
 	platform_impl::platform::{
+		OsError,
 		app_state::{AppState, INTERRUPT_EVENT_LOOP_EXIT},
 		ffi,
 		monitor::{self, MonitorHandle, VideoMode},
 		util::{self, IdRef},
-		view::{self, new_view, CursorState},
+		view::{self, CursorState, new_view},
 		window_delegate::new_delegate,
-		OsError,
 	},
 	window::{
 		CursorIcon,

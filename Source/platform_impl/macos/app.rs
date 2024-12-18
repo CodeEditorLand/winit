@@ -9,7 +9,7 @@ use objc::{
 	runtime::{Class, Object, Sel},
 };
 
-use super::{app_state::AppState, event::EventWrapper, util, DEVICE_ID};
+use super::{DEVICE_ID, app_state::AppState, event::EventWrapper, util};
 use crate::event::{DeviceEvent, ElementState, Event};
 
 pub struct AppClass(pub *const Class);

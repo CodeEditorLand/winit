@@ -2,7 +2,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use web_sys::{EventTarget, MouseEvent};
 
-use super::{event, EventListenerHandle};
+use super::{EventListenerHandle, event};
 use crate::{
 	dpi::PhysicalPosition,
 	event::{ModifiersState, MouseButton},

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use objc::{
 	declare::ClassDecl,
-	runtime::{Class, Object, Sel, BOOL, NO, YES},
+	runtime::{BOOL, Class, NO, Object, Sel, YES},
 };
 
 use crate::{
@@ -10,11 +10,10 @@ use crate::{
 	event::{DeviceId as RootDeviceId, Event, Force, Touch, TouchPhase, WindowEvent},
 	platform::ios::MonitorHandleExtIOS,
 	platform_impl::platform::{
+		DeviceId,
 		app_state::{self, OSCapabilities},
 		event_loop::{self, EventProxy, EventWrapper},
 		ffi::{
-			id,
-			nil,
 			CGFloat,
 			CGPoint,
 			CGRect,
@@ -23,9 +22,10 @@ use crate::{
 			UIRectEdge,
 			UITouchPhase,
 			UITouchType,
+			id,
+			nil,
 		},
 		window::PlatformSpecificWindowBuilderAttributes,
-		DeviceId,
 	},
 	window::{Fullscreen, WindowAttributes, WindowId as RootWindowId},
 };

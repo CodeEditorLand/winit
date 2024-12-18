@@ -18,8 +18,6 @@ use crate::{
 	platform_impl::platform::{
 		event_loop::{EventHandler, EventProxy, EventWrapper, Never},
 		ffi::{
-			id,
-			kCFRunLoopCommonModes,
 			CFAbsoluteTimeGetCurrent,
 			CFRelease,
 			CFRunLoopAddTimer,
@@ -34,6 +32,8 @@ use crate::{
 			NSInteger,
 			NSOperatingSystemVersion,
 			NSUInteger,
+			id,
+			kCFRunLoopCommonModes,
 		},
 	},
 	window::WindowId as RootWindowId,

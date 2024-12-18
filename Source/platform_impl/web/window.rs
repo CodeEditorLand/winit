@@ -1,12 +1,12 @@
 use std::{
 	cell::{Ref, RefCell},
-	collections::{vec_deque::IntoIter as VecDequeIter, VecDeque},
+	collections::{VecDeque, vec_deque::IntoIter as VecDequeIter},
 	rc::Rc,
 };
 
 use raw_window_handle::web::WebHandle;
 
-use super::{backend, monitor, EventLoopWindowTarget};
+use super::{EventLoopWindowTarget, backend, monitor};
 use crate::{
 	dpi::{LogicalSize, PhysicalPosition, PhysicalSize, Position, Size},
 	error::{ExternalError, NotSupportedError, OsError as RootOE},

@@ -11,8 +11,8 @@ use std::{
 	ptr,
 	rc::Rc,
 	sync::{
-		mpsc::{self, Receiver, Sender},
 		Arc,
+		mpsc::{self, Receiver, Sender},
 	},
 	thread,
 	time::{Duration, Instant},
@@ -45,6 +45,8 @@ use crate::{
 	event_loop::{ControlFlow, EventLoopClosed, EventLoopWindowTarget as RootELW},
 	monitor::MonitorHandle as RootMonitorHandle,
 	platform_impl::platform::{
+		DEVICE_ID,
+		WindowId,
 		dark_mode::try_theme,
 		dpi::{become_dpi_aware, dpi_to_scale_factor, enable_non_client_dpi_scaling},
 		drop_handler::FileDropHandler,
@@ -54,8 +56,6 @@ use crate::{
 		util,
 		window_state::{CursorFlags, WindowFlags, WindowState},
 		wrap_device_id,
-		WindowId,
-		DEVICE_ID,
 	},
 	window::{Fullscreen, WindowId as RootWindowId},
 };
@@ -83,16 +83,12 @@ type GetPointerPenInfo =
 lazy_static! {
 	static ref GET_POINTER_FRAME_INFO_HISTORY: Option<GetPointerFrameInfoHistory> =
 		get_function!("user32.dll", GetPointerFrameInfoHistory);
-
 	static ref SKIP_POINTER_FRAME_MESSAGES: Option<SkipPointerFrameMessages> =
 		get_function!("user32.dll", SkipPointerFrameMessages);
-
 	static ref GET_POINTER_DEVICE_RECTS: Option<GetPointerDeviceRects> =
 		get_function!("user32.dll", GetPointerDeviceRects);
-
 	static ref GET_POINTER_TOUCH_INFO: Option<GetPointerTouchInfo> =
 		get_function!("user32.dll", GetPointerTouchInfo);
-
 	static ref GET_POINTER_PEN_INFO: Option<GetPointerPenInfo> =
 		get_function!("user32.dll", GetPointerPenInfo);
 }

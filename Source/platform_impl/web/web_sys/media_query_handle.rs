@@ -1,4 +1,4 @@
-use wasm_bindgen::{prelude::Closure, JsCast};
+use wasm_bindgen::{JsCast, prelude::Closure};
 use web_sys::{MediaQueryList, MediaQueryListEvent};
 
 pub(super) struct MediaQueryListHandle {

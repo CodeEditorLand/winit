@@ -15,7 +15,7 @@ use std::{
 
 use gdk::{Cursor, EventMask, WindowEdge, WindowExt, WindowState};
 use gdk_pixbuf::Pixbuf;
-use gtk::{prelude::*, ApplicationWindow};
+use gtk::{ApplicationWindow, prelude::*};
 
 use super::{event_loop::EventLoopWindowTarget, monitor::MonitorHandle};
 use crate::{

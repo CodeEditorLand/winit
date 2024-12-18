@@ -8,18 +8,18 @@ use std::{
 	error::Error,
 	process,
 	rc::Rc,
-	sync::mpsc::{channel, Receiver, SendError, Sender},
+	sync::mpsc::{Receiver, SendError, Sender, channel},
 };
 
 use gdk::{Cursor, CursorType, WindowExt, WindowState};
-use gio::{prelude::*, Cancellable};
-use glib::{source::idle_add_local, Continue, MainContext};
-use gtk::{prelude::*, ApplicationWindow, Inhibit};
+use gio::{Cancellable, prelude::*};
+use glib::{Continue, MainContext, source::idle_add_local};
+use gtk::{ApplicationWindow, Inhibit, prelude::*};
 
 use super::{
+	DeviceId,
 	monitor::MonitorHandle,
 	window::{WindowId, WindowRequest},
-	DeviceId,
 };
 use crate::{
 	dpi::{PhysicalPosition, PhysicalSize},
@@ -616,7 +616,7 @@ fn assert_is_main_thread(suggested_method:&str) {
 
 #[cfg(target_os = "linux")]
 fn is_main_thread() -> bool {
-	use libc::{c_long, getpid, syscall, SYS_gettid};
+	use libc::{SYS_gettid, c_long, getpid, syscall};
 
 	unsafe { syscall(SYS_gettid) == getpid() as c_long }
 }

@@ -1,7 +1,7 @@
 use std::{
 	cell::RefCell,
 	clone::Clone,
-	collections::{vec_deque::IntoIter as VecDequeIter, VecDeque},
+	collections::{VecDeque, vec_deque::IntoIter as VecDequeIter},
 	rc::Rc,
 };
 

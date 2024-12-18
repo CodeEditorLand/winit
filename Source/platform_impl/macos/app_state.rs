@@ -6,9 +6,9 @@ use std::{
 	mem,
 	rc::{Rc, Weak},
 	sync::{
-		atomic::{AtomicBool, Ordering},
 		Mutex,
 		MutexGuard,
+		atomic::{AtomicBool, Ordering},
 	},
 	time::Instant,
 };
@@ -29,7 +29,7 @@ use crate::{
 		get_aux_state_mut,
 		platform::{
 			event::{EventProxy, EventWrapper},
-			event_loop::{post_dummy_event, PanicInfo},
+			event_loop::{PanicInfo, post_dummy_event},
 			menu,
 			observer::{CFRunLoopGetMain, CFRunLoopWakeUp, EventLoopWaker},
 			util::{IdRef, Never},

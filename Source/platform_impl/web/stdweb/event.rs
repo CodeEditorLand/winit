@@ -1,8 +1,8 @@
 use stdweb::{
+	JsSerialize,
 	js,
 	unstable::TryInto,
 	web::event::{IKeyboardEvent, IMouseEvent, MouseWheelDeltaMode, MouseWheelEvent},
-	JsSerialize,
 };
 
 use crate::{

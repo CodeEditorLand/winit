@@ -9,7 +9,7 @@ use std::{
 
 use crate::platform_impl::platform::{
 	app_state::AppState,
-	event_loop::{stop_app_on_panic, PanicInfo},
+	event_loop::{PanicInfo, stop_app_on_panic},
 	ffi,
 };
 

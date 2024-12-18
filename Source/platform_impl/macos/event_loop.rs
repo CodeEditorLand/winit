@@ -5,7 +5,7 @@ use std::{
 	marker::PhantomData,
 	mem,
 	os::raw::c_void,
-	panic::{catch_unwind, resume_unwind, RefUnwindSafe, UnwindSafe},
+	panic::{RefUnwindSafe, UnwindSafe, catch_unwind, resume_unwind},
 	process,
 	ptr,
 	rc::{Rc, Weak},
@@ -14,7 +14,7 @@ use std::{
 
 use cocoa::{
 	appkit::{NSApp, NSEventType::NSApplicationDefined},
-	base::{id, nil, YES},
+	base::{YES, id, nil},
 	foundation::{NSAutoreleasePool, NSPoint},
 };
 use scopeguard::defer;

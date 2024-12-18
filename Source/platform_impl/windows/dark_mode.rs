@@ -7,7 +7,7 @@ use winapi::{
 	shared::{
 		basetsd::SIZE_T,
 		minwindef::{BOOL, DWORD, FALSE, UINT, ULONG, WORD},
-		ntdef::{LPSTR, NTSTATUS, NT_SUCCESS, PVOID, WCHAR},
+		ntdef::{LPSTR, NT_SUCCESS, NTSTATUS, PVOID, WCHAR},
 		windef::HWND,
 		winerror::S_OK,
 	},

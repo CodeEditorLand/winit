@@ -5,7 +5,7 @@ use cocoa::{
 	base::{id, nil},
 	foundation::{NSDictionary, NSPoint, NSString},
 };
-use objc::runtime::{Sel, NO};
+use objc::runtime::{NO, Sel};
 
 use crate::window::CursorIcon;
 

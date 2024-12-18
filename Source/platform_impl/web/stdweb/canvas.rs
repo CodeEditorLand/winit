@@ -5,6 +5,10 @@ use stdweb::{
 	traits::IPointerEvent,
 	unstable::TryInto,
 	web::{
+		EventListenerHandle,
+		IElement,
+		IEventTarget,
+		IHtmlElement,
 		document,
 		event::{
 			BlurEvent,
@@ -25,10 +29,6 @@ use stdweb::{
 			PointerUpEvent,
 		},
 		html_element::CanvasElement,
-		EventListenerHandle,
-		IElement,
-		IEventTarget,
-		IHtmlElement,
 	},
 };
 

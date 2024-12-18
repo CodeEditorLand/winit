@@ -16,7 +16,7 @@ use winapi::{
 	},
 	um::{
 		objidl::IDataObject,
-		oleidl::{IDropTarget, IDropTargetVtbl, DROPEFFECT_COPY, DROPEFFECT_NONE},
+		oleidl::{DROPEFFECT_COPY, DROPEFFECT_NONE, IDropTarget, IDropTargetVtbl},
 		shellapi,
 		unknwnbase,
 		winnt::HRESULT,

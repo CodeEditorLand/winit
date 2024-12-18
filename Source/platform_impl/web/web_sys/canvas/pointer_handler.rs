@@ -1,6 +1,6 @@
 use web_sys::PointerEvent;
 
-use super::{event, EventListenerHandle};
+use super::{EventListenerHandle, event};
 use crate::{
 	dpi::PhysicalPosition,
 	event::{ModifiersState, MouseButton},

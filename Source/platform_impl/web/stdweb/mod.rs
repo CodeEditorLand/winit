@@ -9,12 +9,12 @@ use stdweb::{
 	js,
 	unstable::TryInto,
 	web::{
+		Element,
+		IEventTarget,
 		document,
 		event::BeforeUnloadEvent,
 		html_element::CanvasElement,
 		window,
-		Element,
-		IEventTarget,
 	},
 };
 

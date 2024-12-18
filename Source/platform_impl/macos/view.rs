@@ -14,7 +14,7 @@ use cocoa::{
 };
 use objc::{
 	declare::ClassDecl,
-	runtime::{Class, Object, Protocol, Sel, BOOL, NO, YES},
+	runtime::{BOOL, Class, NO, Object, Protocol, Sel, YES},
 };
 
 use crate::{
@@ -32,20 +32,20 @@ use crate::{
 		WindowEvent,
 	},
 	platform_impl::platform::{
+		DEVICE_ID,
 		app_state::AppState,
 		event::{
+			EventWrapper,
 			char_to_keycode,
 			check_function_keys,
 			event_mods,
 			get_scancode,
 			modifier_event,
 			scancode_to_keycode,
-			EventWrapper,
 		},
 		ffi::*,
 		util::{self, IdRef},
 		window::get_window_id,
-		DEVICE_ID,
 	},
 	window::WindowId,
 };

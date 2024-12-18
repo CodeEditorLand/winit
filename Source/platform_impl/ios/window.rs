@@ -3,8 +3,8 @@ use std::{
 	ops::{Deref, DerefMut},
 };
 
-use objc::runtime::{Class, Object, BOOL, NO, YES};
-use raw_window_handle::{ios::IOSHandle, RawWindowHandle};
+use objc::runtime::{BOOL, Class, NO, Object, YES};
+use raw_window_handle::{RawWindowHandle, ios::IOSHandle};
 
 use crate::{
 	dpi::{self, LogicalPosition, LogicalSize, PhysicalPosition, PhysicalSize, Position, Size},
@@ -14,10 +14,11 @@ use crate::{
 	monitor::MonitorHandle as RootMonitorHandle,
 	platform::ios::{MonitorHandleExtIOS, ScreenEdge, ValidOrientations},
 	platform_impl::platform::{
+		EventLoopWindowTarget,
+		MonitorHandle,
 		app_state,
 		event_loop::{self, EventProxy, EventWrapper},
 		ffi::{
-			id,
 			CGFloat,
 			CGPoint,
 			CGRect,
@@ -26,11 +27,10 @@ use crate::{
 			UIInterfaceOrientationMask,
 			UIRectEdge,
 			UIScreenOverscanCompensation,
+			id,
 		},
 		monitor,
 		view,
-		EventLoopWindowTarget,
-		MonitorHandle,
 	},
 	window::{
 		CursorIcon,

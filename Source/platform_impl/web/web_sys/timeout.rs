@@ -1,6 +1,6 @@
 use std::{cell::Cell, rc::Rc, time::Duration};
 
-use wasm_bindgen::{closure::Closure, JsCast};
+use wasm_bindgen::{JsCast, closure::Closure};
 
 #[derive(Debug)]
 pub struct Timeout {
