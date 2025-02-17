@@ -1,15 +1,15 @@
 [dependencies]
-bitflags = "1"
+bitflags = "2"
 instant = "0.1"
 lazy_static = "1"
-libc = "0.2.64"
+libc = "0.2.169"
 log = "0.4"
-raw-window-handle = "0.3"
+raw-window-handle = "0.6"
 serde = { version = "1", optional = true, features = ["serde_derive"] }
 
 [dev-dependencies]
-image = "0.23.12"
-simple_logger = "1.9"
+image = "0.25.5"
+simple_logger = "5.0"
 
 [features]
 default = ["x11"]
@@ -54,20 +54,20 @@ objc = "0.2.7"
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))']
 
 [target.'cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies]
-cairo-rs = "0.9"
-gdk = "0.13"
-gdk-pixbuf = "0.9"
-gio = "0.9"
-glib = "0.10"
-gtk = "0.9"
-image = "0.23"
-mio = { version = "0.7", features = ["os-ext"], optional = true }
-mio-misc = { version = "1.0", optional = true }
-parking_lot = { version = "0.11.0", optional = true }
-percent-encoding = { version = "2.0", optional = true }
+cairo-rs = "0.20"
+gdk = "0.18"
+gdk-pixbuf = "0.20"
+gio = "0.20"
+glib = "0.20"
+gtk = "0.18"
+image = "0.25"
+mio = { version = "1.0", features = ["os-ext"], optional = true }
+mio-misc = { version = "2.0", optional = true }
+parking_lot = { version = "0.12.3", optional = true }
+percent-encoding = { version = "2.3", optional = true }
 sctk = { package = "smithay-client-toolkit", version = "0.12.3", optional = true }
-wayland-client = { version = "0.28", features = [ "dlopen"] , optional = true }
-x11-dl = { version = "2.18.5", optional = true }
+wayland-client = { version = "0.31", features = [ "dlopen"] , optional = true }
+x11-dl = { version = "2.21.0", optional = true }
 
 [target.'cfg(target_arch = "wasm32")']
 
@@ -81,7 +81,7 @@ version = "=0.4.20"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies.wasm-bindgen]
 optional = true
-version = "0.2.45"
+version = "0.2.100"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies.web_sys]
 features = [
@@ -108,26 +108,26 @@ features = [
 ]
 optional = true
 package = "web-sys"
-version = "0.3.22"
+version = "0.3.77"
 
 [target.'cfg(target_arch = "wasm32")'.dev-dependencies]
-console_log = "0.2"
+console_log = "1.0"
 
 [target.'cfg(target_os = "android")']
 
 [target.'cfg(target_os = "android")'.dependencies]
-ndk = "0.3"
-ndk-glue = "0.3"
-ndk-sys = "0.2.0"
+ndk = "0.9"
+ndk-glue = "0.7"
+ndk-sys = "0.6.0"
 
 [target.'cfg(target_os = "macos")']
 
 [target.'cfg(target_os = "macos")'.dependencies]
-cocoa = "0.24"
-core-foundation = "0.9"
-core-graphics = "0.22"
+cocoa = "0.26"
+core-foundation = "0.10"
+core-graphics = "0.24"
 dispatch = "0.2.0"
-scopeguard = "1.1"
+scopeguard = "1.2"
 
 [target.'cfg(target_os = "macos")'.dependencies.core-video-sys]
 default_features = false
@@ -137,7 +137,7 @@ version = "0.1.4"
 [target.'cfg(target_os = "windows")']
 
 [target.'cfg(target_os = "windows")'.dependencies]
-parking_lot = "0.11"
+parking_lot = "0.12"
 
 [target.'cfg(target_os = "windows")'.dependencies.winapi]
 features = [
@@ -162,4 +162,4 @@ features = [
     "winnt",
     "winuser",
 ]
-version = "0.3.6"
+version = "0.3.9"
